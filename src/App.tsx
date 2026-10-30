@@ -16,7 +16,7 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { PreFlightCheck } from "./components/PreFlightCheck";
-import { DocumentationPortal } from "./components/DocumentationPortal";
+import { OfficialPortal } from "./components/OfficialPortal";
 import { proctorVision } from "./services/faceDetection";
 
 interface StrikeEvent {
@@ -30,12 +30,42 @@ interface StrikeEvent {
 type PipPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
 export default function App() {
-  const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+  const isTauri =
+    typeof window !== "undefined" &&
+    ("__TAURI_INTERNALS__" in window || "__TAURI__" in window);
 
-  // Navigation principale
+  // Navigation principale : "portal" (Site Web & Doc officielle) ou "app" (Application Kiosk)
+  const [viewMode, setViewMode] = useState<"portal" | "app">(() => {
+    if (typeof window === "undefined") return "portal";
+    if (window.location.hash === "#app") return "app";
+    // Dans l'environnement Tauri natif, lancer l'application d'examen par défaut
+    if (
+      isTauri &&
+      !window.location.hash.includes("docs") &&
+      !window.location.hash.includes("download") &&
+      !window.location.hash.includes("home")
+    ) {
+      return "app";
+    }
+    return "portal";
+  });
+
   const [isExamStarted, setIsExamStarted] = useState<boolean>(false);
-  const [showDocs, setShowDocs] = useState<boolean>(false);
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
+
+  // Écoute des changements de hash (#docs, #download, #home, #app)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === "#app") {
+        setViewMode("app");
+      } else if (hash === "#docs" || hash === "#download" || hash === "#home" || hash === "") {
+        setViewMode("portal");
+      }
+    };
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, []);
 
   // État de l'examen et de la télésurveillance
   const [strikes, setStrikes] = useState<number>(0);
@@ -341,9 +371,24 @@ export default function App() {
     setPipPosition(positions[nextIdx]);
   };
 
-  // Si la documentation est ouverte, l'afficher en plein écran
-  if (showDocs) {
-    return <DocumentationPortal onClose={() => setShowDocs(false)} />;
+  // Si le mode portail (Site Web Officiel & Docs) est actif
+  if (viewMode === "portal") {
+    const initialTab =
+      typeof window !== "undefined" && window.location.hash === "#docs"
+        ? "docs"
+        : typeof window !== "undefined" && window.location.hash === "#download"
+        ? "download"
+        : "home";
+
+    return (
+      <OfficialPortal
+        initialTab={initialTab}
+        onLaunchApp={() => {
+          setViewMode("app");
+          window.location.hash = "#app";
+        }}
+      />
+    );
   }
 
   // Affichage du Pre-Flight Check avant démarrage
@@ -353,7 +398,10 @@ export default function App() {
         onExamReady={() => setIsExamStarted(true)}
         mediaStream={mediaStream}
         onStreamReady={(stream) => setMediaStream(stream)}
-        onOpenDocs={() => setShowDocs(true)}
+        onOpenDocs={() => {
+          setViewMode("portal");
+          window.location.hash = "#docs";
+        }}
       />
     );
   }
@@ -485,7 +533,10 @@ export default function App() {
 
           {/* Bouton Documentation & Aide */}
           <button
-            onClick={() => setShowDocs(true)}
+            onClick={() => {
+              setViewMode("portal");
+              window.location.hash = "#docs";
+            }}
             className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
             title="Consulter la documentation"
             aria-label="Consulter la documentation"
