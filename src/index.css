@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 5.5%;
+    --card-foreground: 0 0% 98%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 240 5.9% 10%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 18%;
+    --input: 240 4% 18%;
+    --ring: 160 84% 39%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-zinc-800 selection:text-zinc-100;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Focus ring universel accessible WCAG AA */
+  button:focus-visible,
+  input:focus-visible,
+  a:focus-visible {
+    @apply outline-none ring-2 ring-emerald-500/80 ring-offset-2 ring-offset-zinc-950;
+  }
+}
+
+/* Animations et micro-interactions sobres */
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(0.99); }
+}
+
+.animate-subtle-pulse {
+  animation: subtle-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Scrollbar ultra discrète */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}

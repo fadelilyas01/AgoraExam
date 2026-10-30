@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSCameraUsageDescription</key>
+    <string>AgoraExam requiert l'accès à la webcam pour la télésurveillance et la vérification de présence durant l'examen.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>AgoraExam requiert l'accès au microphone pour la détection sonore durant l'examen.</string>
+</dict>
+</plist>
+

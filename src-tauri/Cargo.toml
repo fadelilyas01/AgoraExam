@@ -1,0 +1,28 @@
+[package]
+name = "agora-exam"
+version = "0.1.0"
+description = "Navigateur securise et e-proctoring pour examens Moodle"
+authors = ["AgoraExam Team"]
+edition = "2021"
+
+[lib]
+name = "agora_exam_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+# Client HTTP asynchrone avec stack TLS 100% Rust (rustls/ring)
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+tokio = { version = "1.38", features = ["full"] }
+thiserror = "1.0"
+zeroize = { version = "1.8", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+base64 = "0.22"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
