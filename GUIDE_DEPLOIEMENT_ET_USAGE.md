@@ -9,6 +9,7 @@ Procédures d'installation, de configuration et d'exploitation pour étudiants, 
 1. [Recommandations pour les étudiants](#1-recommandations-pour-les-étudiants)
 2. [Intégration et configuration pour les enseignants (Moodle)](#2-intégration-et-configuration-pour-les-enseignants-moodle)
 3. [Déploiement pour les administrateurs systèmes et réseaux](#3-déploiement-pour-les-administrateurs-systèmes-et-réseaux)
+4. [Hébergement du portail web (Vercel, Netlify, GitHub Pages)](#4-hébergement-du-portail-web-vercel-netlify-github-pages)
 
 ---
 
@@ -92,3 +93,33 @@ Afin d'éviter les avertissements de sécurité des systèmes d'exploitation (Wi
 1. Utiliser un certificat de signature de code standard (OV ou EV émis par une autorité reconnue).
 2. Spécifier les clés de signature dans les variables d'environnement de la chaîne de compilation Tauri (`TAURI_SIGNING_PRIVATE_KEY`).
 3. Les binaires signés s'exécutent de façon transparente sur les postes institutionnels et personnels.
+
+---
+
+## 4. Hébergement du portail web (Vercel, Netlify, GitHub Pages)
+
+Le site officiel et la documentation peuvent être hébergés gratuitement avec SSL automatique et CDN mondial sur les plateformes suivantes :
+
+### Option A : Déploiement sur Vercel (Recommandé)
+1. Créer un compte sur [vercel.com](https://vercel.com) (connexion directe avec GitHub).
+2. Cliquer sur **« Add New... » > « Project »**.
+3. Sélectionner le référentiel **`fadelilyas01/AgoraExam`**.
+4. Le fichier [`vercel.json`](vercel.json) est automatiquement détecté (Framework: Vite, Répertoire: `dist`).
+5. Cliquer sur **« Deploy »** : le portail est en ligne sous une adresse sécurisée HTTPS (`agoraexam.vercel.app`).
+6. Tout nouveau commit poussé sur la branche `main` déclenche un redéploiement automatique sans interruption de service.
+
+### Option B : Déploiement sur Netlify
+1. Se connecter sur [app.netlify.com](https://app.netlify.com) avec GitHub.
+2. Cliquer sur **« Add new site » > « Import an existing project » > « GitHub »**.
+3. Choisir le dépôt **`fadelilyas01/AgoraExam`**.
+4. Le fichier [`netlify.toml`](netlify.toml) configure automatiquement les règles de build et les redirections SPA.
+5. Cliquer sur **« Deploy AgoraExam »**.
+
+### Option C : Ligne de commande locale (CLI)
+```bash
+# Déploiement Vercel direct :
+npx vercel --prod
+
+# Déploiement Netlify direct :
+npx netlify deploy --prod --dir=dist
+```
