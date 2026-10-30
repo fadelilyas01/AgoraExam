@@ -16,14 +16,17 @@ Procédures d'installation, de configuration et d'exploitation pour étudiants, 
 
 ### A. Téléchargement et installation
 
-- **Windows 10 / 11 :**
-  - Télécharger l'installateur `AgoraExam-Setup.exe`.
-  - Exécuter le fichier d'installation (installation locale dans `%LocalAppData%`, ne requérant pas de privilèges administrateur).
-- **macOS :**
-  - Ouvrir l'image disque `AgoraExam.dmg` et déplacer l'application dans le dossier `/Applications`.
-  - Lors du premier lancement, autoriser l'accès à la caméra et au microphone dans les réglages système de macOS (*Confidentialité et sécurité*).
-- **Linux :**
-  - Télécharger le paquet `AgoraExam.AppImage`, attribuer les droits d'exécution (`chmod +x AgoraExam.AppImage`) et exécuter le binaire.
+Téléchargez le binaire officiel correspondant à votre ordinateur :
+
+| Système d'exploitation | Format | Lien de téléchargement direct | Instructions |
+| :--- | :---: | :---: | :--- |
+| **Windows (10/11)** | `.exe` | [Télécharger AgoraExam.exe](https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.exe) | Exécuter directement (installation utilisateur sans mot de passe admin). |
+| **macOS (Apple Silicon M1/M2/M3/M4)** | `.dmg` | [Télécharger AgoraExam-aarch64.dmg](https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-aarch64.dmg) | Ouvrir le `.dmg` et glisser l'icône dans `/Applications`. |
+| **macOS (Processeur Intel)** | `.dmg` | [Télécharger AgoraExam-x64.dmg](https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-x64.dmg) | Ouvrir le `.dmg` et glisser l'icône dans `/Applications`. |
+| **Linux (Ubuntu, Debian, Fedora)** | `.AppImage` | [Télécharger AgoraExam.AppImage](https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.AppImage) | Rendre exécutable (`chmod +x`) et lancer. |
+
+> [!NOTE]
+> Sur macOS, lors du premier démarrage, autorisez l'accès à la caméra et au microphone lorsque le système vous le demande (*Réglages Système > Confidentialité et sécurité*).
 
 ### B. Vérification préalable (Test à froid)
 
@@ -54,6 +57,9 @@ Il est recommandé de tester l'installation 24 heures avant l'examen officiel :
      style="background: #0ea5e9; color: #ffffff; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-weight: 600; display: inline-block;">
     Ouvrir l'épreuve dans AgoraExam
   </a>
+  <p style="margin-top: 10px; font-size: 12px; color: #94a3b8;">
+    Pas encore installé ? <a href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.exe" style="color: #38bdf8;">Télécharger le logiciel AgoraExam</a>
+  </p>
 </div>
 ```
 

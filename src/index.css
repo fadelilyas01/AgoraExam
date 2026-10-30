@@ -24,10 +24,8 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased selection:bg-zinc-800 selection:text-zinc-100;
+    @apply bg-background text-foreground antialiased font-sans selection:bg-emerald-500/20 selection:text-emerald-300;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    user-select: none;
-    -webkit-user-select: none;
   }
 
   /* Focus ring universel accessible WCAG AA */

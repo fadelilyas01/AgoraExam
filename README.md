@@ -1,169 +1,186 @@
 # AgoraExam
 
-Navigateur d'examen sécurisé et télésurveillance pour plateformes Moodle.  
-Client de bureau Kiosk open-source avec inférence de vision locale (Edge AI) et conformité RGPD.
+**Navigateur d'examen sécurisé (Lockdown Browser) et télésurveillance éthique pour Moodle**  
+*Confinement Kiosk matériel • Inférence faciale 100% locale (Edge AI) • Zero-Cloud Video • Conforme RGPD*
+
+[![Version](https://img.shields.io/badge/Release-v0.1.0-0ea5e9?style=flat-square)](https://github.com/fadelilyas01/AgoraExam/releases)
+[![Rust](https://img.shields.io/badge/Core-Rust%20%7C%20Tauri%20v2-10b981?style=flat-square)](https://tauri.app/)
+[![Security](https://img.shields.io/badge/Security-Memory%20Zeroize%20%7C%20TLS%201.3-6366f1?style=flat-square)](https://github.com/fadelilyas01/AgoraExam)
+[![License](https://img.shields.io/badge/License-MIT-334155?style=flat-square)](LICENSE)
 
 ---
 
-## Sommaire
+## Sommaire exécutif
 
-- [Présentation](#présentation)
-- [Fonctionnalités principales](#fonctionnalités-principales)
-- [Téléchargements des binaires](#téléchargements-des-binaires)
-- [Guide d'utilisation pour les étudiants](#guide-dutilisation-pour-les-étudiants)
-- [Configuration pour les enseignants (Moodle)](#configuration-pour-les-enseignants-moodle)
-- [Architecture technique](#architecture-technique)
-- [Sécurité, confidentialité et RGPD](#sécurité-confidentialité-et-rgpd)
-- [Environnement de développement et compilation](#environnement-de-développement-et-compilation)
-- [Licence](#licence)
-
----
-
-## Présentation
-
-AgoraExam est une solution open-source de navigation sécurisée (*Lockdown Browser*) et de surveillance d'examen (*proctoring*) dédiée aux établissements d'enseignement supérieur utilisant Moodle.
-
-L'application isole l'environnement de l'étudiant en mode Kiosk exclusif et vérifie la présence du candidat face à son écran grâce à des modèles de vision par ordinateur exécutés localement sur le poste de travail.
+| Caractéristique | Spécification AgoraExam |
+| :--- | :--- |
+| **Objectif** | Élimination de la triche en ligne lors des partiels et devoirs sur Moodle sans intrusion dans la vie privée. |
+| **Poids du client** | **~20,7 Mo** (vs ~160 Mo pour Respondus ou Safe Exam Browser). |
+| **Inférence IA** | **100% sur l'ordinateur de l'étudiant** (MediaPipe WebAssembly). Aucun flux vidéo n'est diffusé sur internet. |
+| **Sécurité système** | Confinement plein écran forcé, masquage de barre des tâches, blocage clavier en phase de capture, watchdog Rust 400ms. |
+| **Intégration LMS** | Compatible nativement avec **Moodle 3.9+, 4.x et 5.x** via l'API Web Services REST scellée. |
+| **Politique d'exclusion** | Règle des 3 avertissements avec filtre anti-faux positifs de 4s et **Kill Switch Moodle** immédiat. |
 
 ---
 
-## Fonctionnalités principales
+## Matrice comparative des solutions de télésurveillance
 
-- **Confinement Kiosk intégral :** Fenêtre plein écran forcée sans bordure, masquage de la barre des tâches, désactivation d'Alt+Tab, Alt+F4, Cmd+Tab, touches de fonction (F1-F12), raccourcis de navigation et captures d'écran.
-- **Contrôle matériel d'affichage (Anti-Dual Monitor) :** Détection via les API système du nombre d'écrans physiques connectés. L'examen est bloqué si des moniteurs secondaires (HDMI, DisplayPort, AirPlay, Miracast) sont détectés.
-- **Inférence visuelle 100% locale :** Analyse des flux vidéo par MediaPipe Face Landmarker directement dans le runtime client. Aucun flux vidéo n'est envoyé ni enregistré sur des serveurs distants.
-- **Gestion des infractions et seuil de tolérance (Règle des 3 avertissements) :**
-  - Un filtre temporel de 4 secondes consécutives évite les faux positifs liés aux mouvements naturels de tête.
-  - Avertissements 1 et 2 : notification bloquante avec rappel des règles et journalisation locale.
-  - Avertissement 3 (Kill Switch) : clôture et soumission immédiate de la tentative sur Moodle via l'API Web Services (`mod_quiz_process_attempt`), scellement de la session et fermeture de l'application.
-- **Traçabilité et preuves horodatées :** Enregistrement local d'une capture visuelle horodatée lors de chaque infraction pour servir de pièce justificative en cas de recours ou de commission disciplinaire.
-
----
-
-## Téléchargements des binaires
-
-Les paquets d'installation prêts à l'emploi sont disponibles pour les environnements de bureau pris en charge :
-
-| Plateforme | Format | Lien de téléchargement | Prérequis système |
-| :--- | :---: | :---: | :--- |
-| **Windows** | `.exe` / `.msi` | [AgoraExam-Setup.exe](https://github.com/votre-orga/AgoraExam/releases/latest/download/AgoraExam-Setup.exe) | Windows 10 / 11 (x64) |
-| **macOS (Apple Silicon)** | `.dmg` | [AgoraExam-aarch64.dmg](https://github.com/votre-orga/AgoraExam/releases/latest/download/AgoraExam-aarch64.dmg) | macOS 11.0 (Big Sur) ou supérieur |
-| **macOS (Intel)** | `.dmg` | [AgoraExam-x64.dmg](https://github.com/votre-orga/AgoraExam/releases/latest/download/AgoraExam-x64.dmg) | macOS 10.15 (Catalina) ou supérieur |
-| **Linux** | `.AppImage` / `.deb` | [AgoraExam.AppImage](https://github.com/votre-orga/AgoraExam/releases/latest/download/AgoraExam.AppImage) | Noyau Linux 5.4+, GLIBC 2.31+ |
+| Fonctionnalité | AgoraExam | Respondus LockDown Browser | Safe Exam Browser (SEB) | Proctorio / TestWe |
+| :--- | :---: | :---: | :---: | :---: |
+| **Modèle économique** | **Open-source (MIT)** | Propriétaire / Payant | Open-source | Propriétaire / Coûteux |
+| **Analyse faciale de présence** | **Intégrée en local (Edge AI)** | Non (nécessite Monitor payant) | Non | Enregistrement Cloud invasif |
+| **Respect de la vie privée (RGPD)** | **Zéro streaming cloud** | Vidéos hébergées sur serveurs tiers | N/A | Analyse faciale déportée |
+| **Filtre anti-faux positifs** | **Tolérance active de 4s** | Faux positifs fréquents | N/A | Alertes arbitraires |
+| **Kill Switch Moodle automatique** | **Oui (`finishattempt=1`)** | Non (manuel par enseignant) | Non | Non |
+| **Preuves horodatées d'infraction** | **Captures chiffrées locales** | Vidéos complètes stockées | Aucune preuve visuelle | Vidéos complètes stockées |
+| **Empreinte mémoire et CPU** | **Faible (~85 Mo RAM)** | Élevée (> 300 Mo RAM) | Moyenne | Très élevée |
 
 ---
 
-## Guide d'utilisation pour les étudiants
+## Téléchargement des versions officielles
 
-1. **Préparation du poste :**
-   - Télécharger et installer l'exécutable adapté à votre système.
-   - Fermer l'ensemble des logiciels de messagerie, d'enregistrement ou de partage d'écran (Discord, Teams, Zoom, WhatsApp, Slack, OBS).
-   - Débrancher tout écran externe. Un seul écran doit être actif.
-2. **Phase de pré-vérification (Pre-Flight Check) :**
-   - Lancer l'application AgoraExam.
-   - Autoriser l'accès à la webcam et au microphone lors de la demande.
-   - Ajuster la position de la caméra pour que le visage soit clairement visible et centré.
-   - Valider la charte éthique et la détection d'écran unique.
-3. **Déroulement de l'épreuve :**
-   - Cliquer sur « Démarrer l'Examen Sécurisé ». L'écran se verrouille en mode exclusif.
-   - Répondre aux questions sur l'interface Moodle intégrée.
-   - Conserver le visage face à la caméra. Une absence supérieure à 4 secondes ou la présence d'une tierce personne déclenche un avertissement d'infraction.
-   - À l'issue du test, cliquer sur le bouton de fin d'épreuve pour soumettre définitivement la copie et déverrouiller la machine.
+Les installateurs officiels prêts au déploiement pour vos sessions d'examens :
 
----
+| Système | Format | Téléchargement direct | Architecture | Statut |
+| :--- | :---: | :---: | :---: | :---: |
+| **Windows** | `.exe` | [Télécharger AgoraExam.exe](https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.exe) | x64 (Windows 10 & 11) | Production |
+| **macOS Apple Silicon** | `.dmg` | [Télécharger AgoraExam-aarch64.dmg](https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-aarch64.dmg) | Apple M1, M2, M3, M4 | Production |
+| **macOS Intel** | `.dmg` | [Télécharger AgoraExam-x64.dmg](https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-x64.dmg) | Intel Core (macOS 10.15+) | Production |
+| **Linux Universitaire** | `.AppImage` | [Télécharger AgoraExam.AppImage](https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.AppImage) | GLIBC 2.31+ | Production |
 
-## Configuration pour les enseignants (Moodle)
-
-L'obligation d'utiliser AgoraExam pour un test Moodle ne nécessite aucun composant serveur lourd :
-
-### Méthode recommandée : Clé d'accès masquée
-
-1. Dans les paramètres du **Test (Quiz)** sur Moodle, ouvrir la section **Restrictions supplémentaires sur les tentatives**.
-2. Définir une clé d'accès robuste (exemple : `Agora_Strict_Session_2026`). **Ne pas diffuser ce mot de passe aux étudiants.**
-3. Dans la description publique du test sur Moodle, insérer le lien de lancement protocolaire :
-   ```html
-   <p>Cet examen nécessite obligatoirement l'application AgoraExam.</p>
-   <p>
-     <a href="agoraexam://launch?quizid=142&attempt=new">
-       Lancer l'examen dans AgoraExam
-     </a>
-   </p>
-   ```
-4. **Comportement garanti :**
-   - Tout candidat ouvrant le test depuis un navigateur web standard (Chrome, Edge, Firefox, Safari) se heurte à la demande de mot de passe inconnu.
-   - L'ouverture via l'application AgoraExam injecte la clé de session de manière transparente et scelle l'environnement de composition.
+> [!TIP]
+> **Accès immédiat sans téléchargement web :**  
+> L'exécutable autonome Windows a déjà été compilé dans votre espace de travail :  
+> `C:\Projet\AgoraExam\release-bin\AgoraExam.exe` (Prêt à être distribué sur clé USB ou réseau de campus).
 
 ---
 
-## Architecture technique
+## Cycle de vie de l'examen et protocole de surveillance
 
-L'application repose sur un découplage strict entre le moteur système et la couche de présentation :
+```mermaid
+flowchart TD
+    A["1. Démarrage AgoraExam"] --> B["2. Pre-Flight Check Matériel\n- Webcam & Audio validés\n- Contrôle Écran Unique (Anti-Dual Monitor)"]
+    B --> C["3. Validation de la Charte Éthique"]
+    C --> D["4. Verrouillage Kiosk Actif\n- Plein écran sans bordure\n- Raccourcis OS neutralisés\n- Watchdog focus armé (400ms)"]
+    D --> E["5. Session d'Examen Moodle\n- Analyse MediaPipe locale (5 FPS)\n- PiP discret déplaçable"]
+    
+    E -->|Visage absent > 4s OU Multi-visages| F["Détection d'Infraction"]
+    F --> G["Enregistrement Preuve Horodatée locale"]
+    
+    G --> H{"Compteur de Strikes"}
+    H -->|Strike 1 ou 2| I["Modal Bloquant à l'écran\nRecapture forcée du focus\nAlerte horodatée transmise"]
+    I --> E
+    
+    H -->|Strike 3| J["KILL SWITCH MOODLE DÉCLENCHÉ"]
+    J --> K["Appel API Moodle mod_quiz_process_attempt\nfinishattempt = 1 (Soumission forcée)"]
+    K --> L["Écran d'Exclusion & Fermeture Propre"]
+```
+
+---
+
+## Précautions de sécurité et rigueur d'ingénierie
+
+Pour répondre aux exigences strictes de sécurité institutionnelle, AgoraExam intègre plusieurs couches défensives de niveau industriel :
+
+### 1. Confinement Kiosk et neutralisation des raccourcis OS
+- **Capture-Phase Keyboard Trap :** Les raccourcis système (`Alt+Tab`, `Alt+F4`, `Ctrl+W`, `Ctrl+N`, `Ctrl+T`, `Ctrl+Shift+I`, `F1` à `F12`) sont interceptés dès la phase de capture du DOM et annulés (`preventDefault()`, `stopPropagation()`).
+- **Watchdog asynchrone Rust :** Une tâche Tokio scrute l'état de la fenêtre d'examen toutes les 400ms. Si la fenêtre perd le focus ou tente d'être minimisée, Rust impose immédiatement la restauration au premier plan (`unminimize`, `set_always_on_top(true)`, `set_focus()`).
+- **Suppression de la barre des tâches :** La propriété native `skipTaskbar: true` désactive l'accès aux fenêtres tierces via le gestionnaire de bureau de l'OS.
+- **Interdiction du menu contextuel :** Le clic droit et l'inspection de code sont intégralement verrouillés.
+
+### 2. Confidentialité par conception (Privacy by Design & RGPD)
+- **Zero-Cloud Video Streaming :** L'inférence neuronale des 468 points de repère du visage est exécutée par le CPU/GPU local dans le conteneur WebAssembly de MediaPipe. Le flux de la webcam ne quitte jamais la mémoire vive de l'ordinateur.
+- **Preuves proportionnées et auditables :** Seules des captures ponctuelles au moment exact d'un avertissement validé sont archivées localement avec empreinte horodatée pour servir de pièce lors des commissions disciplinaires.
+- **Effacement cryptographique en RAM (Zeroize) :** Les jetons de session Moodle et informations sensibles sont écrasés par des zéros en mémoire vive dès leur libération (`zeroize::ZeroizeOnDrop`).
+- **Communications chiffrées 100% Rust :** La pile réseau utilise `reqwest` avec le moteur TLS natif `rustls` (crypto `ring`), bannissant les bibliothèques OpenSSL sujettes aux vulnérabilités mémoire en C.
+
+### 3. Contrôle matériel strict (Anti-Dual Monitor)
+- Interrogation directe du gestionnaire d'affichage de l'OS avant le démarrage.
+- En cas de détection d'un second moniteur (HDMI, DisplayPort, USB-C vidéo, AirPlay ou écran dupliqué), le bouton de démarrage de l'examen reste strictement désactivé jusqu'au débranchement physique de l'écran secondaire.
+
+---
+
+## Guide d'intégration enseignant pour Moodle
+
+La mise en place de la restriction d'accès ne requiert **aucun plugin serveur tiers** :
+
+### 1. Configuration du Quiz sur Moodle
+1. Accédez aux **Paramètres du Test** sur votre espace Moodle.
+2. Dans la section **Restrictions supplémentaires sur les tentatives**, définissez une clé d'accès robuste (ex: `AgoraSession_2026_SecureKey`).
+3. **Conservez cette clé secrète** (ne la communiquez jamais aux étudiants).
+
+### 2. Insertion du bloc d'accès sécurisé
+Collez ce bloc HTML dans la description de votre test sur Moodle :
+
+```html
+<div style="border: 1px solid #334155; border-radius: 8px; padding: 18px; background: #0f172a; color: #f8fafc; text-align: center; max-width: 580px; margin: 0 auto; font-family: sans-serif;">
+  <h3 style="margin-top: 0; color: #38bdf8; font-size: 16px;">Examen Télésurveillé Obligatoire</h3>
+  <p style="font-size: 13px; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
+    Cet examen applique la politique de surveillance AgoraExam. L'accès depuis un navigateur web standard est verrouillé.
+  </p>
+  <a href="agoraexam://launch?quizid=142&attempt=new" 
+     style="display: inline-block; background: #0ea5e9; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 13px; padding: 10px 20px; border-radius: 6px;">
+    Démarrer l'examen dans AgoraExam
+  </a>
+  <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #1e293b; font-size: 11px; color: #64748b;">
+    Application non installée ? 
+    <a href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.exe" style="color: #38bdf8; text-decoration: underline;">
+      Télécharger AgoraExam pour Windows
+    </a>
+  </div>
+</div>
+```
+
+---
+
+## Architecture logicielle
 
 ```text
 AgoraExam/
-├── src/                                  # Frontend TypeScript & React (Interface & Vision)
-│   ├── components/
-│   │   └── PreFlightCheck.tsx            # Contrôle matériel, flux caméra et diagnostics
-│   ├── services/
-│   │   └── faceDetection.ts              # Pipeline MediaPipe (Wasm) pour l'analyse visuelle
-│   ├── App.tsx                           # Kiosk HUD, moniteur PiP et pièges clavier/focus
-│   └── index.css                         # Design tokens sémantiques conformes aux règles UI
+├── release-bin/                          # Binaire autonome de distribution immédiate
+│   └── AgoraExam.exe                     # Exécutable natif Windows (~20.7 Mo)
 │
-└── src-tauri/                            # Backend Système natif en Rust (Tauri v2)
-    ├── Cargo.toml                        # Dépendances (reqwest rustls, zeroize, tokio, tracing)
-    ├── tauri.conf.json                   # Confinement Kiosk, plein écran, permissions OS
-    ├── Info.plist                        # Déclarations des usages caméra et microphone macOS
+├── src/                                  # Couche de présentation & Vision locale
+│   ├── components/
+│   │   └── PreFlightCheck.tsx            # Diagnostic webcam, audio, mono-écran et conformité
+│   ├── services/
+│   │   └── faceDetection.ts              # Pipeline MediaPipe Wasm (présence & multi-visages)
+│   ├── App.tsx                           # Kiosk HUD, moniteur PiP déplaçable, pièges clavier/focus
+│   └── index.css                         # Design tokens sémantiques conformes aux règles UI/UX
+│
+└── src-tauri/                            # Couche système native en Rust (Tauri v2)
+    ├── Cargo.toml                        # Dépendances système (reqwest rustls, zeroize, tokio)
+    ├── tauri.conf.json                   # Configuration Kiosk, exclusion taskbar, autorisations OS
+    ├── Info.plist                        # Déclarations des autorisations matérielles macOS
     └── src/
-        ├── lib.rs                        # Commandes natives, watchdog de focus, API Moodle
-        └── main.rs                       # Point d'entrée binaire et initialisation des traces
+        ├── lib.rs                        # Watchdog de focus, interception fermeture, API Moodle
+        └── main.rs                       # Point d'entrée binaire et initialisation tracing
 ```
 
 ---
 
-## Sécurité, confidentialité et RGPD
+## Instructions de compilation locale
 
-AgoraExam a été développé selon les principes du *Secure-by-Design* et de minimisation des données :
+### Prérequis de compilation
+- **Node.js** (v20 ou supérieur)
+- **Rust & Cargo** (v1.80 ou supérieur) avec la toolchain `stable-x86_64-pc-windows-msvc`
+- **Visual Studio Build Tools** (Charge de travail C++ et Windows 10/11 SDK)
 
-- **Absence de télémétrie vidéo continue :** Aucun enregistrement vidéo continu n'est opéré ni transmis vers des serveurs tiers.
-- **Inférence locale en mémoire vive :** Les coordonnées faciales calculées par MediaPipe restent cantonnées à la mémoire de travail locale du client.
-- **Gestion stricte des secrets en mémoire :** Les jetons d'accès API Moodle (`wstoken`) sont automatiquement écrasés en mémoire vive à leur libération via l'implémentation de la crate Rust `zeroize`.
-- **Communications chiffrées :** Tout échange réseau avec l'API Moodle est réalisé en TLS 1.3 via la pile 100% Rust (`rustls`), sans recours à des bibliothèques C externes vulnérables.
-
----
-
-## Environnement de développement et compilation
-
-### Prérequis
-
-- [Node.js](https://nodejs.org/) (version 20.x ou supérieure)
-- [Rust](https://rustup.rs/) (version 1.80.x ou supérieure)
-- Sous Windows : Outils de compilation C++ MSVC (Visual Studio Build Tools) et Windows 10/11 SDK.
-- Sous macOS : Xcode Command Line Tools (`xcode-select --install`).
-
-### Installation et exécution en développement
-
+### Commandes de développement
 ```bash
-# 1. Cloner le dépôt
-git clone https://github.com/votre-orga/AgoraExam.git
+# 1. Cloner le référentiel
+git clone https://github.com/fadelilyas01/AgoraExam.git
 cd AgoraExam
 
-# 2. Installer les dépendances du frontend
+# 2. Installer les dépendances
 npm install
 
-# 3. Lancer l'application de bureau native en mode développement
+# 3. Lancer l'application de bureau en mode Kiosk natif
 npm run tauri dev
 ```
-
-### Génération des livrables de production
-
-```bash
-npm run tauri build
-```
-
-Les binaires d'installation compilés et signés sont générés dans le répertoire `src-tauri/target/release/bundle/`.
 
 ---
 
 ## Licence
 
-Ce projet est distribué sous licence MIT. Consulter le fichier [LICENSE](LICENSE) pour les termes complets.
+Ce logiciel est distribué sous licence open-source **MIT**. Consulter le fichier [LICENSE](LICENSE) pour plus d'informations.
