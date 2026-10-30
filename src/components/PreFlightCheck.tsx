@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  ShieldCheck,
   Monitor,
   Camera,
   AlertTriangle,
@@ -8,14 +7,13 @@ import {
   ArrowRight,
   RefreshCw,
   VideoOff,
-  Info,
   Check,
   Eye,
-  Cpu,
   BookOpen,
   CheckCircle2,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
+import { AgoraExamLogo, MoodleLogo } from "./Logos";
 
 interface HardwareStatus {
   singleMonitor: boolean;
@@ -156,13 +154,11 @@ export function PreFlightCheck({
   }, []);
 
   const allChecksPass = hardware.singleMonitor && hardware.cameraReady;
-
   const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
   const handleStartExam = async () => {
     if (!allChecksPass || !agreed) return;
 
-    // Si lancé dans un navigateur Web standard, forcer le plein écran HTML5
     if (typeof document !== "undefined" && !document.fullscreenElement) {
       try {
         await document.documentElement.requestFullscreen();
@@ -181,62 +177,59 @@ export function PreFlightCheck({
   };
 
   return (
-    <div className="flex min-h-screen w-screen items-center justify-center bg-zinc-950 p-6 text-zinc-100 font-sans antialiased">
-      <div className="w-full max-w-2xl rounded-2xl border border-zinc-800/80 bg-zinc-900/80 p-8 shadow-2xl backdrop-blur-md">
-        {/* En-tête / Barre supérieure */}
-        <div className="flex items-center justify-between border-b border-zinc-800/80 pb-5">
+    <div className="flex min-h-screen w-screen items-center justify-center bg-zinc-950 p-4 sm:p-6 text-zinc-100 font-sans antialiased">
+      <div className="w-full max-w-2xl rounded-3xl border border-zinc-800 bg-zinc-900/90 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+        {/* En-tête Institutionnel avec Logo Réel AgoraExam */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800 pb-5 gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800/90 text-emerald-400 border border-zinc-700/60 shadow-inner">
-              <ShieldCheck size={24} />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-950 border border-zinc-800 shadow-md flex-shrink-0">
+              <AgoraExamLogo size={30} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-sm font-semibold tracking-tight text-zinc-100">
+                <h1 className="text-base sm:text-lg font-bold tracking-tight text-zinc-100">
                   AgoraExam
                 </h1>
-                <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-mono text-zinc-400 border border-zinc-700/50">
-                  v0.1.0-secure
+                <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20">
+                  Pre-Flight Check
                 </span>
               </div>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Assistant de vérification matérielle & conformité éthique
+              <p className="text-xs sm:text-sm text-zinc-400 mt-0.5">
+                Vérification du poste d'examen et conformité réglementaire
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             {onOpenDocs && (
               <button
                 onClick={onOpenDocs}
-                className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950/60 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-950/80 px-3 py-2 text-xs sm:text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
                 title="Consulter la documentation"
-                aria-label="Consulter la documentation"
               >
-                <BookOpen size={13} className="text-emerald-400" />
-                <span className="hidden sm:inline">Docs</span>
+                <BookOpen size={14} className="text-emerald-400" />
+                <span>Docs</span>
               </button>
             )}
 
-            <div className="flex rounded-lg bg-zinc-950/60 p-1 border border-zinc-800/60">
+            <div className="flex rounded-xl bg-zinc-950/80 p-1 border border-zinc-800">
               <button
                 onClick={() => setActiveTab("check")}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
+                className={`rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
                   activeTab === "check"
                     ? "bg-zinc-800 text-zinc-100 shadow-sm"
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
-                aria-label="Afficher le diagnostic matériel"
               >
                 Diagnostic
               </button>
               <button
                 onClick={() => setActiveTab("privacy")}
-                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
+                className={`rounded-lg px-3 py-1.5 text-xs sm:text-sm font-semibold transition-all ${
                   activeTab === "privacy"
                     ? "bg-zinc-800 text-zinc-100 shadow-sm"
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
-                aria-label="Afficher les engagements de confidentialité"
               >
                 Confidentialité
               </button>
@@ -245,86 +238,85 @@ export function PreFlightCheck({
             <button
               onClick={requestCameraPermission}
               disabled={isChecking}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-zinc-700/70 bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700 transition-colors disabled:opacity-40"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors disabled:opacity-40"
               title="Relancer le diagnostic"
-              aria-label="Relancer le diagnostic"
             >
-              <RefreshCw size={13} className={isChecking ? "animate-spin" : ""} />
+              <RefreshCw size={14} className={isChecking ? "animate-spin" : ""} />
             </button>
           </div>
         </div>
 
         {activeTab === "privacy" ? (
-          /* Onglet 2 : Charte Éthique & RGPD */
+          /* Onglet 2 : Charte Éthique & RGPD (Zéro Buzzword IA) */
           <div className="py-6 space-y-4">
-            <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/50 space-y-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
-                <Cpu size={15} />
-                <span>Inférence 100% Locale (Edge AI)</span>
+            <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-950/70 space-y-2.5">
+              <div className="flex items-center gap-2 text-sm font-bold text-emerald-400">
+                <Eye size={16} />
+                <span>Traitement Biométrique 100% Embarqué (Edge Computing)</span>
               </div>
-              <p className="text-xs text-zinc-300 leading-relaxed">
-                Contrairement aux logiciels de surveillance traditionnels, AgoraExam n'envoie
-                aucun flux vidéo continu vers des serveurs distants. L'analyse du visage est effectuée
-                directement par le processeur de votre machine via MediaPipe WebAssembly.
+              <p className="text-sm text-zinc-300 leading-relaxed">
+                Contrairement aux plateformes de télésurveillance commerciales, AgoraExam n'envoie
+                aucun flux vidéo continu vers des serveurs distants. L'analyse des repères faciaux est exécutée
+                exclusivement dans la mémoire vive locale de votre machine via WebAssembly.
               </p>
             </div>
 
-            <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-950/50 space-y-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
-                <Eye size={15} className="text-blue-400" />
-                <span>Preuves Proportionnées & Horodatées</span>
+            <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-950/70 space-y-2.5">
+              <div className="flex items-center gap-2 text-sm font-bold text-blue-400">
+                <Lock size={16} />
+                <span>Preuves Scellées Uniquement sur Infraction Avérée</span>
               </div>
-              <p className="text-xs text-zinc-300 leading-relaxed">
-                Seules des photographies ponctuelles lors d'infractions avérées (départ prolongé de plus de 4 secondes
-                ou présence de plusieurs personnes) sont enregistrées pour servir de pièce officielle lors des jurys.
+              <p className="text-sm text-zinc-300 leading-relaxed">
+                Seules les absences prolongées ininterrompues (plus de 4 secondes complètes) ou la présence
+                confirmée d'une tierce personne enregistrent un cliché horodaté pour le jury d'examen.
               </p>
             </div>
 
             <button
               onClick={() => setActiveTab("check")}
-              className="w-full py-2 text-xs font-medium text-emerald-400 hover:underline text-center block"
+              className="w-full py-2.5 text-sm font-semibold text-emerald-400 hover:underline text-center block"
             >
-              ← Revenir au diagnostic matériel
+              ← Revenir au diagnostic du poste
             </button>
           </div>
         ) : (
           /* Onglet 1 : Diagnostic Matériel */
-          <div className="py-5 space-y-5">
+          <div className="py-6 space-y-5">
             {/* Avertissement Mode Navigateur Web vs Application Desktop */}
             {!isTauri ? (
-              <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-200 text-xs space-y-1">
-                <div className="flex items-center gap-2 font-semibold text-amber-300">
-                  <AlertTriangle size={15} />
-                  <span>Aperçu dans Navigateur Web standard (`npm run dev`)</span>
+              <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-200 text-xs sm:text-sm space-y-1.5">
+                <div className="flex items-center gap-2 font-bold text-amber-300">
+                  <AlertTriangle size={16} />
+                  <span>Aperçu dans Navigateur Web</span>
                 </div>
-                <p className="text-[11px] text-zinc-300 leading-relaxed">
-                  Vous exécutez AgoraExam dans un onglet standard de votre navigateur. Les bacs à sable des navigateurs interdisent par sécurité le verrouillage exclusif de votre système d'exploitation (Alt+Tab, blocage des fenêtres tierces).
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  Vous visualisez l'interface dans un navigateur ordinaire. Pour activer le verrouillage réel de l'OS (Alt+Tab, captures d'écran, confinement matériel), lancez l'application native.
                 </p>
-                <div className="pt-1 text-[11px] font-mono text-amber-300 font-medium">
-                  👉 Pour tester le verrouillage réel de l'écran et du système, lancez : <span className="bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">npm run tauri dev</span>
+                <div className="pt-1 text-xs font-mono text-amber-300 font-semibold">
+                  Commande : <span className="bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800">npm run tauri dev</span>
                 </div>
               </div>
             ) : (
-              <div className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-200 text-xs flex items-center gap-2.5">
-                <CheckCircle2 size={16} className="text-emerald-400 flex-shrink-0" />
-                <span className="text-[11px] text-zinc-300">
-                  <strong className="text-emerald-300">Application native Tauri v2 active :</strong> Le confinement Kiosk matériel et la capture exclusive du focus sont armés.
+              <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-200 text-xs sm:text-sm flex items-center gap-3">
+                <CheckCircle2 size={18} className="text-emerald-400 flex-shrink-0" />
+                <span className="text-zinc-200">
+                  <strong className="text-emerald-400">Application native Tauri v2 active :</strong> Le confinement Kiosk matériel et l'interception exclusive du clavier sont armés.
                 </span>
               </div>
             )}
 
             {/* Message d'Erreur Caméra Actionnable */}
             {cameraError && (
-              <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-xs space-y-2">
-                <div className="flex items-center gap-2 font-semibold text-rose-400">
-                  <AlertTriangle size={15} />
+              <div className="p-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-xs sm:text-sm space-y-2">
+                <div className="flex items-center gap-2 font-bold text-rose-400">
+                  <AlertTriangle size={16} />
                   <span>Caméra non disponible</span>
                 </div>
                 <p className="leading-relaxed text-zinc-300">{cameraError}</p>
-                <div className="pt-1 flex gap-2">
+                <div className="pt-1">
                   <button
                     onClick={requestCameraPermission}
-                    className="rounded-md bg-rose-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-600 transition-colors"
+                    className="rounded-xl bg-rose-500 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-rose-600 transition-colors"
                   >
                     Réessayer
                   </button>
@@ -333,118 +325,117 @@ export function PreFlightCheck({
             )}
 
             {/* Cartes des contrôles matériels */}
-            <div className="grid grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Carte 1 : Écran Unique */}
               <div
-                className={`rounded-xl border p-4 transition-colors ${
+                className={`rounded-2xl border p-5 transition-colors ${
                   hardware.singleMonitor
-                    ? "border-zinc-800/90 bg-zinc-950/40"
+                    ? "border-zinc-800 bg-zinc-950/60"
                     : "border-rose-500/40 bg-rose-500/10"
                 }`}
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl ${
                         hardware.singleMonitor
-                          ? "bg-zinc-800 text-zinc-200"
+                          ? "bg-zinc-800 text-zinc-100"
                           : "bg-rose-500/20 text-rose-400"
                       }`}
                     >
-                      <Monitor size={16} />
+                      <Monitor size={18} />
                     </div>
                     <div>
-                      <span className="text-xs font-semibold block text-zinc-200">
+                      <span className="text-sm font-bold block text-zinc-100">
                         Écran Physique
                       </span>
-                      <span className="text-[11px] text-zinc-400 font-mono">
-                        {hardware.monitorCount} écran(s)
+                      <span className="text-xs text-zinc-400 font-mono">
+                        {hardware.monitorCount} écran détecté
                       </span>
                     </div>
                   </div>
                   {hardware.singleMonitor ? (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
-                      <Check size={12} />
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <Check size={14} />
                     </span>
                   ) : (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-500/20 text-rose-400">
-                      <AlertTriangle size={12} />
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-500/20 text-rose-400">
+                      <AlertTriangle size={14} />
                     </span>
                   )}
                 </div>
-                <p className="mt-3 text-[11px] leading-relaxed text-zinc-400">
+                <p className="mt-3 text-xs sm:text-sm leading-relaxed text-zinc-300">
                   {hardware.singleMonitor
-                    ? "Configuration validée (aucun écran externe)."
-                    : "Débranchez vos câbles HDMI / DisplayPort."}
+                    ? "Configuration validée (aucun moniteur externe HDMI/DP)."
+                    : "Débranchez immédiatement vos écrans secondaires."}
                 </p>
               </div>
 
-              {/* Carte 2 : Webcam */}
+              {/* Carte 2 : Webcam & Vision Locale */}
               <div
-                className={`rounded-xl border p-4 transition-colors ${
+                className={`rounded-2xl border p-5 transition-colors ${
                   hardware.cameraReady
-                    ? "border-zinc-800/90 bg-zinc-950/40"
+                    ? "border-zinc-800 bg-zinc-950/60"
                     : "border-amber-500/40 bg-amber-500/10"
                 }`}
               >
                 <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-3">
                     <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl ${
                         hardware.cameraReady
-                          ? "bg-zinc-800 text-zinc-200"
+                          ? "bg-zinc-800 text-zinc-100"
                           : "bg-amber-500/20 text-amber-400"
                       }`}
                     >
-                      <Camera size={16} />
+                      <Camera size={18} />
                     </div>
                     <div>
-                      <span className="text-xs font-semibold block text-zinc-200">
-                        Webcam & IA
+                      <span className="text-sm font-bold block text-zinc-100">
+                        Capteur Webcam
                       </span>
-                      <span className="text-[11px] text-zinc-400 font-mono">
-                        {hardware.cameraReady ? "Opérationnelle" : "En attente"}
+                      <span className="text-xs text-zinc-400 font-mono">
+                        {hardware.cameraReady ? "Opérationnel" : "En attente"}
                       </span>
                     </div>
                   </div>
                   {hardware.cameraReady ? (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
-                      <Check size={12} />
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <Check size={14} />
                     </span>
                   ) : (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
-                      <AlertTriangle size={12} />
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500/20 text-amber-400">
+                      <AlertTriangle size={14} />
                     </span>
                   )}
                 </div>
-                <p className="mt-3 text-[11px] leading-relaxed text-zinc-400">
+                <p className="mt-3 text-xs sm:text-sm leading-relaxed text-zinc-300">
                   {hardware.cameraReady
-                    ? "Flux actif et prêt pour l'analyse faciale."
-                    : "Autorisation requise pour continuer."}
+                    ? "Flux actif et prêt pour la vérification de présence."
+                    : "Autorisation requise pour composer."}
                 </p>
               </div>
             </div>
 
-            {/* Zone de Cadrage Vidéo & Silhouette */}
-            <div className="rounded-xl border border-zinc-800/80 bg-zinc-950/70 p-4">
-              <div className="flex items-center justify-between pb-3 mb-3 border-b border-zinc-800/60 text-xs">
-                <span className="font-semibold text-zinc-200 flex items-center gap-2">
-                  <Camera size={14} className="text-emerald-400" />
-                  Mire de cadrage du visage
+            {/* Zone de Cadrage Vidéo & Viseur Optique */}
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-800 text-xs sm:text-sm">
+                <span className="font-bold text-zinc-200 flex items-center gap-2">
+                  <Camera size={16} className="text-emerald-400" />
+                  Mire Optique de Cadrage Candidat
                 </span>
-                <span className="text-[11px] text-zinc-400 font-mono">
+                <span className="text-xs text-zinc-400 font-mono">
                   {hardware.cameraReady ? "640x480 • 30 FPS" : "Flux inactif"}
                 </span>
               </div>
 
-              <div className="flex gap-4 items-center">
+              <div className="flex flex-col sm:flex-row gap-5 items-center">
                 {/* Cadre vidéo avec coins de visée esthétiques */}
-                <div className="relative h-36 w-48 flex-shrink-0 rounded-lg overflow-hidden bg-black border border-zinc-800 flex items-center justify-center">
+                <div className="relative h-44 w-56 flex-shrink-0 rounded-2xl overflow-hidden bg-black border border-zinc-800 flex items-center justify-center shadow-inner">
                   {isChecking && !hardware.cameraReady ? (
-                    /* Skeleton Loader */
-                    <div className="h-full w-full bg-zinc-900 animate-pulse flex flex-col items-center justify-center text-zinc-600 gap-2">
-                      <RefreshCw size={20} className="animate-spin text-zinc-500" />
-                      <span className="text-[10px]">Initialisation...</span>
+                    <div className="h-full w-full bg-zinc-900 animate-pulse flex flex-col items-center justify-center text-zinc-500 gap-2">
+                      <RefreshCw size={22} className="animate-spin text-zinc-400" />
+                      <span className="text-xs">Initialisation...</span>
                     </div>
                   ) : hardware.cameraReady ? (
                     <>
@@ -455,37 +446,40 @@ export function PreFlightCheck({
                         muted
                         className="h-full w-full object-cover -scale-x-100"
                       />
-                      {/* Viseur esthétique façon caméra pro */}
-                      <div className="absolute inset-2 border border-emerald-500/30 rounded pointer-events-none" />
-                      <div className="absolute top-2 left-2 w-2 h-2 border-t-2 border-l-2 border-emerald-400 pointer-events-none" />
-                      <div className="absolute top-2 right-2 w-2 h-2 border-t-2 border-r-2 border-emerald-400 pointer-events-none" />
-                      <div className="absolute bottom-2 left-2 w-2 h-2 border-b-2 border-l-2 border-emerald-400 pointer-events-none" />
-                      <div className="absolute bottom-2 right-2 w-2 h-2 border-b-2 border-r-2 border-emerald-400 pointer-events-none" />
+                      {/* Viseur optique de précision */}
+                      <div className="absolute inset-3 border border-emerald-500/30 rounded-lg pointer-events-none" />
+                      <div className="absolute top-3 left-3 w-3 h-3 border-t-2 border-l-2 border-emerald-400 pointer-events-none" />
+                      <div className="absolute top-3 right-3 w-3 h-3 border-t-2 border-r-2 border-emerald-400 pointer-events-none" />
+                      <div className="absolute bottom-3 left-3 w-3 h-3 border-b-2 border-l-2 border-emerald-400 pointer-events-none" />
+                      <div className="absolute bottom-3 right-3 w-3 h-3 border-b-2 border-r-2 border-emerald-400 pointer-events-none" />
+                      <div className="absolute bottom-2 inset-x-2 text-center pointer-events-none">
+                        <span className="inline-block rounded-full bg-zinc-950/80 px-2 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/30 backdrop-blur">
+                          Position Valide
+                        </span>
+                      </div>
                     </>
                   ) : (
-                    /* Empty / Inactive state */
-                    <div className="flex flex-col items-center justify-center text-zinc-600 gap-1.5 p-3 text-center">
-                      <VideoOff size={22} />
-                      <span className="text-[10px]">Caméra non initialisée</span>
+                    <div className="flex flex-col items-center justify-center text-zinc-600 gap-2 p-4 text-center">
+                      <VideoOff size={26} />
+                      <span className="text-xs">Caméra non initialisée</span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex-1 text-xs text-zinc-400 leading-relaxed space-y-2">
-                  <p className="text-zinc-300">
+                <div className="flex-1 text-xs sm:text-sm text-zinc-300 leading-relaxed space-y-3">
+                  <p>
                     {hardware.cameraReady
-                      ? "✅ Votre visage est correctement cadré. Assurez-vous d'avoir un éclairage suffisant sur votre visage tout au long de l'épreuve."
-                      : "Le système requiert l'accès à votre webcam pour valider votre présence en toute conformité."}
+                      ? "Votre visage est centré dans la mire. Conservez votre regard orienté vers l'écran durant toute la durée de la composition."
+                      : "AgoraExam requiert l'accès à la webcam pour certifier la présence continue du candidat."}
                   </p>
                   {!hardware.cameraReady && (
                     <button
                       onClick={requestCameraPermission}
                       disabled={isChecking}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-white transition-colors"
-                      aria-label="Autoriser la caméra"
+                      className="inline-flex items-center gap-2 rounded-xl bg-zinc-100 px-4 py-2 text-xs sm:text-sm font-semibold text-zinc-950 hover:bg-white transition-colors"
                     >
-                      <Camera size={13} />
-                      {isChecking ? "Vérification..." : "Activer la Caméra"}
+                      <Camera size={15} />
+                      <span>{isChecking ? "Vérification..." : "Activer la Caméra"}</span>
                     </button>
                   )}
                 </div>
@@ -493,24 +487,24 @@ export function PreFlightCheck({
             </div>
 
             {/* Engagement & Consentement de l'étudiant */}
-            <div className="p-4 rounded-xl bg-zinc-950/60 border border-zinc-800/80 text-xs text-zinc-300 space-y-2.5">
-              <div className="flex items-start gap-2.5">
-                <Lock size={15} className="text-amber-400 flex-shrink-0 mt-0.5" />
-                <p className="text-zinc-400 leading-normal">
+            <div className="p-5 rounded-2xl bg-zinc-950/70 border border-zinc-800 text-xs sm:text-sm text-zinc-300 space-y-3">
+              <div className="flex items-start gap-3">
+                <Lock size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-zinc-300 leading-relaxed">
                   <strong>Règle des 3 Strikes :</strong> Une absence prolongée (+4s) ou la présence
                   d'une tierce personne déclenchera un avertissement. Au 3ème avertissement,
                   l'examen sera automatiquement soumis et scellé sur Moodle.
                 </p>
               </div>
-              <label className="flex items-center gap-2.5 pt-1 text-zinc-200 cursor-pointer select-none">
+              <label className="flex items-center gap-3 pt-1 text-zinc-200 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={agreed}
                   onChange={(e) => setAgreed(e.target.checked)}
                   className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500/20"
                 />
-                <span className="text-xs">
-                  J'accepte le protocole de surveillance locale et le verrouillage plein écran.
+                <span className="text-xs sm:text-sm font-medium">
+                  J'accepte le protocole de vérification locale et le confinement en plein écran exclusif.
                 </span>
               </label>
             </div>
@@ -518,20 +512,19 @@ export function PreFlightCheck({
         )}
 
         {/* Bouton de Démarrage */}
-        <div className="mt-6 flex items-center justify-between border-t border-zinc-800/80 pt-5">
-          <div className="flex items-center gap-2 text-[11px] text-zinc-500">
-            <Info size={13} />
-            <span>Moodle Session ID : #48291-SEC</span>
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between border-t border-zinc-800 pt-5 gap-4">
+          <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
+            <MoodleLogo size={15} />
+            <span>Session Moodle ID : #48291-SEC</span>
           </div>
 
           <button
             onClick={handleStartExam}
             disabled={!allChecksPass || !agreed}
-            className="flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-md shadow-emerald-500/10 active:scale-[0.98]"
-            aria-label="Démarrer l'examen sécurisé"
+            className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-md shadow-emerald-500/10 active:scale-[0.98]"
           >
             <span>Démarrer l'Examen Sécurisé</span>
-            <ArrowRight size={15} />
+            <ArrowRight size={17} />
           </button>
         </div>
       </div>

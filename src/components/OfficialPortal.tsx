@@ -1,33 +1,34 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  Shield,
   Download,
   BookOpen,
-  Monitor,
   Camera,
-  Cpu,
   Lock,
   ExternalLink,
   Check,
   Copy,
   Search,
-  Sparkles,
   AlertTriangle,
-  GraduationCap,
   Server,
-  Code2,
   CheckCircle2,
   ShieldCheck,
-  Terminal,
   Eye,
   Sliders,
-  Key,
   VideoOff,
   Menu,
   X,
   ChevronDown,
   ChevronRight,
+  Monitor,
 } from "lucide-react";
+import {
+  AgoraExamLogo,
+  WindowsLogo,
+  AppleLogo,
+  LinuxLogo,
+  MoodleLogo,
+  GitHubLogo,
+} from "./Logos";
 
 interface OfficialPortalProps {
   initialTab?: "home" | "docs" | "download";
@@ -64,7 +65,7 @@ const DOC_GROUPS: DocGroup[] = [
     group: "Bien Démarrer",
     items: [
       { id: "intro", title: "Présentation Générale", desc: "Vision & architecture du navigateur" },
-      { id: "edge-ai", title: "Architecture & RGPD", desc: "Inférence 100% locale sans cloud", badge: "Éthique" },
+      { id: "edge-ai", title: "Vision Locale & RGPD", desc: "Traitement 100% sur l'appareil sans cloud", badge: "Souverain" },
       { id: "telechargement", title: "Matrice Téléchargements", desc: "Binaires Windows, macOS & Linux" },
     ],
   },
@@ -146,7 +147,6 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Trouver le titre de la section active pour la barre mobile
   const getActiveDocTitle = (): string => {
     for (const grp of DOC_GROUPS) {
       const found = grp.items.find((item) => item.id === activeDocSection);
@@ -211,15 +211,15 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
     };
   }, [sandboxStream]);
 
-  const generatedMoodleHtml = `<!-- Bloc AgoraExam pour description de quiz Moodle -->
+  const generatedMoodleHtml = `<!-- Bloc AgoraExam officiel pour description de quiz Moodle -->
 <div style="background:#09090b; border:1px solid #27272a; border-radius:12px; padding:24px; text-align:center; max-width:560px; margin:20px auto; font-family:'Inter',system-ui,sans-serif; color:#f4f4f5;">
   <div style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px;">
     <span style="background:#10b981; width:10px; height:10px; border-radius:50%; display:inline-block;"></span>
-    <span style="font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:#10b981; font-weight:700;">Examen Télésurveillé</span>
+    <span style="font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:#10b981; font-weight:700;">Épreuve Officielle Sécurisée</span>
   </div>
   <h3 style="margin:0 0 10px 0; font-size:18px; font-weight:700; color:#ffffff;">${examName}</h3>
   <p style="font-size:14px; color:#a1a1aa; margin:0 0 18px 0; line-height:1.6;">
-    Cet examen exige l'utilisation d'<strong>AgoraExam</strong>. Débranchez tout écran externe et fermez Discord, Teams ou Zoom avant d'ouvrir le test.
+    Cet examen exige l'utilisation d'<strong>AgoraExam</strong>. Débranchez tout écran externe et fermez toute application tierce avant d'ouvrir le test.
   </p>
   <a href="agoraexam://launch?quizid=${moodleQuizId}&host=${encodeURIComponent(moodleUrl)}" 
      style="display:inline-block; background:#10b981; color:#09090b; font-weight:700; font-size:14px; padding:12px 26px; border-radius:8px; text-decoration:none; box-shadow:0 4px 12px rgba(16,185,129,0.25);">
@@ -234,14 +234,14 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
       {/* ========================================================================= */}
       <header className="sticky top-0 z-50 w-full border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md">
         <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-12">
-          {/* Logo Brand */}
+          {/* Logo Brand Officiel */}
           <div className="flex items-center gap-6 lg:gap-8">
             <button
               onClick={() => changeTab("home")}
               className="flex items-center gap-3 text-left group focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 text-emerald-400 group-hover:border-emerald-500/50 transition-colors shadow-sm">
-                <Shield size={22} />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-emerald-500/50 transition-colors shadow-sm">
+                <AgoraExamLogo size={26} />
               </div>
               <div>
                 <div className="flex items-center gap-2">
@@ -297,7 +297,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               rel="noreferrer"
               className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/80 px-3.5 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
             >
-              <Code2 size={16} />
+              <GitHubLogo size={16} />
               <span>GitHub</span>
               <ExternalLink size={13} className="text-zinc-500" />
             </a>
@@ -397,7 +397,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 rel="noreferrer"
                 className="flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 py-3 text-sm font-semibold text-zinc-300 hover:text-white"
               >
-                <Code2 size={16} />
+                <GitHubLogo size={16} />
                 <span>Code Source sur GitHub</span>
                 <ExternalLink size={13} className="text-zinc-500" />
               </a>
@@ -425,24 +425,20 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
         <div className="space-y-20 sm:space-y-28 pb-24">
           {/* Hero Section */}
           <section className="relative overflow-hidden pt-12 sm:pt-20 lg:pt-28 text-center px-4 sm:px-6 max-w-5xl mx-auto space-y-6 sm:space-y-8">
-            {/* Pill Notification */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs sm:text-sm font-medium text-emerald-300">
-              <Sparkles size={14} className="text-emerald-400" />
-              <span>Version 0.1.0 Stable Disponible — Alternative Libre à Respondus</span>
+            {/* Pill Notification Institutionnelle (Zéro Cliché IA) */}
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs sm:text-sm font-medium text-emerald-300">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400" />
+              <span>Version 0.1.0 Stable Disponible — Alternative Open-Source et Souveraine à Respondus</span>
             </div>
 
-            {/* Titre & Sous-titre */}
+            {/* Titre & Sous-titre Épurés et Rigoureux */}
             <div className="space-y-4 sm:space-y-5 max-w-4xl mx-auto">
               <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-100 leading-[1.15]">
-                Le Navigateur d'Examen Sécurisé &{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">
-                  Télésurveillance Éthique
-                </span>{" "}
-                pour Moodle
+                Le Navigateur d'Examen Sécurisé & Verrouillage Kiosk pour Moodle
               </h1>
               <p className="text-base sm:text-lg lg:text-xl text-zinc-300 max-w-3xl mx-auto leading-relaxed">
-                Verrouillage système impénétrable (Kiosk Mode) et surveillance faciale par intelligence artificielle
-                exécutée <strong>100% sur l'ordinateur de l'étudiant</strong>. Zéro flux vidéo dans le cloud. Conforme RGPD.
+                Verrouillage hermétique du système d'exploitation et vérification de présence biométrique exécutée{" "}
+                <strong>100% sur l'ordinateur de l'étudiant</strong>. Zéro flux vidéo dans le cloud. Conforme RGPD et souveraineté académique.
               </p>
             </div>
 
@@ -454,7 +450,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                   download="AgoraExam-Setup.exe"
                   className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-7 py-3.5 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
                 >
-                  <Download size={18} />
+                  <WindowsLogo size={18} />
                   <span>Télécharger pour Windows (.exe)</span>
                 </a>
               ) : (
@@ -462,7 +458,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                   onClick={() => changeTab("download")}
                   className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-7 py-3.5 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
                 >
-                  <Download size={18} />
+                  {detectedOs === "mac" ? <AppleLogo size={18} /> : <LinuxLogo size={18} />}
                   <span>
                     Télécharger pour {detectedOs === "mac" ? "macOS (.dmg)" : "Linux (.AppImage)"}
                   </span>
@@ -493,23 +489,26 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               </span>
             </div>
 
-            {/* Mockup / Aperçu Réaliste de l'Interface */}
+            {/* Mockup / Aperçu Réaliste de l'Interface de l'Application Kiosk */}
             <div className="pt-6 sm:pt-8">
               <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-2 sm:p-3 shadow-2xl ring-1 ring-zinc-800/80 max-w-4xl mx-auto overflow-hidden">
                 <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:p-6 text-left space-y-4">
-                  {/* Fausse barre de titre */}
+                  {/* Fausse barre de titre avec Logo Réel AgoraExam */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800 pb-3 gap-2">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full bg-rose-500/80" />
-                      <div className="h-3 w-3 rounded-full bg-amber-500/80" />
-                      <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
-                      <span className="ml-2 text-xs sm:text-sm font-mono text-zinc-300">
-                        AgoraExam - Session Verrouillée [Kiosk Mode]
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-1.5 mr-2">
+                        <div className="h-3 w-3 rounded-full bg-rose-500/80" />
+                        <div className="h-3 w-3 rounded-full bg-amber-500/80" />
+                        <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
+                      </div>
+                      <AgoraExamLogo size={18} />
+                      <span className="text-xs sm:text-sm font-mono text-zinc-200 font-semibold">
+                        AgoraExam • Session Kiosk Verrouillée
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs font-mono text-emerald-400">
                       <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                      Inférence Locale MediaPipe : 30 FPS
+                      Vérification de Présence Locale : 30 FPS (0 flux cloud)
                     </div>
                   </div>
 
@@ -517,7 +516,10 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
                     <div className="md:col-span-2 p-4 sm:p-5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 space-y-3">
                       <div className="flex items-center justify-between text-xs sm:text-sm font-mono text-zinc-400">
-                        <span>Épreuve : Algorithmique Avancée</span>
+                        <span className="flex items-center gap-1.5">
+                          <MoodleLogo size={14} />
+                          <span>Épreuve : Algorithmique Avancée</span>
+                        </span>
                         <span className="text-emerald-400 font-semibold">Question 3 / 8</span>
                       </div>
                       <p className="text-sm sm:text-base text-zinc-200 leading-relaxed">
@@ -540,7 +542,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                       </div>
                       <div className="text-xs sm:text-sm text-zinc-400 font-mono pt-3 border-t border-zinc-800 flex items-center justify-between">
                         <span>Strikes : 0 / 3</span>
-                        <span className="text-emerald-400 font-semibold">Statut OK</span>
+                        <span className="text-emerald-400 font-semibold">Statut Conforme</span>
                       </div>
                     </div>
                   </div>
@@ -556,7 +558,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 L'Excellence Technique au Service de la Justice Académique
               </h2>
               <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                Conçu pour éliminer la triche sans transformer l'ordinateur personnel de l'étudiant en mouchard intrusif.
+                Conçu pour garantir l'intégrité de l'examen sans transformer l'ordinateur de l'étudiant en mouchard intrusif.
               </p>
             </div>
 
@@ -583,14 +585,14 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 </p>
               </div>
 
-              {/* Carte 3 */}
+              {/* Carte 3 - Vision Locale (Non-Hype AI) */}
               <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3.5 hover:border-zinc-700 transition-colors">
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
-                  <Cpu size={22} />
+                  <Eye size={22} />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-zinc-100">IA Éthique & Locale (Edge AI)</h3>
+                <h3 className="text-base sm:text-lg font-bold text-zinc-100">Vision Embarquée Souveraine</h3>
                 <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                  Inférence MediaPipe WebAssembly exécutée dans la RAM de l'étudiant. Aucun flux vidéo n'est envoyé vers des serveurs distants.
+                  Analyse des repères faciaux exécutée localement dans la mémoire vive de l'ordinateur. Aucun flux vidéo n'est envoyé vers des serveurs distants.
                 </p>
               </div>
 
@@ -616,10 +618,10 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 </p>
               </div>
 
-              {/* Carte 6 */}
+              {/* Carte 6 - Moodle Logo */}
               <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3.5 hover:border-zinc-700 transition-colors">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800 text-teal-400 border border-zinc-700/60">
-                  <GraduationCap size={22} />
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800 text-orange-400 border border-zinc-700/60">
+                  <MoodleLogo size={22} />
                 </div>
                 <h3 className="text-base sm:text-lg font-bold text-zinc-100">Zéro Plugin Moodle Obligatoire</h3>
                 <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
@@ -646,7 +648,10 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               </div>
 
               <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-950/70 space-y-3">
-                <span className="text-xs font-mono font-bold text-blue-400 uppercase tracking-wider">Pour l'Enseignant</span>
+                <div className="flex items-center gap-2">
+                  <MoodleLogo size={15} />
+                  <span className="text-xs font-mono font-bold text-orange-400 uppercase tracking-wider">Pour l'Enseignant</span>
+                </div>
                 <h4 className="text-base sm:text-lg font-bold text-zinc-100">Générateur Moodle Intégré</h4>
                 <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
                   Renseignez l'ID du test et copiez le bloc HTML sécurisé. Les étudiants sans AgoraExam ne peuvent pas déverrouiller l'accès.
@@ -666,6 +671,9 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
           {/* Bannière Call To Action Finale */}
           <section className="px-4 sm:px-6 max-w-4xl mx-auto">
             <div className="rounded-3xl border border-zinc-800 bg-zinc-900/60 p-8 sm:p-12 text-center space-y-6 shadow-2xl">
+              <div className="flex justify-center mb-2">
+                <AgoraExamLogo size={42} />
+              </div>
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-zinc-100 leading-tight">
                 Prêt à sécuriser vos prochains examens universitaires ?
               </h2>
@@ -708,13 +716,13 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             </p>
           </div>
 
-          {/* Grille des plateformes */}
+          {/* Grille des plateformes avec vrais logos officiels */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
             {/* Windows */}
             <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-4 hover:border-zinc-700 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2.5">
-                  <Monitor size={20} className="text-blue-400" />
+                  <WindowsLogo size={22} />
                   Windows 10 & 11 (64-bit)
                 </span>
                 <span className="rounded bg-emerald-500/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20">
@@ -730,7 +738,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                   download="AgoraExam-Setup.exe"
                   className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 py-3.5 px-4 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-md shadow-emerald-500/10 active:scale-[0.98]"
                 >
-                  <Download size={18} />
+                  <WindowsLogo size={18} />
                   <span>Télécharger AgoraExam-Setup.exe (20.7 Mo)</span>
                 </a>
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-zinc-400">
@@ -757,7 +765,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-4 hover:border-zinc-700 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2.5">
-                  <Cpu size={20} className="text-emerald-400" />
+                  <AppleLogo size={22} className="text-zinc-100" />
                   macOS (Apple Silicon M1 à M4)
                 </span>
                 <span className="rounded bg-zinc-800 px-2.5 py-0.5 text-xs font-mono text-zinc-300">
@@ -772,7 +780,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                   href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-aarch64.dmg"
                   className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-zinc-100 py-3.5 px-4 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-white transition-colors"
                 >
-                  <Download size={18} />
+                  <AppleLogo size={18} />
                   <span>Télécharger AgoraExam-aarch64.dmg (12.8 Mo)</span>
                 </a>
               </div>
@@ -786,7 +794,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-4 hover:border-zinc-700 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2.5">
-                  <Monitor size={20} className="text-zinc-400" />
+                  <AppleLogo size={22} className="text-zinc-400" />
                   macOS (Processeurs Intel)
                 </span>
                 <span className="rounded bg-zinc-800 px-2.5 py-0.5 text-xs font-mono text-zinc-300">
@@ -801,7 +809,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                   href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-x64.dmg"
                   className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl border border-zinc-700 bg-zinc-800 py-3.5 px-4 text-sm sm:text-base font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors"
                 >
-                  <Download size={18} />
+                  <AppleLogo size={18} />
                   <span>Télécharger AgoraExam-x64.dmg (13.4 Mo)</span>
                 </a>
               </div>
@@ -815,7 +823,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-4 hover:border-zinc-700 transition-colors">
               <div className="flex items-center justify-between">
                 <span className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2.5">
-                  <Server size={20} className="text-amber-400" />
+                  <LinuxLogo size={22} />
                   Linux (Ubuntu, Debian, Fedora)
                 </span>
                 <span className="rounded bg-zinc-800 px-2.5 py-0.5 text-xs font-mono text-zinc-300">
@@ -830,7 +838,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                   href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.AppImage"
                   className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl border border-zinc-700 bg-zinc-800 py-3.5 px-4 text-sm sm:text-base font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors"
                 >
-                  <Download size={18} />
+                  <LinuxLogo size={18} />
                   <span>Télécharger AgoraExam.AppImage (15.1 Mo)</span>
                 </a>
               </div>
@@ -1044,10 +1052,11 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                       <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20">
                         v0.1.0 Stable
                       </span>
-                      <span className="text-xs sm:text-sm text-zinc-400 font-mono">Architecture Kiosk & Edge AI</span>
+                      <span className="text-xs sm:text-sm text-zinc-400 font-mono">Architecture Kiosk & Vision Locale</span>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-100">
-                      Présentation d'AgoraExam
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-100 flex items-center gap-3">
+                      <AgoraExamLogo size={32} />
+                      <span>Présentation d'AgoraExam</span>
                     </h1>
                     <p className="text-base sm:text-lg text-zinc-300 leading-relaxed">
                       Alternative open-source et souveraine aux navigateurs d'examen propriétaires (Respondus, Safe Exam Browser, Proctorio).
@@ -1072,11 +1081,11 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
 
                     <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-950/60 space-y-2.5">
                       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                        <Cpu size={18} />
+                        <Eye size={18} />
                       </div>
-                      <h3 className="text-sm sm:text-base font-bold text-zinc-100">Inférence Edge AI</h3>
+                      <h3 className="text-sm sm:text-base font-bold text-zinc-100">Vision Locale Souveraine</h3>
                       <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                        Analyse faciale MediaPipe locale en WebAssembly. Zéro flux vidéo diffusé sur le cloud : respect strict de la vie privée et du RGPD.
+                        Analyse faciale locale en WebAssembly. Zéro flux vidéo diffusé sur le cloud : respect strict de la vie privée et du RGPD.
                       </p>
                     </div>
 
@@ -1152,13 +1161,13 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                     </p>
                   </div>
 
-                  {/* Cartes de téléchargement par plateforme */}
+                  {/* Cartes de téléchargement par plateforme avec VRAIS LOGOS */}
                   <div className="space-y-4">
                     {/* Windows */}
                     <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/70 hover:border-zinc-700 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2.5">
-                          <Monitor size={20} className="text-blue-400" />
+                          <WindowsLogo size={22} />
                           <h3 className="text-base font-bold text-zinc-100">Windows 10 & 11 (64-bit)</h3>
                           <span className="rounded bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
                             Recommandé
@@ -1174,9 +1183,9 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                       <a
                         href="/downloads/AgoraExam-Setup.exe"
                         download="AgoraExam-Setup.exe"
-                        className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors whitespace-nowrap shadow-sm shadow-emerald-500/10 active:scale-[0.98]"
+                        className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors whitespace-nowrap shadow-sm shadow-emerald-500/10"
                       >
-                        <Download size={16} />
+                        <WindowsLogo size={16} />
                         <span>Télécharger AgoraExam-Setup.exe</span>
                       </a>
                     </div>
@@ -1185,7 +1194,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                     <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/70 hover:border-zinc-700 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2.5">
-                          <Cpu size={20} className="text-emerald-400" />
+                          <AppleLogo size={22} className="text-zinc-100" />
                           <h3 className="text-base font-bold text-zinc-100">macOS (Apple Silicon M1 à M4)</h3>
                           <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs font-mono text-zinc-300">
                             ARM64
@@ -1202,7 +1211,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                         href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-aarch64.dmg"
                         className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-zinc-100 px-5 py-3 text-sm font-semibold text-zinc-950 hover:bg-white transition-colors whitespace-nowrap"
                       >
-                        <Download size={16} />
+                        <AppleLogo size={16} />
                         <span>Télécharger AgoraExam-aarch64.dmg</span>
                       </a>
                     </div>
@@ -1211,7 +1220,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                     <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/70 hover:border-zinc-700 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2.5">
-                          <Monitor size={20} className="text-zinc-400" />
+                          <AppleLogo size={22} className="text-zinc-400" />
                           <h3 className="text-base font-bold text-zinc-100">macOS (Processeurs Intel)</h3>
                           <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs font-mono text-zinc-300">
                             x86_64
@@ -1228,7 +1237,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                         href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-x64.dmg"
                         className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800 px-5 py-3 text-sm font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors whitespace-nowrap"
                       >
-                        <Download size={16} />
+                        <AppleLogo size={16} />
                         <span>Télécharger AgoraExam-x64.dmg</span>
                       </a>
                     </div>
@@ -1237,7 +1246,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                     <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/70 hover:border-zinc-700 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2.5">
-                          <Terminal size={20} className="text-amber-400" />
+                          <LinuxLogo size={22} />
                           <h3 className="text-base font-bold text-zinc-100">Linux (Ubuntu, Debian, Fedora)</h3>
                           <span className="rounded bg-zinc-800 px-2 py-0.5 text-xs font-mono text-zinc-300">
                             AppImage
@@ -1254,7 +1263,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                         href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.AppImage"
                         className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800 px-5 py-3 text-sm font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors whitespace-nowrap"
                       >
-                        <Download size={16} />
+                        <LinuxLogo size={16} />
                         <span>Télécharger AgoraExam.AppImage</span>
                       </a>
                     </div>
@@ -1277,7 +1286,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               )}
 
               {/* ================================================================= */}
-              {/* 3. INFERENCE LOCALE & RGPD                                        */}
+              {/* 3. VISION LOCALE & RGPD (NON-HYPE)                                */}
               {/* ================================================================= */}
               {activeDocSection === "edge-ai" && (
                 <article className="space-y-8 animate-in fade-in duration-200">
@@ -1288,7 +1297,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                       </span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-100">
-                      Inférence 100% Locale & RGPD
+                      Vision par Ordinateur Locale & RGPD
                     </h1>
                     <p className="text-base sm:text-lg text-zinc-300 leading-relaxed">
                       Pourquoi AgoraExam respecte scrupuleusement la vie privée des étudiants en bannissant le streaming vidéo cloud.
@@ -1302,10 +1311,10 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                   <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/60 space-y-3">
                     <h3 className="text-base font-bold text-emerald-400 flex items-center gap-2">
                       <Eye size={18} />
-                      <span>Le Modèle Edge AI d'AgoraExam</span>
+                      <span>Le Modèle de Vision Locale d'AgoraExam</span>
                     </h3>
                     <p className="text-sm sm:text-base text-zinc-200 leading-relaxed">
-                      AgoraExam intègre le modèle <strong>MediaPipe Face Landmarker</strong> compilé en WebAssembly natif. L'inférence est effectuée image par image directement sur le processeur (CPU) de l'étudiant. Les points de repère faciaux sont analysés à une cadence maîtrisée (5 images par seconde), puis la mémoire tampon est immédiatement écrasée.
+                      AgoraExam intègre un modèle de détection faciale compilé en WebAssembly natif. L'analyse est effectuée image par image directement sur le processeur (CPU) de l'étudiant. Les points de repère faciaux sont analysés à une cadence maîtrisée (5 images par seconde), puis la mémoire tampon est immédiatement écrasée.
                     </p>
                   </div>
 
@@ -1321,10 +1330,10 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                     </div>
 
                     <div className="p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 space-y-3">
-                      <strong className="text-emerald-400 block text-base font-bold">AgoraExam (Edge AI Souverain)</strong>
+                      <strong className="text-emerald-400 block text-base font-bold">AgoraExam (Vision Locale Souveraine)</strong>
                       <ul className="space-y-2 text-zinc-200 text-sm list-disc list-inside leading-relaxed">
                         <li>Zéro flux vidéo diffusé sur le réseau externe</li>
-                        <li>Inférence faciale 100% confinée en mémoire vive locale</li>
+                        <li>Analyse faciale 100% confinée en mémoire vive locale</li>
                         <li>Fonctionne parfaitement sur des connexions internet modestes</li>
                         <li>Preuves photographiques enregistrées uniquement sur infraction avérée</li>
                       </ul>
@@ -1498,7 +1507,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
 
                     <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/60 space-y-2.5">
                       <h3 className="text-sm sm:text-base font-bold text-zinc-100 flex items-center gap-2">
-                        <Lock size={18} className="text-emerald-400" />
+                        <AppleLogo size={18} className="text-zinc-200" />
                         <span>Autorisations Système macOS</span>
                       </h3>
                       <p className="text-sm sm:text-base text-zinc-200 leading-relaxed">
@@ -1527,7 +1536,8 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 <article className="space-y-8 animate-in fade-in duration-200">
                   <div className="border-b border-zinc-800 pb-6 space-y-3">
                     <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20">
+                      <MoodleLogo size={18} />
+                      <span className="rounded-full bg-orange-500/10 px-3 py-1 text-xs font-mono font-semibold text-orange-400 border border-orange-500/20">
                         Professeurs & Formateurs
                       </span>
                     </div>
@@ -1541,7 +1551,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
 
                   <div className="p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 space-y-2.5">
                     <strong className="text-sm sm:text-base font-bold text-emerald-300 flex items-center gap-2">
-                      <Key size={18} />
+                      <Lock size={18} />
                       <span>La Méthode par Mot de Passe Masqué</span>
                     </strong>
                     <p className="text-sm sm:text-base text-zinc-200 leading-relaxed">
@@ -1573,7 +1583,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                       onClick={() => selectDocSection("generateur-moodle")}
                       className="min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors"
                     >
-                      <Code2 size={16} />
+                      <MoodleLogo size={16} />
                       <span>Accéder au Générateur de Bouton Moodle</span>
                     </button>
                   </div>
@@ -1587,8 +1597,9 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 <article className="space-y-8 animate-in fade-in duration-200">
                   <div className="border-b border-zinc-800 pb-6 space-y-3">
                     <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-purple-500/10 px-3 py-1 text-xs font-mono font-semibold text-purple-400 border border-purple-500/20">
-                        Outil Enseignant
+                      <MoodleLogo size={18} />
+                      <span className="rounded-full bg-orange-500/10 px-3 py-1 text-xs font-mono font-semibold text-orange-400 border border-orange-500/20">
+                        Outil Enseignant Moodle
                       </span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-100">
@@ -1826,15 +1837,30 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
       {/* 4. FOOTER GLOBAL                                                          */}
       {/* ========================================================================= */}
       <footer className="border-t border-zinc-800/80 bg-zinc-950 px-4 sm:px-6 py-8 sm:py-10 text-center text-xs sm:text-sm text-zinc-400 space-y-3">
-        <p>AgoraExam • Logiciel Libre sous licence MIT • Conçu pour l'enseignement supérieur et Moodle</p>
-        <div className="flex flex-wrap items-center justify-center gap-4 text-xs sm:text-sm text-zinc-300">
+        <div className="flex items-center justify-center gap-2 text-zinc-300">
+          <AgoraExamLogo size={18} />
+          <span className="font-semibold text-zinc-200">AgoraExam</span>
+          <span>•</span>
+          <span>Logiciel Libre sous licence MIT</span>
+          <span>•</span>
+          <span>Conçu pour l'enseignement supérieur et Moodle</span>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-4 text-xs sm:text-sm text-zinc-400">
           <button onClick={() => changeTab("home")} className="hover:text-white transition-colors">Accueil</button>
           <span>•</span>
           <button onClick={() => changeTab("download")} className="hover:text-white transition-colors">Téléchargements</button>
           <span>•</span>
           <button onClick={() => changeTab("docs")} className="hover:text-white transition-colors">Documentation</button>
           <span>•</span>
-          <a href="https://github.com/fadelilyas01/AgoraExam" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">GitHub</a>
+          <a
+            href="https://github.com/fadelilyas01/AgoraExam"
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-white transition-colors inline-flex items-center gap-1.5"
+          >
+            <GitHubLogo size={14} />
+            <span>GitHub</span>
+          </a>
         </div>
       </footer>
     </div>

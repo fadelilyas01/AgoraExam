@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  Shield,
   AlertTriangle,
   Camera,
   CheckCircle2,
@@ -18,6 +17,7 @@ import { listen } from "@tauri-apps/api/event";
 import { PreFlightCheck } from "./components/PreFlightCheck";
 import { OfficialPortal } from "./components/OfficialPortal";
 import { proctorVision } from "./services/faceDetection";
+import { AgoraExamLogo, MoodleLogo } from "./components/Logos";
 
 interface StrikeEvent {
   strike_number: number;
@@ -172,7 +172,7 @@ export default function App() {
     }
   }, [strikes, captureEvidenceSnapshot]);
 
-  // Boucle d'analyse MediaPipe avec Tolérance 4s (Anti-faux positifs)
+  // Boucle de vision locale avec Tolérance 4s (Anti-faux positifs)
   useEffect(() => {
     if (!isExamStarted || isExpelled) return;
 
@@ -180,7 +180,7 @@ export default function App() {
     let lastTime = 0;
 
     proctorVision.initialize().catch((err) => {
-      console.warn("MediaPipe initialisé en mode dégradé :", err);
+      console.warn("Vision locale initialisée en mode dégradé :", err);
     });
 
     const processFrame = (currentTime: number) => {
@@ -259,9 +259,7 @@ export default function App() {
   useEffect(() => {
     if (!isExamStarted || isExpelled || isFinished) return;
 
-    // A. Interception des raccourcis clavier en phase de capture (avant tout le monde)
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Bloquer toutes les touches de fonction F1-F12
       if (e.key.startsWith("F") && e.key.length <= 3) {
         e.preventDefault();
         e.stopPropagation();
@@ -269,7 +267,6 @@ export default function App() {
         return false;
       }
 
-      // Bloquer toutes les combinaisons Alt (Alt+Tab, Alt+F4, Alt+Espace, Alt+Flèches)
       if (e.altKey) {
         e.preventDefault();
         e.stopPropagation();
@@ -277,7 +274,6 @@ export default function App() {
         return false;
       }
 
-      // Bloquer les raccourcis Ctrl / Meta (Ctrl+W, Ctrl+T, Ctrl+N, Ctrl+R, Ctrl+Shift+I, etc.)
       if (e.ctrlKey || e.metaKey) {
         const forbiddenKeys = [
           "w", "W", "t", "T", "n", "N", "r", "R", "p", "P", "s", "S",
@@ -291,7 +287,6 @@ export default function App() {
         }
       }
 
-      // Bloquer Escape
       if (e.key === "Escape") {
         e.preventDefault();
         e.stopPropagation();
@@ -299,20 +294,17 @@ export default function App() {
       }
     };
 
-    // B. Bloquer le clic droit (anti-inspection et anti-menu contextuel)
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
       return false;
     };
 
-    // C. Détecter la perte de focus de la fenêtre (clic en dehors ou alt-tab)
     const handleBlur = () => {
       handleWarning("Perte de focus de la fenêtre d'examen détectée !");
       window.focus();
     };
 
-    // D. Détecter le masquage ou changement d'onglet
     const handleVisibilityChange = () => {
       if (document.hidden) {
         handleWarning("La fenêtre d'examen a été minimisée ou masquée !");
@@ -351,7 +343,6 @@ export default function App() {
     };
   }, [isExamStarted, handleWarning]);
 
-  // Positionnement dynamique du widget PiP
   const getPipPositionClass = (pos: PipPosition) => {
     switch (pos) {
       case "bottom-right":
@@ -409,21 +400,21 @@ export default function App() {
   // Écran d'expulsion définitive (Strike 3)
   if (isExpelled) {
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center bg-zinc-950 p-8 text-center font-sans antialiased">
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-zinc-950 p-6 sm:p-8 text-center font-sans antialiased">
         <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 mb-6 shadow-xl shadow-rose-500/5">
           <AlertOctagon size={44} />
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-100">
           Session d'Examen Verrouillée & Clôturée
         </h1>
-        <p className="mt-2.5 text-xs text-zinc-400 max-w-lg leading-relaxed">
-          Le seuil maximal de 3 avertissements de télésurveillance a été atteint.
+        <p className="mt-3 text-sm sm:text-base text-zinc-300 max-w-lg leading-relaxed">
+          Le seuil maximal de 3 avertissements a été atteint.
           Votre épreuve a été automatiquement transmise et scellée sur le serveur Moodle.
         </p>
-        <div className="mt-6 p-4 rounded-xl border border-zinc-800 bg-zinc-900/60 text-[11px] text-zinc-400 font-mono space-y-1 text-left max-w-md w-full">
-          <div><strong className="text-zinc-200">Tentative ID :</strong> #48291</div>
-          <div><strong className="text-zinc-200">Statut :</strong> Clôturé pour infraction répétée</div>
-          <div><strong className="text-zinc-200">Preuves :</strong> 3 photographies horodatées archivées</div>
+        <div className="mt-6 p-5 rounded-2xl border border-zinc-800 bg-zinc-900/80 text-xs sm:text-sm text-zinc-300 font-mono space-y-2 text-left max-w-md w-full">
+          <div><strong className="text-zinc-100">Tentative ID :</strong> #48291</div>
+          <div><strong className="text-zinc-100">Statut :</strong> Clôturé pour infraction répétée</div>
+          <div><strong className="text-zinc-100">Preuves :</strong> 3 photographies horodatées archivées</div>
         </div>
       </div>
     );
@@ -432,18 +423,21 @@ export default function App() {
   // Écran de fin réussie
   if (isFinished) {
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center bg-zinc-950 p-8 text-center font-sans antialiased">
-        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-6 shadow-xl shadow-emerald-500/5">
-          <CheckCircle2 size={44} />
+      <div className="flex h-screen w-screen flex-col items-center justify-center bg-zinc-950 p-6 sm:p-8 text-center font-sans antialiased">
+        <div className="mb-6 flex justify-center">
+          <AgoraExamLogo size={56} />
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-100">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4 shadow-xl shadow-emerald-500/5">
+          <CheckCircle2 size={36} />
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-100">
           Examen Soumis avec Succès
         </h1>
-        <p className="mt-2 text-xs text-zinc-400 max-w-md leading-relaxed">
-          Votre copie a été enregistrée sur le serveur Moodle. Aucun incident critique n'a été relevé durant votre composition.
+        <p className="mt-2.5 text-sm sm:text-base text-zinc-300 max-w-md leading-relaxed">
+          Votre copie a été transmise et validée sur le serveur Moodle. Aucun incident critique n'a été relevé durant votre composition.
         </p>
-        <div className="mt-6 p-3 rounded-lg border border-zinc-800 bg-zinc-900/50 text-[11px] font-mono text-zinc-400">
-          Session Token : a8f9-c2e1-48291 • Hash SHA-256 scellé
+        <div className="mt-6 p-4 rounded-xl border border-zinc-800 bg-zinc-900/70 text-xs font-mono text-zinc-300">
+          Session Token : a8f9-c2e1-48291 • Empreinte SHA-256 certifiée
         </div>
       </div>
     );
@@ -454,82 +448,82 @@ export default function App() {
       {/* Canvas invisible pour capture d'infractions */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* 1. TOP HUD / BARRE DE SÉCURITÉ LINÉAIRE */}
-      <header className="flex h-14 items-center justify-between border-b border-zinc-800/80 bg-zinc-900/90 px-6 backdrop-blur z-20">
+      {/* 1. TOP HUD / BARRE DE SÉCURITÉ OFFICIELLE */}
+      <header className="flex h-16 items-center justify-between border-b border-zinc-800/80 bg-zinc-900/95 px-6 backdrop-blur z-20">
         {/* Identité logicielle & Statut Kiosk */}
         <div className="flex items-center gap-3.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-800/90 text-emerald-400 border border-zinc-700/60 shadow-sm">
-            <Shield size={17} />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-950 border border-zinc-800 shadow-sm">
+            <AgoraExamLogo size={22} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold tracking-tight text-zinc-100">AgoraExam</span>
+              <span className="text-sm font-bold tracking-tight text-zinc-100">AgoraExam</span>
               {isTauri ? (
-                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   Kiosk Matériel Verrouillé
                 </span>
               ) : (
-                <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
+                <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping" />
-                  Aperçu Navigateur Web (Lancez npm run tauri dev pour Kiosk OS)
+                  Aperçu Web (Lancez npm run tauri dev pour Kiosk OS)
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-zinc-400">
-              Algorithmique Avancée • Réf: ALG402
+            <p className="text-xs text-zinc-400">
+              Algorithmique Avancée • Réf: ALG402 • Épreuve Universitaire
             </p>
           </div>
         </div>
 
         {/* Jauge progressive de tolérance d'absence (Debounce 4s) */}
         {absenceCountdown !== null && (
-          <div className="flex items-center gap-3 rounded-lg bg-amber-500/10 border border-amber-500/30 px-3.5 py-1.5 text-xs font-medium text-amber-400 animate-pulse">
-            <AlertTriangle size={15} />
+          <div className="flex items-center gap-3 rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-2 text-xs sm:text-sm font-medium text-amber-400 animate-pulse">
+            <AlertTriangle size={17} />
             <div className="space-y-0.5">
-              <span>Visage hors champ — Repositionnez-vous</span>
-              <div className="h-1 w-32 bg-amber-950 rounded-full overflow-hidden">
+              <span>Visage hors champ — Repositionnez-vous face à l'écran</span>
+              <div className="h-1.5 w-36 bg-amber-950 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-amber-400 transition-all duration-1000"
                   style={{ width: `${(absenceCountdown / 4) * 100}%` }}
                 />
               </div>
             </div>
-            <span className="font-mono font-bold text-xs">{absenceCountdown}s</span>
+            <span className="font-mono font-bold text-sm">{absenceCountdown}s</span>
           </div>
         )}
 
         {/* Compteur d'infractions & Horloge */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-zinc-400 font-medium mr-1">Strikes :</span>
+            <span className="text-xs font-mono text-zinc-400 uppercase font-semibold mr-1">Strikes :</span>
             {[1, 2, 3].map((num) => {
               const isActive = strikes >= num;
               return (
                 <div
                   key={num}
-                  className={`h-6 px-2.5 rounded-md text-[11px] font-semibold flex items-center gap-1 border transition-colors ${
+                  className={`h-7 px-3 rounded-lg text-xs font-mono font-bold flex items-center gap-1 border transition-colors ${
                     isActive
-                      ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                      ? "bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm shadow-rose-500/10"
                       : "bg-zinc-800/40 text-zinc-500 border-zinc-800"
                   }`}
                 >
-                  <AlertTriangle size={11} />
+                  <AlertTriangle size={12} />
                   <span>{num}</span>
                 </div>
               );
             })}
           </div>
 
-          <div className="h-4 w-px bg-zinc-800" />
+          <div className="h-5 w-px bg-zinc-800" />
 
           {/* Horloge / Compte à rebours */}
-          <div className="flex items-center gap-2 text-xs text-zinc-200 font-mono bg-zinc-800/80 px-3 py-1.5 rounded-lg border border-zinc-700/60 shadow-sm">
-            <Clock size={13} className="text-zinc-400" />
-            <span>01:42:15</span>
+          <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-100 font-mono bg-zinc-800/90 px-3.5 py-1.5 rounded-xl border border-zinc-700/60 shadow-sm">
+            <Clock size={14} className="text-zinc-400" />
+            <span className="font-bold">01:42:15</span>
           </div>
 
-          <div className="h-4 w-px bg-zinc-800" />
+          <div className="h-5 w-px bg-zinc-800" />
 
           {/* Bouton Documentation & Aide */}
           <button
@@ -537,11 +531,10 @@ export default function App() {
               setViewMode("portal");
               window.location.hash = "#docs";
             }}
-            className="flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
             title="Consulter la documentation"
-            aria-label="Consulter la documentation"
           >
-            <BookOpen size={13} className="text-emerald-400" />
+            <BookOpen size={14} className="text-emerald-400" />
             <span>Docs</span>
           </button>
         </div>
@@ -550,15 +543,18 @@ export default function App() {
       {/* 2. ZONE CENTRALE : NAVIGATEUR MOODLE INTÉGRÉ & QUESTIONNAIRE RÉEL */}
       <div className="flex flex-1 overflow-hidden">
         {/* Volet latéral gauche : Navigation du Quiz Moodle */}
-        <aside className="w-64 border-r border-zinc-800/80 bg-zinc-950/60 p-4 flex flex-col justify-between flex-shrink-0">
+        <aside className="w-64 border-r border-zinc-800/80 bg-zinc-950/70 p-5 flex flex-col justify-between flex-shrink-0">
           <div className="space-y-4">
-            <div className="text-xs font-semibold text-zinc-300 uppercase tracking-wider pb-2 border-b border-zinc-800/60 flex items-center justify-between">
-              <span>Navigation du Quiz</span>
-              <span className="text-[10px] text-zinc-500 font-normal">8 questions</span>
+            <div className="text-xs font-mono font-bold text-zinc-300 uppercase tracking-wider pb-3 border-b border-zinc-800/60 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <MoodleLogo size={14} />
+                <span>Navigation Quiz</span>
+              </span>
+              <span className="text-xs text-zinc-400 font-mono font-normal">8 questions</span>
             </div>
 
             {/* Grille des questions */}
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2.5">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((qNum) => {
                 const isCurrent = currentQuestion === qNum;
                 const isAnswered = answers[qNum] !== undefined;
@@ -567,14 +563,13 @@ export default function App() {
                   <button
                     key={qNum}
                     onClick={() => setCurrentQuestion(qNum)}
-                    className={`h-9 rounded-lg text-xs font-mono font-medium border flex items-center justify-center transition-all ${
+                    className={`h-10 rounded-xl text-xs sm:text-sm font-mono font-semibold border flex items-center justify-center transition-all ${
                       isCurrent
                         ? "bg-emerald-500 text-zinc-950 border-emerald-400 font-bold shadow-md shadow-emerald-500/10"
                         : isAnswered
-                        ? "bg-zinc-800/90 text-zinc-200 border-zinc-700 hover:bg-zinc-700"
+                        ? "bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700"
                         : "bg-zinc-900/60 text-zinc-500 border-zinc-800 hover:border-zinc-700"
                     }`}
-                    aria-label={`Aller à la question ${qNum}`}
                   >
                     {qNum}
                   </button>
@@ -582,13 +577,13 @@ export default function App() {
               })}
             </div>
 
-            <div className="pt-2 text-[11px] text-zinc-400 space-y-1">
+            <div className="pt-3 text-xs text-zinc-400 space-y-2">
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded bg-emerald-500" />
+                <span className="h-3 w-3 rounded bg-emerald-500" />
                 <span>Question active</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded bg-zinc-700" />
+                <span className="h-3 w-3 rounded bg-zinc-700" />
                 <span>Réponse enregistrée</span>
               </div>
             </div>
@@ -597,7 +592,7 @@ export default function App() {
           {/* Bouton de Fin d'Épreuve */}
           <button
             onClick={() => setIsFinished(true)}
-            className="w-full py-2.5 rounded-lg border border-zinc-700 bg-zinc-900 text-xs font-semibold text-zinc-200 hover:bg-zinc-800 hover:text-white transition-colors"
+            className="w-full py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-800 hover:text-white transition-colors"
           >
             Terminer le test...
           </button>
@@ -605,39 +600,40 @@ export default function App() {
 
         {/* Contenu principal : Feuille d'examen Moodle */}
         <main className="flex-1 flex flex-col bg-zinc-900/20 overflow-y-auto relative">
-          {/* Fausse barre d'adresse Moodle sécurisée */}
-          <div className="flex items-center justify-between px-5 py-2.5 bg-zinc-950/40 border-b border-zinc-800/60 text-xs">
-            <div className="flex items-center gap-2 bg-zinc-900/90 border border-zinc-800 px-3 py-1 rounded-md max-w-xl flex-1 text-[11px] font-mono text-zinc-300">
-              <Lock size={12} className="text-emerald-400 flex-shrink-0" />
+          {/* Fausse barre d'adresse Moodle sécurisée avec vrai logo Moodle */}
+          <div className="flex items-center justify-between px-6 py-2.5 bg-zinc-950/60 border-b border-zinc-800/60 text-xs">
+            <div className="flex items-center gap-2.5 bg-zinc-900 border border-zinc-800 px-3.5 py-1.5 rounded-lg max-w-xl flex-1 text-xs font-mono text-zinc-300">
+              <MoodleLogo size={15} />
+              <Lock size={13} className="text-emerald-400 flex-shrink-0" />
               <span className="truncate">{moodleUrl}</span>
             </div>
 
-            <div className="flex items-center gap-3 text-[11px] text-zinc-400">
+            <div className="flex items-center gap-3 text-xs text-zinc-400">
               <span className="flex items-center gap-1.5">
-                <Wifi size={13} className="text-emerald-400" />
+                <Wifi size={14} className="text-emerald-400" />
                 TLS 1.3 Chiffré
               </span>
               <span className="text-zinc-600">|</span>
-              <span className="text-emerald-400 font-medium">Auto-save actif</span>
+              <span className="text-emerald-400 font-semibold">Auto-save actif</span>
             </div>
           </div>
 
           {/* Énoncé et options de réponse de la question */}
           <div className="p-8 max-w-3xl mx-auto w-full space-y-6">
-            <div className="p-6 rounded-2xl border border-zinc-800/80 bg-zinc-950/70 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-zinc-800/60 pb-3">
-                <span className="text-xs font-mono font-bold text-emerald-400">
+            <div className="p-6 sm:p-8 rounded-3xl border border-zinc-800 bg-zinc-950/80 shadow-sm space-y-5">
+              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+                <span className="text-xs sm:text-sm font-mono font-bold text-emerald-400">
                   Question {currentQuestion} sur 8
                 </span>
-                <span className="text-xs text-zinc-400">Barème : 2.00 point(s)</span>
+                <span className="text-xs sm:text-sm text-zinc-400">Barème : 2.00 point(s)</span>
               </div>
 
               {currentQuestion === 1 ? (
                 <>
-                  <h2 className="text-sm font-semibold text-zinc-100 leading-snug">
+                  <h2 className="text-base sm:text-lg font-bold text-zinc-100 leading-snug">
                     Quelle est la complexité asymptotique moyenne de la recherche d'une clé dans une table de hachage bien dimensionnée avec résolution par adressage ouvert ?
                   </h2>
-                  <div className="space-y-2 pt-2">
+                  <div className="space-y-3 pt-2">
                     {[
                       { id: "a", text: "O(log n) dans le pire des cas" },
                       { id: "b", text: "O(1) en moyenne grâce à une fonction de hachage uniforme" },
@@ -646,9 +642,9 @@ export default function App() {
                     ].map((opt) => (
                       <label
                         key={opt.id}
-                        className={`flex items-center gap-3 p-3.5 rounded-xl border text-xs cursor-pointer transition-colors ${
+                        className={`flex items-center gap-3.5 p-4 rounded-2xl border text-sm sm:text-base cursor-pointer transition-colors ${
                           answers[1] === opt.id
-                            ? "border-emerald-500/50 bg-emerald-500/10 text-zinc-100"
+                            ? "border-emerald-500/50 bg-emerald-500/10 text-zinc-100 font-semibold"
                             : "border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900/80"
                         }`}
                       >
@@ -666,31 +662,31 @@ export default function App() {
                 </>
               ) : (
                 <>
-                  <h2 className="text-sm font-semibold text-zinc-100 leading-snug">
+                  <h2 className="text-base sm:text-lg font-bold text-zinc-100 leading-snug">
                     Implémentez l'inversion d'une liste chaînée simple en complexité mémoire O(1).
                   </h2>
                   <div className="pt-2">
                     <textarea
-                      rows={6}
+                      rows={8}
                       placeholder="// Écrivez votre code d'implémentation ici..."
-                      className="w-full rounded-xl border border-zinc-800 bg-zinc-900/70 p-3.5 text-xs font-mono text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:outline-none"
+                      className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4 text-xs sm:text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:outline-none"
                     />
                   </div>
                 </>
               )}
 
-              <div className="flex justify-between items-center pt-4 border-t border-zinc-800/60">
+              <div className="flex justify-between items-center pt-5 border-t border-zinc-800/80">
                 <button
                   disabled={currentQuestion === 1}
                   onClick={() => setCurrentQuestion((prev) => Math.max(1, prev - 1))}
-                  className="rounded-lg border border-zinc-700 bg-zinc-800/80 px-4 py-2 text-xs font-medium text-zinc-300 hover:bg-zinc-700 transition-colors disabled:opacity-40"
+                  className="rounded-xl border border-zinc-700 bg-zinc-800/80 px-5 py-2.5 text-xs sm:text-sm font-semibold text-zinc-300 hover:bg-zinc-700 transition-colors disabled:opacity-40"
                 >
                   Question précédente
                 </button>
                 <button
                   disabled={currentQuestion === 8}
                   onClick={() => setCurrentQuestion((prev) => Math.min(8, prev + 1))}
-                  className="rounded-lg bg-zinc-100 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-white transition-colors disabled:opacity-40"
+                  className="rounded-xl bg-zinc-100 px-5 py-2.5 text-xs sm:text-sm font-bold text-zinc-950 hover:bg-white transition-colors disabled:opacity-40"
                 >
                   Question suivante
                 </button>
@@ -706,9 +702,9 @@ export default function App() {
           >
             {pipMinimized ? (
               /* Mode Réduit : Badge ultra-discret */
-              <div className="flex items-center gap-2.5 rounded-full border border-zinc-800 bg-zinc-900/95 px-3 py-1.5 shadow-2xl backdrop-blur">
+              <div className="flex items-center gap-2.5 rounded-full border border-zinc-800 bg-zinc-900/95 px-3.5 py-2 shadow-2xl backdrop-blur">
                 <span
-                  className={`h-2 w-2 rounded-full ${
+                  className={`h-2.5 w-2.5 rounded-full ${
                     multipleFaces
                       ? "bg-rose-500 animate-ping"
                       : faceDetected
@@ -716,23 +712,23 @@ export default function App() {
                       : "bg-amber-400 animate-pulse"
                   }`}
                 />
-                <span className="text-[11px] font-medium text-zinc-300">
+                <span className="text-xs font-semibold text-zinc-200">
                   {multipleFaces ? "2 visages !" : faceDetected ? "Surveillance active" : "Visage absent"}
                 </span>
                 <button
                   onClick={() => setPipMinimized(false)}
-                  className="text-zinc-400 hover:text-white p-0.5"
+                  className="text-zinc-400 hover:text-white p-0.5 ml-1"
                   aria-label="Agrandir la caméra"
                 >
-                  <Maximize2 size={12} />
+                  <Maximize2 size={13} />
                 </button>
               </div>
             ) : (
               /* Mode Déplié : Mini-moniteur vidéo complet */
-              <div className="w-52 rounded-xl border border-zinc-800 bg-zinc-900/95 p-3 shadow-2xl backdrop-blur">
-                <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800 text-[11px]">
-                  <span className="font-semibold text-zinc-300 flex items-center gap-1.5">
-                    <Camera size={13} className="text-zinc-400" />
+              <div className="w-56 rounded-2xl border border-zinc-800 bg-zinc-900/95 p-3.5 shadow-2xl backdrop-blur">
+                <div className="flex items-center justify-between pb-2 mb-2 border-b border-zinc-800 text-xs">
+                  <span className="font-bold text-zinc-200 flex items-center gap-1.5">
+                    <Camera size={14} className="text-emerald-400" />
                     Webcam PiP
                   </span>
 
@@ -741,22 +737,20 @@ export default function App() {
                       onClick={cyclePipPosition}
                       className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
                       title="Changer d'angle"
-                      aria-label="Changer de coin d'écran"
                     >
-                      <Move size={11} />
+                      <Move size={12} />
                     </button>
                     <button
                       onClick={() => setPipMinimized(true)}
                       className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
                       title="Minimiser"
-                      aria-label="Réduire en badge"
                     >
-                      <Minimize2 size={11} />
+                      <Minimize2 size={12} />
                     </button>
                   </div>
                 </div>
 
-                <div className="relative aspect-video w-full rounded-lg overflow-hidden bg-black border border-zinc-800">
+                <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-zinc-800">
                   <video
                     ref={videoRef}
                     autoPlay
@@ -765,14 +759,14 @@ export default function App() {
                     className="h-full w-full object-cover -scale-x-100"
                   />
                   {/* Pastille de statut en surimpression */}
-                  <div className="absolute top-1.5 left-1.5">
+                  <div className="absolute top-2 left-2">
                     <span
-                      className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono font-medium backdrop-blur ${
+                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-mono font-bold backdrop-blur ${
                         multipleFaces
-                          ? "bg-rose-500/80 text-white"
+                          ? "bg-rose-500/90 text-white"
                           : faceDetected
-                          ? "bg-emerald-500/80 text-zinc-950"
-                          : "bg-amber-500/80 text-zinc-950"
+                          ? "bg-emerald-500/90 text-zinc-950"
+                          : "bg-amber-500/90 text-zinc-950"
                       }`}
                     >
                       {multipleFaces ? "MULTI-FACES" : faceDetected ? "OK" : "ABSENT"}
@@ -780,9 +774,9 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="mt-2 flex items-center justify-between text-[10px] text-zinc-500 font-mono">
-                  <span>MediaPipe Local</span>
-                  <span className="text-emerald-500">0 flux cloud</span>
+                <div className="mt-2.5 flex items-center justify-between text-xs text-zinc-400 font-mono">
+                  <span>Vision Locale</span>
+                  <span className="text-emerald-400 font-semibold">0 flux cloud</span>
                 </div>
               </div>
             )}
@@ -792,35 +786,35 @@ export default function App() {
 
       {/* 4. MODAL D'AVERTISSEMENT (STRIKE NOTIFICATION) */}
       {activeModalStrike && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
-          <div className="w-full max-w-md rounded-2xl border border-rose-500/30 bg-zinc-950 p-6 shadow-2xl text-center space-y-4 animate-in fade-in zoom-in-95">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20">
-              <AlertTriangle size={28} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-6">
+          <div className="w-full max-w-md rounded-3xl border border-rose-500/40 bg-zinc-950 p-6 sm:p-8 shadow-2xl text-center space-y-5 animate-in fade-in zoom-in-95">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20">
+              <AlertTriangle size={32} />
             </div>
 
             <div>
-              <span className="inline-block rounded-full bg-rose-500/20 px-3 py-1 text-[11px] font-semibold text-rose-300 border border-rose-500/30 mb-2">
+              <span className="inline-block rounded-full bg-rose-500/20 px-3.5 py-1 text-xs font-mono font-bold text-rose-300 border border-rose-500/30 mb-2">
                 Avertissement {activeModalStrike.strike_number} sur {activeModalStrike.max_strikes}
               </span>
-              <h3 className="text-base font-semibold text-zinc-100">
-                Incident de Télésurveillance Constaté
+              <h3 className="text-lg font-bold text-zinc-100">
+                Incident de Surveillance Constaté
               </h3>
-              <p className="mt-1 text-xs text-zinc-400 leading-relaxed">
+              <p className="mt-1 text-xs sm:text-sm text-zinc-300 leading-relaxed">
                 {activeModalStrike.reason}
               </p>
             </div>
 
-            <div className="p-3 rounded-xl border border-zinc-800 bg-zinc-900/60 text-[11px] text-zinc-400 space-y-1 text-left">
-              <div><strong className="text-zinc-300">Horodatage :</strong> {activeModalStrike.timestamp}</div>
-              <div><strong className="text-zinc-300">Statut :</strong> Preuve photographique archivée</div>
-              <div className="text-rose-400 pt-1">
-                ⚠️ Au 3ème avertissement, votre épreuve sera clôturée définitivement.
+            <div className="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 text-xs sm:text-sm text-zinc-300 space-y-1.5 text-left font-mono">
+              <div><strong className="text-zinc-100">Horodatage :</strong> {activeModalStrike.timestamp}</div>
+              <div><strong className="text-zinc-100">Statut :</strong> Preuve photographique archivée</div>
+              <div className="text-rose-400 pt-1 font-semibold">
+                Au 3ème avertissement, votre épreuve sera clôturée définitivement.
               </div>
             </div>
 
             <button
               onClick={() => setActiveModalStrike(null)}
-              className="w-full rounded-xl bg-zinc-100 py-2.5 text-xs font-semibold text-zinc-950 hover:bg-white transition-colors"
+              className="w-full rounded-xl bg-zinc-100 py-3 text-xs sm:text-sm font-bold text-zinc-950 hover:bg-white transition-colors min-h-[44px]"
             >
               J'ai compris — Reprendre l'épreuve
             </button>
