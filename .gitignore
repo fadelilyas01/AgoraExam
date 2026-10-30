@@ -32,3 +32,5 @@ release-bin/
 .env
 .env.local
 .env.*.local
+
+.vercel
