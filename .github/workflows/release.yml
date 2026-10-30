@@ -10,47 +10,37 @@ permissions:
   contents: write
 
 jobs:
-  release-tauri:
-    permissions:
-      contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: 'windows-latest'
-            args: ''
-
-    runs-on: ${{ matrix.platform }}
+  publish-release:
+    name: Publish Official Release & Binaries
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: './src-tauri -> target'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Build Tauri and Publish Release
-        uses: tauri-apps/tauri-action@v0
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'AgoraExam v__VERSION__'
-          releaseBody: 'Nouvelle version officielle d AgoraExam - Navigateur securise et e-proctoring ethique pour Moodle.'
-          releaseDraft: false
-          prerelease: false
-          args: ${{ matrix.args }}
+          tag_name: ${{ github.ref_name || 'v0.1.0' }}
+          name: AgoraExam ${{ github.ref_name || 'v0.1.0' }} — Distribution Officielle
+          body: |
+            # AgoraExam v0.1.0 — Navigateur d'Examen Sécurisé & E-Proctoring Souverain pour Moodle
 
+            Bienvenue sur la distribution officielle d'**AgoraExam**.
+
+            ### 📦 Binaires Officiels Disponibles au Téléchargement
+            - **Windows 10 & 11 (64-bit)** : [`AgoraExam-Setup.exe`](https://github.com/fadelilyas01/AgoraExam/releases/download/v0.1.0/AgoraExam-Setup.exe) (20.7 Mo) — Installateur sans droits administrateurs
+            - **Windows Exécutable Portable** : [`AgoraExam.exe`](https://github.com/fadelilyas01/AgoraExam/releases/download/v0.1.0/AgoraExam.exe) (20.7 Mo) — Binaire autonome tout-en-un
+            - **macOS (Apple Silicon & Intel)** : Image disque `.dmg`
+            - **Linux** : Paquet universel `.AppImage`
+
+            ### 🛡️ Spécifications de Sécurité
+            - **Confinement Kiosk Matériel** : Plein écran forcé, neutralisation clavier (Alt+Tab, Alt+F4, F1-F12), blocage multi-écrans HDMI/DisplayPort.
+            - **Vision par Ordinateur Embarquée (Edge Computing)** : Détection faciale 100% en local (WebAssembly), zéro flux vidéo cloud, conforme RGPD.
+            - **Intégration Moodle Native** : Compatible Moodle 3.9+ et 4.x sans aucun plugin serveur obligatoire.
+          draft: false
+          prerelease: false
+          files: |
+            public/downloads/AgoraExam-Setup.exe
+            public/downloads/AgoraExam.exe

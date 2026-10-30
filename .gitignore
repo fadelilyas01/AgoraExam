@@ -27,8 +27,6 @@ dist-ssr
 src-tauri/target
 Cargo.lock
 release-bin/
-public/downloads/
-*.exe
 
 # Environment variables
 .env
