@@ -26,6 +26,8 @@ dist-ssr
 # Rust / Cargo
 src-tauri/target
 Cargo.lock
+release-bin/
+*.exe
 
 # Environment variables
 .env
