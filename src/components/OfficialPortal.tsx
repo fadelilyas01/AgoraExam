@@ -10,7 +10,6 @@ import {
   Copy,
   Search,
   AlertTriangle,
-  Server,
   CheckCircle2,
   ShieldCheck,
   Eye,
@@ -1487,21 +1486,21 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               )}
 
               {/* ================================================================= */}
-              {/* 5. RÈGLE DES 3 STRIKES & 4s                                      */}
+              {/* 5. PROTOCOLE HUMAN-IN-THE-LOOP & RÈGLE DES 3 STRIKES             */}
               {/* ================================================================= */}
               {activeDocSection === "regle-strikes" && (
                 <article className="space-y-8 animate-in fade-in duration-200">
                   <div className="border-b border-zinc-800 pb-6 space-y-3">
                     <div className="flex items-center gap-2">
-                      <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-mono font-semibold text-amber-400 border border-amber-500/20">
-                        Arbitrage & Tolérance
+                      <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20">
+                        Éthique & Conformité AI Act
                       </span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-zinc-100">
-                      Règle des 3 Strikes & Tolérance 4s
+                      Protocole Human-in-the-Loop & Strikes
                     </h1>
                     <p className="text-base sm:text-lg text-zinc-300 leading-relaxed">
-                      Le protocole impartial de gestion des incidents et le Kill Switch automatique sur Moodle.
+                      Gestion éthique des anomalies : consignation au dossier candidat, alerte surveillant en temps réel et politiques configurables pour chaque établissement.
                     </p>
                   </div>
 
@@ -1515,36 +1514,92 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                     </p>
                   </div>
 
+                  {/* Principe Human-in-the-loop */}
+                  <div className="p-6 rounded-2xl border border-blue-500/30 bg-blue-500/10 space-y-3">
+                    <strong className="text-sm sm:text-base font-bold text-blue-300 flex items-center gap-2">
+                      <UserCheck size={18} />
+                      <span>Gouvernance Éthique : L'Humain au Cœur de la Décision</span>
+                    </strong>
+                    <p className="text-sm sm:text-base text-zinc-200 leading-relaxed">
+                      Une déconnexion automatique unilatérale par l'IA est jugée disproportionnée et juridiquement fragile (Règlement Européen sur l'IA). AgoraExam garantit qu'<strong>aucun algorithme ne peut expulser un étudiant sans validation humaine</strong>. Les anomalies sont consignées au dossier de l'étudiant sous forme de preuves horodatées chiffrées, et le surveillant est immédiatement notifié pour statuer.
+                    </p>
+                  </div>
+
                   {/* Les 3 niveaux */}
                   <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
+                      <SlidersHorizontal size={18} className="text-zinc-400" />
+                      <span>Déroulement des Avertissements (Mode Hybride par Défaut)</span>
+                    </h3>
+
                     <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/60 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-sm sm:text-base font-bold text-amber-400">Strike 1 : Premier Avertissement</span>
-                        <span className="text-xs font-mono text-zinc-400">Capture photo horodatée</span>
+                        <span className="text-xs font-mono text-zinc-400">Consigné au dossier</span>
                       </div>
                       <p className="text-sm sm:text-base text-zinc-200 leading-relaxed">
-                        Affichage d'un modal bloquant à l'écran : <em>« Attention : votre visage n'est plus détecté (1/3). Au 3ème avertissement, votre tentative sera scellée automatiquement. »</em> L'étudiant clique pour acquitter et poursuivre son épreuve.
+                        Affichage d'un modal bloquant de sensibilisation : <em>« Attention : votre visage n'est plus détecté (1/3). L'incident est consigné à votre dossier d'examen. »</em> L'étudiant acquitte et continue son épreuve.
                       </p>
                     </div>
 
                     <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/60 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm sm:text-base font-bold text-orange-400">Strike 2 : Dernier Avertissement</span>
-                        <span className="text-xs font-mono text-zinc-400">Capture photo horodatée</span>
+                        <span className="text-sm sm:text-base font-bold text-orange-400">Strike 2 : Avertissement Solennel</span>
+                        <span className="text-xs font-mono text-zinc-400">Cliché horodaté archivé</span>
                       </div>
                       <p className="text-sm sm:text-base text-zinc-200 leading-relaxed">
-                        Alerte renforcée avec rappel que la prochaine infraction clôturera définitivement le test sans possibilité de réouverture.
+                        Alerte renforcée rappelant que tout nouvel écart entraînera la transmission immédiate du dossier d'infractions au surveillant de session.
                       </p>
                     </div>
 
-                    <div className="p-6 rounded-2xl border border-rose-500/40 bg-rose-500/10 space-y-2.5">
+                    <div className="p-6 rounded-2xl border border-amber-500/40 bg-amber-500/10 space-y-2.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm sm:text-base font-bold text-rose-400">Strike 3 : Kill Switch Moodle & Expulsion</span>
-                        <span className="text-xs font-mono text-rose-300 font-bold">Exclusion immédiate</span>
+                        <span className="text-sm sm:text-base font-bold text-amber-300">Strike 3 : Alerte Surveillant & Maintien de l'Épreuve</span>
+                        <span className="text-xs font-mono text-amber-400 font-bold">Surveillance Humaine Active</span>
                       </div>
                       <p className="text-sm sm:text-base text-zinc-200 leading-relaxed">
-                        Le backend Rust envoie immédiatement une requête sécurisée vers l'API Moodle (<code className="font-mono text-rose-300">mod_quiz_process_attempt</code> avec le paramètre <code className="font-mono text-rose-300">finishattempt = 1</code>). La tentative est soumise, les réponses sont scellées, et l'application affiche l'écran de clôture définitive.
+                        Le backend Rust notifie instantanément le surveillant de salle (<code className="font-mono text-amber-300">alerter_surveillant</code>). L'épreuve <strong>n'est pas brutalement coupée</strong> : l'étudiant peut continuer de composer tandis que le surveillant examine les preuves horodatées. <strong>Seul le surveillant humain</strong> possède la clé d'expulsion si la triche avérée est confirmée.
                       </p>
+                    </div>
+                  </div>
+
+                  {/* Les 3 politiques configurables */}
+                  <div className="space-y-4 pt-4 border-t border-zinc-800">
+                    <h3 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
+                      <Sliders size={18} className="text-zinc-400" />
+                      <span>3 Politiques Configurables par l'Établissement</span>
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 space-y-2">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400">
+                          Recommandé
+                        </span>
+                        <h4 className="font-bold text-zinc-100 text-sm">Mode Hybride</h4>
+                        <p className="text-xs text-zinc-300 leading-relaxed">
+                          Human-in-the-Loop. 3 avertissements avec captures horodatées, puis notification au surveillant humain qui conserve l'arbitrage exclusif.
+                        </p>
+                      </div>
+
+                      <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-950/60 space-y-2">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-400">
+                          Formatif
+                        </span>
+                        <h4 className="font-bold text-zinc-100 text-sm">Mode Pédagogique</h4>
+                        <p className="text-xs text-zinc-300 leading-relaxed">
+                          Audit Trail continu. Consignation silencieuse sans interruption du candidat, idéal pour les contrôles continus et épreuves blanches.
+                        </p>
+                      </div>
+
+                      <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-950/60 space-y-2">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-400">
+                          Haute Criticité
+                        </span>
+                        <h4 className="font-bold text-zinc-100 text-sm">Mode Strict</h4>
+                        <p className="text-xs text-zinc-300 leading-relaxed">
+                          Réservé aux concours certifiants nationaux. Scellement Moodle immédiat au 3ème strike via l'API Web Services pour les sessions sans surveillant.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </article>
