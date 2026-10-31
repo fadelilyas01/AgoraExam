@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter, Manager, WindowEvent};
 use thiserror::Error;
-use zeroize::{Zeroize, ZeroizeOnDrop};
+use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
 use sha2::{Digest, Sha256};
 
 // -----------------------------------------------------------------------------
@@ -234,19 +234,20 @@ async fn enregistrer_preuve(
 
 /// Valide et assainit l'URL Moodle pour bloquer les attaques SSRF (CWE-918)
 fn valider_url_moodle(url: &str) -> Result<String, ProctorError> {
-    let trimmed = url.trim().trim_end_matches('/');
+    let parsed = reqwest::Url::parse(url.trim()).map_err(|_| ProctorError::InvalidMoodleUrl)?;
 
-    let is_https = trimmed.starts_with("https://");
-    let is_local_dev = trimmed.starts_with("http://localhost") || trimmed.starts_with("http://127.0.0.1");
+    let is_https = parsed.scheme() == "https";
+    let host_str = parsed.host_str().ok_or(ProctorError::InvalidMoodleUrl)?;
+    let is_local_dev = host_str == "localhost" || host_str == "127.0.0.1";
 
     if !is_https && !is_local_dev {
-        tracing::error!(url = %trimmed, "SSRF Guard : Le protocole doit obligatoirement être HTTPS.");
+        tracing::error!(url = %url, "SSRF Guard : Le protocole doit obligatoirement être HTTPS.");
         return Err(ProctorError::InvalidMoodleUrl);
     }
 
-    // Protection anti-SSRF : Interdiction des adresses de métadonnées cloud et adresses réservées en prod
     if !is_local_dev {
-        let lower = trimmed.to_lowercase();
+        let lower = host_str.to_lowercase();
+        // Bloquer IPv6 loopback, cloud metadata et plages RFC1918
         let forbidden_targets = [
             "169.254.169.254", // AWS/GCP/Azure Metadata
             "metadata.google.internal",
@@ -256,18 +257,36 @@ fn valider_url_moodle(url: &str) -> Result<String, ProctorError> {
             "::1",
             "10.",
             "192.168.",
-            "172.16.",
+            "127.",
         ];
 
         for target in &forbidden_targets {
-            if lower.contains(target) {
-                tracing::error!(url = %trimmed, target = %target, "SSRF Guard : Tentative de ciblage d'adresse privée ou de métadonnées bloquée.");
+            if lower.contains(target) || lower.ends_with(".internal") || lower.ends_with(".local") {
+                tracing::error!(url = %url, target = %target, "SSRF Guard : Tentative de ciblage d'adresse privée ou de métadonnées bloquée.");
                 return Err(ProctorError::InvalidMoodleUrl);
+            }
+        }
+
+        // Vérification de la plage RFC1918 172.16.0.0/12 (172.16.x.x à 172.31.x.x)
+        if lower.starts_with("172.") {
+            let parts: Vec<&str> = lower.split('.').collect();
+            if parts.len() >= 2 {
+                if let Ok(second_octet) = parts[1].parse::<u8>() {
+                    if (16..=31).contains(&second_octet) {
+                        tracing::error!(url = %url, "SSRF Guard : Plage RFC1918 172.16-31.x.x bloquée.");
+                        return Err(ProctorError::InvalidMoodleUrl);
+                    }
+                }
             }
         }
     }
 
-    Ok(trimmed.to_string())
+    let port_suffix = if let Some(p) = parsed.port() {
+        format!(":{}", p)
+    } else {
+        "".to_string()
+    };
+    Ok(format!("{}://{}{}", parsed.scheme(), host_str, port_suffix))
 }
 
 /// Commande déclenchée lors du 3ème avertissement (Kill Switch Moodle)
@@ -288,6 +307,9 @@ async fn expulser_etudiant(
     // Validation stricte anti-SSRF avant toute émission réseau
     let safe_moodle_url = valider_url_moodle(&moodle_url)?;
 
+    // Encapsulation sécurisée du token avec effacement automatique de la RAM à la libération
+    let wstoken_secure = Zeroizing::new(wstoken);
+
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(10))
         .build()
@@ -296,7 +318,7 @@ async fn expulser_etudiant(
     let endpoint = format!("{}/webservice/rest/server.php", safe_moodle_url);
 
     let params = [
-        ("wstoken", wstoken.as_str()),
+        ("wstoken", wstoken_secure.as_str()),
         ("wsfunction", "mod_quiz_process_attempt"),
         ("moodlewsrestformat", "json"),
         ("attemptid", &attempt_id.to_string()),

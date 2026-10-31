@@ -333,17 +333,31 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
     };
   }, [sandboxStream]);
 
+  // Fonction d'échappement sécurisée anti-XSS
+  const escapeHtml = (text: string): string => {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
+
+  const safeExamName = escapeHtml(examName);
+  const safeQuizId = encodeURIComponent(moodleQuizId.trim());
+  const safeMoodleUrl = encodeURIComponent(moodleUrl.trim());
+
   const generatedMoodleHtml = `<!-- Bloc AgoraExam officiel pour description de quiz Moodle -->
 <div style="background:#09090b; border:1px solid #27272a; border-radius:12px; padding:24px; text-align:center; max-width:560px; margin:20px auto; font-family:'Inter',system-ui,sans-serif; color:#f4f4f5;">
   <div style="display:inline-flex; align-items:center; gap:8px; margin-bottom:12px;">
     <span style="background:#10b981; width:10px; height:10px; border-radius:50%; display:inline-block;"></span>
     <span style="font-size:13px; text-transform:uppercase; letter-spacing:0.06em; color:#10b981; font-weight:700;">Épreuve Officielle Sécurisée</span>
   </div>
-  <h3 style="margin:0 0 10px 0; font-size:18px; font-weight:700; color:#ffffff;">${examName}</h3>
+  <h3 style="margin:0 0 10px 0; font-size:18px; font-weight:700; color:#ffffff;">${safeExamName}</h3>
   <p style="font-size:14px; color:#a1a1aa; margin:0 0 18px 0; line-height:1.6;">
     Cet examen exige l'utilisation d'<strong>AgoraExam</strong>. Débranchez tout écran externe et fermez toute application tierce avant d'ouvrir le test.
   </p>
-  <a href="agoraexam://launch?quizid=${moodleQuizId}&host=${encodeURIComponent(moodleUrl)}" 
+  <a href="agoraexam://launch?quizid=${safeQuizId}&host=${safeMoodleUrl}" 
      style="display:inline-block; background:#10b981; color:#09090b; font-weight:700; font-size:14px; padding:12px 26px; border-radius:8px; text-decoration:none; box-shadow:0 4px 12px rgba(16,185,129,0.25);">
     Lancer l'Épreuve dans AgoraExam
   </a>
@@ -2311,15 +2325,32 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                     </div>
                   </div>
 
-                  {/* Prévisualisation */}
+                  {/* Prévisualisation Réactive Sécurisée (Zero dangerouslySetInnerHTML) */}
                   <div className="space-y-3">
                     <span className="text-xs sm:text-sm font-mono font-bold text-zinc-400 uppercase tracking-wider block">
                       Aperçu tel qu'affiché pour l'étudiant dans Moodle :
                     </span>
-                    <div
-                      className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/80"
-                      dangerouslySetInnerHTML={{ __html: generatedMoodleHtml }}
-                    />
+                    <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-950/80 flex justify-center">
+                      <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 text-center max-w-[560px] w-full font-sans text-zinc-100 shadow-sm space-y-3">
+                        <div className="inline-flex items-center gap-2">
+                          <span className="bg-emerald-500 w-2.5 h-2.5 rounded-full inline-block" />
+                          <span className="text-[13px] uppercase tracking-wider text-emerald-400 font-bold">
+                            Épreuve Officielle Sécurisée
+                          </span>
+                        </div>
+                        <h3 className="text-lg font-bold text-white break-words">
+                          {examName || "Intitulé de l'Épreuve"}
+                        </h3>
+                        <p className="text-sm text-zinc-400 leading-relaxed">
+                          Cet examen exige l'utilisation d'<strong>AgoraExam</strong>. Débranchez tout écran externe et fermez toute application tierce avant d'ouvrir le test.
+                        </p>
+                        <div className="pt-2">
+                          <span className="inline-block bg-emerald-500 text-zinc-950 font-bold text-sm px-6 py-3 rounded-lg shadow-sm pointer-events-none select-none">
+                            Lancer l'Épreuve dans AgoraExam
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Code et Copie */}
