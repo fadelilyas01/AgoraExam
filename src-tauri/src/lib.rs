@@ -36,14 +36,6 @@ pub enum ProctorError {
 // -----------------------------------------------------------------------------
 // 2. Modèles de Données & Métadonnées
 // -----------------------------------------------------------------------------
-#[derive(Serialize, Clone)]
-pub struct AntiIntrusionReport {
-    pub is_safe: bool,
-    pub detected_threats: Vec<String>,
-    pub checked_processes_count: usize,
-    pub message: String,
-}
-
 #[derive(Serialize)]
 pub struct HardwareCheckResult {
     pub is_valid: bool,
@@ -128,108 +120,6 @@ async fn verifier_materiel(app: AppHandle) -> Result<HardwareCheckResult, Procto
             message: "Configuration matérielle validée (Écran unique).".into(),
         })
     }
-}
-
-/// Détecte la présence de logiciels de télé-assistance ou partage d'écran non autorisés (Anti-Remote)
-#[tauri::command]
-async fn detecter_outils_distance() -> Result<AntiIntrusionReport, ProctorError> {
-    let blacklisted_binaries = [
-        "anydesk.exe",
-        "anydesk",
-        "teamviewer.exe",
-        "teamviewer",
-        "teamviewerd",
-        "rustdesk.exe",
-        "rustdesk",
-        "ultraviewer.exe",
-        "ultraviewer",
-        "vncserver.exe",
-        "tvnserver.exe",
-        "winvnc.exe",
-        "vncserver",
-        "remmina",
-        "discord.exe",
-        "discord",
-        "obs64.exe",
-        "obs32.exe",
-        "obs",
-        "sharex.exe",
-        "lightshot.exe",
-        "ngrok.exe",
-        "frpc.exe",
-    ];
-
-    let mut detected: Vec<String> = Vec::new();
-    let mut total_checked = 0;
-
-    #[cfg(target_os = "windows")]
-    {
-        use std::os::windows::process::CommandExt;
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
-
-        if let Ok(output) = std::process::Command::new("tasklist.exe")
-            .args(["/FO", "CSV", "/NH"])
-            .creation_flags(CREATE_NO_WINDOW)
-            .output()
-        {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            for line in stdout.lines() {
-                total_checked += 1;
-                let lower = line.to_lowercase();
-                for binary in &blacklisted_binaries {
-                    if lower.contains(binary) {
-                        let name = binary.to_string();
-                        if !detected.contains(&name) {
-                            detected.push(name);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    {
-        if let Ok(output) = std::process::Command::new("ps")
-            .args(["-e", "-o", "comm="])
-            .output()
-        {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            for line in stdout.lines() {
-                total_checked += 1;
-                let lower = line.trim().to_lowercase();
-                for binary in &blacklisted_binaries {
-                    if lower.contains(binary) {
-                        let name = binary.to_string();
-                        if !detected.contains(&name) {
-                            detected.push(name);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    let is_safe = detected.is_empty();
-    let message = if is_safe {
-        "Bouclier Anti-Intrusion : Aucun logiciel de télé-assistance ou partage d'écran détecté.".to_string()
-    } else {
-        format!(
-            "Logiciels de prise en main à distance détectés : {}. Veuillez les fermer impérativement avant de commencer.",
-            detected.join(", ")
-        )
-    };
-
-    if !is_safe {
-        tracing::warn!(threats = ?detected, "Alerte Anti-Intrusion : Processus distant actif détecté !");
-    }
-
-    Ok(AntiIntrusionReport {
-        is_safe,
-        detected_threats: detected,
-        checked_processes_count: total_checked,
-        message,
-    })
 }
 
 /// Verrouille l'application en mode Kiosk au démarrage effectif de l'examen
@@ -529,7 +419,6 @@ pub fn run() {
         .manage(ExamState::default())
         .invoke_handler(tauri::generate_handler![
             verifier_materiel,
-            detecter_outils_distance,
             verrouiller_examen,
             enregistrer_preuve,
             expulser_etudiant,

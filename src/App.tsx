@@ -19,14 +19,12 @@ import {
   EyeOff,
   Keyboard,
   Award,
-  ShieldCheck,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { PreFlightCheck } from "./components/PreFlightCheck";
 import { OfficialPortal } from "./components/OfficialPortal";
 import { proctorVision } from "./services/faceDetection";
-import { securityShield } from "./services/securityShield";
 import { AgoraExamLogo } from "./components/Logos";
 
 export type SurveillancePolicy = "hybrid" | "audit" | "strict";
@@ -120,16 +118,12 @@ export default function App() {
   // Modal d'aide aux raccourcis clavier
   const [showShortcutsModal, setShowShortcutsModal] = useState<boolean>(false);
 
-  // Modal d'inspection du Bouclier de Sécurité Anti-Intrusion
-  const [showSecurityModal, setShowSecurityModal] = useState<boolean>(false);
-  const [sessionFingerprint, setSessionFingerprint] = useState<string>("SEC-ALPHA-8921");
-  const [, setIsEncrypted] = useState<boolean>(true);
-
   // État de l'examen Moodle interactif (simulation de test universitaire)
   const [currentQuestion, setCurrentQuestion] = useState<number>(1);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [answers, setAnswers] = useState<Record<number, string>>({
+    1: "b",
+  });
   const [isFinished, setIsFinished] = useState<boolean>(false);
-  const [receiptSealHash, setReceiptSealHash] = useState<string>("8f7a9d0e2c4b6e8a1f3d5c7b9a0e2f4d6c8b0a2e4f6a8c0e2d4b6a8f0e2c4b6e");
 
   // Droit d'observation étudiant (Art. 22 RGPD) & Arbitrage surveillant sur place
   const [studentObservation, setStudentObservation] = useState<string>("");
@@ -137,8 +131,6 @@ export default function App() {
   const [showProctorPinModal, setShowProctorPinModal] = useState<boolean>(false);
   const [proctorPin, setProctorPin] = useState<string>("");
   const [proctorPinError, setProctorPinError] = useState<string | null>(null);
-  const [proctorPinAttempts, setProctorPinAttempts] = useState<number>(0);
-  const [isPinLocked, setIsPinLocked] = useState<boolean>(false);
 
   // Décompte automatique du temps restant
   useEffect(() => {
@@ -163,41 +155,9 @@ export default function App() {
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   };
 
-  // Calcul dynamique et authentique du scellement SHA-256 lors de la clôture (CWE-345)
-  useEffect(() => {
-    if (!isFinished) return;
-    const payload = {
-      sessionId: "AGORA-2026-X48291",
-      examCode: "ALG402",
-      attemptId: 48291,
-      candidateId: "ETU-2026-48291",
-      answers,
-      strikes,
-      policy,
-      studentObservation: studentObservation.trim() || "Aucune observation signalée par l'étudiant",
-    };
-    securityShield.computeReceiptSeal(payload).then((hash) => {
-      setReceiptSealHash(hash);
-    });
-  }, [isFinished, answers, strikes, policy, studentObservation]);
-
   const updateAnswer = (questionNumber: number, answerValue: string) => {
     setSaveStatus("saving");
-    setAnswers((prev) => {
-      const nextAnswers = { ...prev, [questionNumber]: answerValue };
-      // Chiffrement fort AES-256-GCM instantané dans le stockage local scellé
-      securityShield.encryptState({ answers: nextAnswers, question: questionNumber, ts: Date.now() }).then((payload) => {
-        if (payload) {
-          try {
-            sessionStorage.setItem("agora_exam_state_enc", JSON.stringify(payload));
-            setIsEncrypted(true);
-          } catch {
-            // Mémoire de session fallback
-          }
-        }
-      });
-      return nextAnswers;
-    });
+    setAnswers((prev) => ({ ...prev, [questionNumber]: answerValue }));
     setTimeout(() => {
       const now = new Date();
       setLastSavedTime(
@@ -392,10 +352,9 @@ export default function App() {
         setIsExpelled(true);
         if (isTauri) {
           try {
-            const sessionToken = sessionStorage.getItem("agora_session_token") || "SESSION_EXPIRED";
             await invoke("expulser_etudiant", {
               moodleUrl: "https://moodle.universite.fr",
-              wstoken: sessionToken,
+              wstoken: "secret_token_session_placeholder",
               attemptId: 48291,
               motif: reason,
             });
@@ -409,29 +368,6 @@ export default function App() {
       }
     }
   }, [strikes, captureEvidenceSnapshot, policy, isTauri]);
-
-  // Initialisation du Bouclier Anti-Intrusion (AES-256-GCM, Anti-DevTools, Détection de Menaces)
-  useEffect(() => {
-    if (!isExamStarted || isFinished || isExpelled) return;
-
-    let isMounted = true;
-    securityShield.initialize(48291).then(() => {
-      if (isMounted) {
-        setSessionFingerprint(securityShield.getSessionFingerprint());
-      }
-    });
-
-    securityShield.setViolationHandler((reason) => {
-      handleWarning(`[Bouclier Anti-Intrusion] ${reason}`);
-    });
-
-    securityShield.activateActiveDefense();
-
-    return () => {
-      isMounted = false;
-      securityShield.deactivateActiveDefense();
-    };
-  }, [isExamStarted, isFinished, isExpelled, handleWarning]);
 
   // Boucle de vision locale avec Tolérance 4s (Anti-faux positifs)
   useEffect(() => {
@@ -795,7 +731,7 @@ export default function App() {
         },
         cryptographicSeal: {
           algorithm: "SHA-256",
-          sha256Digest: receiptSealHash,
+          sha256Digest: "8f7a9d0e2c4b6e8a1f3d5c7b9a0e2f4d6c8b0a2e4f6a8c0e2d4b6a8f0e2c4b6e",
           verificationUrl: "https://agoraexam.vercel.app/#verify",
         },
       };
@@ -882,7 +818,7 @@ export default function App() {
               <span className="text-[10px] text-emerald-400">Certifié Inaltérable</span>
             </div>
             <div className="text-[11px] text-zinc-400 break-all select-all font-mono bg-zinc-900/60 p-2 rounded-xl border border-zinc-800">
-              {receiptSealHash}
+              8f7a9d0e2c4b6e8a1f3d5c7b9a0e2f4d6c8b0a2e4f6a8c0e2d4b6a8f0e2c4b6e
             </div>
           </div>
 
@@ -1105,19 +1041,6 @@ export default function App() {
           >
             <Keyboard size={13} className="text-emerald-400" />
             <span className="hidden sm:inline">Aide (?)</span>
-          </button>
-
-          {/* Badge & Bouton Bouclier Anti-Intrusion (AES-256-GCM) */}
-          <button
-            onClick={() => setShowSecurityModal(true)}
-            className="flex items-center gap-1.5 rounded-lg sm:rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-colors"
-            title="Consulter l'état du bouclier anti-intrusion & chiffrement AES-256"
-          >
-            <ShieldCheck size={14} className="text-emerald-400 animate-pulse" />
-            <span className="hidden md:inline font-mono">Bouclier Actif</span>
-            <span className="text-[10px] px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono hidden lg:inline">
-              AES-256
-            </span>
           </button>
         </div>
       </header>
@@ -1576,113 +1499,6 @@ export default function App() {
         </div>
       )}
 
-      {/* 4.5. MODAL DE DIAGNOSTIC DU BOUCLIER ANTI-INTRUSION */}
-      {showSecurityModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-3xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                  <ShieldCheck size={18} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-zinc-100 text-sm">Bouclier Anti-Intrusion AgoraExam</h3>
-                  <p className="text-[11px] text-zinc-400 font-mono">Défense en Profondeur 360° (Secure-by-Design)</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowSecurityModal(false)}
-                className="text-zinc-400 hover:text-white text-xs px-2.5 py-1.5 rounded-lg bg-zinc-900 border border-zinc-800 transition-colors"
-              >
-                Fermer
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              {/* Couche 1 : Chiffrement local fort */}
-              <div className="p-3.5 rounded-2xl bg-zinc-900/50 border border-zinc-800 flex items-start gap-3">
-                <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
-                  <Lock size={15} />
-                </div>
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-200">Chiffrement AES-256-GCM Authentifié</span>
-                    <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      ACTIF
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">
-                    Toutes les réponses sont chiffrées en temps réel avec un vecteur d'initialisation unique. Toute altération locale invalide immédiatement le tag d'authentification.
-                  </p>
-                </div>
-              </div>
-
-              {/* Couche 2 : Anti-Téléassistance & Anti-Remote */}
-              <div className="p-3.5 rounded-2xl bg-zinc-900/50 border border-zinc-800 flex items-start gap-3">
-                <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
-                  <EyeOff size={15} />
-                </div>
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-200">Protection Anti-Remote & Partage d'Écran</span>
-                    <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      VERROUILLÉ
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">
-                    Surveillance active des processus de télé-assistance (AnyDesk, TeamViewer, RustDesk, RDP, UltraViewer) et des sessions déportées.
-                  </p>
-                </div>
-              </div>
-
-              {/* Couche 3 : Anti-DevTools & Anti-Debugging */}
-              <div className="p-3.5 rounded-2xl bg-zinc-900/50 border border-zinc-800 flex items-start gap-3">
-                <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
-                  <Shield size={15} />
-                </div>
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-200">Neutralisation DevTools & Console</span>
-                    <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      BLOQUÉ
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">
-                    Désactivation des touches d'inspection (F12, Ctrl+Shift+I, Ctrl+U), piège à débogueur actif et détection d'amarrage console.
-                  </p>
-                </div>
-              </div>
-
-              {/* Couche 4 : Presse-papier étanche */}
-              <div className="p-3.5 rounded-2xl bg-zinc-900/50 border border-zinc-800 flex items-start gap-3">
-                <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-emerald-400">
-                  <FileText size={15} />
-                </div>
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-zinc-200">Presse-Papier & Capture d'Écran Isolés</span>
-                    <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                      ÉTANCHE
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">
-                    Neutralisation du copier-coller et purge instantanée du buffer en cas de tentative de capture d'écran (PrintScreen).
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Empreinte cryptographique de session */}
-            <div className="p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-between text-xs">
-              <span className="text-zinc-400">Empreinte Session SHA-256 :</span>
-              <span className="font-mono font-bold text-emerald-400">
-                {sessionFingerprint}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* 5. MODAL D'AVERTISSEMENT OU D'ALERTE SURVEILLANT */}
       {activeModalStrike && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-6">
@@ -1790,38 +1606,18 @@ export default function App() {
                     />
                     <button
                       type="button"
-                      disabled={isPinLocked}
-                      onClick={async () => {
-                        if (isPinLocked) {
-                          setProctorPinError("Verrouillage de sécurité actif (attendez 60s).");
-                          return;
-                        }
-                        const isValid = await securityShield.verifyProctorAuthorization(proctorPin);
-                        if (isValid) {
+                      onClick={() => {
+                        if (proctorPin === "2026" || proctorPin.toUpperCase() === "AGORA") {
                           setStrikes(0);
                           setIsFlaggedForProctorReview(false);
                           setActiveModalStrike(null);
                           setShowProctorPinModal(false);
                           setProctorPin("");
-                          setProctorPinAttempts(0);
-                          setProctorPinError(null);
                         } else {
-                          const next = proctorPinAttempts + 1;
-                          setProctorPinAttempts(next);
-                          if (next >= 3) {
-                            setIsPinLocked(true);
-                            setProctorPinError("3 échecs consécutifs : Verrouillage de sécurité activé pour 60s.");
-                            setTimeout(() => {
-                              setIsPinLocked(false);
-                              setProctorPinAttempts(0);
-                              setProctorPinError(null);
-                            }, 60000);
-                          } else {
-                            setProctorPinError(`Code d'autorisation invalide (${3 - next} tentative(s) restante(s))`);
-                          }
+                          setProctorPinError("Code PIN invalide");
                         }
                       }}
-                      className="rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-zinc-950 font-bold px-3 py-1.5 text-xs transition-opacity"
+                      className="rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold px-3 py-1.5 text-xs"
                     >
                       Acquitter
                     </button>

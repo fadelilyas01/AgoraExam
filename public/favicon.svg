@@ -19,7 +19,7 @@
     stroke-linejoin="round"
   />
 
-  <!-- Cadre interne biseauté -->
+  <!-- Cadre interne -->
   <path
     d="M24 8L11 13.8V23.2C11 31.8 16.7 39.2 24 41.5C31.3 39.2 37 31.8 37 23.2V13.8L24 8Z"
     fill="#18181b"
@@ -29,7 +29,7 @@
   <!-- Fronton de l'Agora -->
   <path d="M24 13L17 17.5H31L24 13Z" fill="url(#agoraInnerGrad)" />
 
-  <!-- Les 3 colonnes académiques de l'Agora -->
+  <!-- Colonnes académiques -->
   <rect x="18" y="19.5" width="2.5" height="11" rx="1.2" fill="#34d399" />
   <rect x="22.75" y="19.5" width="2.5" height="11" rx="1.2" fill="#ffffff" />
   <rect x="27.5" y="19.5" width="2.5" height="11" rx="1.2" fill="#34d399" />
@@ -39,7 +39,4 @@
     d="M16 32H32V33.8C32 34.5 31.4 35 30.7 35H17.3C16.6 35 16 34.5 16 33.8V32Z"
     fill="url(#agoraInnerGrad)"
   />
-
-  <!-- Point focal de vérification cryptographique souveraine -->
-  <circle cx="24" cy="24.5" r="1.5" fill="#10b981" />
 </svg>
