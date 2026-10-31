@@ -160,7 +160,7 @@ export default function App() {
     const snapshotBase64 = captureEvidenceSnapshot();
     let evidencePath = "";
 
-    if (snapshotBase64) {
+    if (snapshotBase64 && isTauri) {
       try {
         evidencePath = await invoke<string>("enregistrer_preuve", {
           attemptId: 48291,
@@ -174,14 +174,16 @@ export default function App() {
     }
 
     if (newStrikeCount < 3) {
-      try {
-        await invoke("signaler_avertissement", {
-          attemptId: 48291,
-          strikeCount: newStrikeCount,
-          motif: reason,
-        });
-      } catch (e) {
-        console.error("Échec signalement avertissement :", e);
+      if (isTauri) {
+        try {
+          await invoke("signaler_avertissement", {
+            attemptId: 48291,
+            strikeCount: newStrikeCount,
+            motif: reason,
+          });
+        } catch (e) {
+          console.error("Échec signalement avertissement :", e);
+        }
       }
 
       if (policy !== "audit") {
@@ -201,15 +203,17 @@ export default function App() {
         // Aucune expulsion automatique par l'IA !
         // L'incident est consigné au dossier et seul un surveillant humain est alerté pour arbitrer.
         setIsFlaggedForProctorReview(true);
-        try {
-          await invoke("alerter_surveillant", {
-            attemptId: 48291,
-            strikeCount: newStrikeCount,
-            motif: reason,
-            evidencePath: evidencePath || null,
-          });
-        } catch (e) {
-          console.error("Échec transmission alerte surveillant :", e);
+        if (isTauri) {
+          try {
+            await invoke("alerter_surveillant", {
+              attemptId: 48291,
+              strikeCount: newStrikeCount,
+              motif: reason,
+              evidencePath: evidencePath || null,
+            });
+          } catch (e) {
+            console.error("Échec transmission alerte surveillant :", e);
+          }
         }
 
         setActiveModalStrike({
@@ -223,22 +227,24 @@ export default function App() {
       } else if (policy === "strict") {
         // 2. POLITIQUE STRICTE (Concours spécifiques avec exclusion immédiate)
         setIsExpelled(true);
-        try {
-          await invoke("expulser_etudiant", {
-            moodleUrl: "https://moodle.universite.fr",
-            wstoken: "secret_token_session_placeholder",
-            attemptId: 48291,
-            motif: reason,
-          });
-        } catch (e) {
-          console.error("Échec expulsion étudiant :", e);
+        if (isTauri) {
+          try {
+            await invoke("expulser_etudiant", {
+              moodleUrl: "https://moodle.universite.fr",
+              wstoken: "secret_token_session_placeholder",
+              attemptId: 48291,
+              motif: reason,
+            });
+          } catch (e) {
+            console.error("Échec expulsion étudiant :", e);
+          }
         }
       } else {
         // 3. POLITIQUE PÉDAGOGIQUE (Audit Trail Silencieux pour TP/Contrôle continu)
         setIsFlaggedForProctorReview(true);
       }
     }
-  }, [strikes, captureEvidenceSnapshot, policy]);
+  }, [strikes, captureEvidenceSnapshot, policy, isTauri]);
 
   // Boucle de vision locale avec Tolérance 4s (Anti-faux positifs)
   useEffect(() => {
@@ -459,23 +465,38 @@ export default function App() {
     };
   }, [isExamStarted, isExpelled, isFinished, handleWarning]);
 
-  // Écoute des événements système Tauri (Focus perdu, alt-tab, etc.)
+  // Écoute des événements système Tauri (Focus perdu, alt-tab, etc.) — Uniquement dans l'application native
   useEffect(() => {
-    if (!isExamStarted) return;
+    if (!isTauri || !isExamStarted) return;
 
-    const unlistenSecurity = listen<string>("security_violation", (event) => {
+    let unlistenSecurityFn: (() => void) | null = null;
+    let unlistenFocusFn: (() => void) | null = null;
+
+    listen<string>("security_violation", (event) => {
       handleWarning(`Violation système : ${event.payload}`);
-    });
+    })
+      .then((unlisten) => {
+        unlistenSecurityFn = unlisten;
+      })
+      .catch((err) => {
+        console.warn("Écoute security_violation indisponible :", err);
+      });
 
-    const unlistenFocus = listen<string>("window_focus_lost", (event) => {
+    listen<string>("window_focus_lost", (event) => {
       handleWarning(`Perte de focus de la fenêtre : ${event.payload}`);
-    });
+    })
+      .then((unlisten) => {
+        unlistenFocusFn = unlisten;
+      })
+      .catch((err) => {
+        console.warn("Écoute window_focus_lost indisponible :", err);
+      });
 
     return () => {
-      unlistenSecurity.then((f) => f());
-      unlistenFocus.then((f) => f());
+      if (unlistenSecurityFn) unlistenSecurityFn();
+      if (unlistenFocusFn) unlistenFocusFn();
     };
-  }, [isExamStarted, handleWarning]);
+  }, [isTauri, isExamStarted, handleWarning]);
 
   const getPipPositionClass = (pos: PipPosition) => {
     switch (pos) {
