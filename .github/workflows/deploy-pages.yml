@@ -13,10 +13,10 @@ permissions:
 
 concurrency:
   group: 'pages'
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -34,8 +34,7 @@ jobs:
       - name: Build site
         run: npm run build
 
-      # Déploiement garanti et infaillible sur la branche gh-pages
-      # Fonctionne immédiatement sans configuration préalable dans les paramètres du dépôt
+      # 1. Sauvegarde sur la branche gh-pages (garantit la compatibilité avec "Deploy from branch")
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -43,21 +42,22 @@ jobs:
           publish_dir: ./dist
           force_orphan: true
 
-      # Déploiement natif GitHub Pages (si activé dans Settings > Pages > Source: GitHub Actions)
-      - name: Setup Pages (Natif)
-        id: pages_setup
-        uses: actions/configure-pages@v4
-        continue-on-error: true
-
-      - name: Upload artifact (Natif)
-        if: steps.pages_setup.outcome == 'success'
+      # 2. Upload artifact pour le mode GitHub Actions
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist'
-        continue-on-error: true
+          path: ./dist
 
-      - name: Deploy to GitHub Pages (Natif)
-        if: steps.pages_setup.outcome == 'success'
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        continue-on-error: true
