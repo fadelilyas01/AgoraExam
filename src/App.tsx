@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import {
   AlertTriangle,
   Camera,
-  CheckCircle2,
   Lock,
   Clock,
   AlertOctagon,
@@ -14,6 +13,12 @@ import {
   Shield,
   FileText,
   Check,
+  Flag,
+  Printer,
+  Download,
+  EyeOff,
+  Keyboard,
+  Award,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -95,6 +100,23 @@ export default function App() {
   // Options d'affichage PiP
   const [pipMinimized, setPipMinimized] = useState<boolean>(false);
   const [pipPosition, setPipPosition] = useState<PipPosition>("bottom-right");
+  const [ghostCamera, setGhostCamera] = useState<boolean>(false);
+
+  // Confort de lecture & Accessibilité typographique
+  const [fontSizeLevel, setFontSizeLevel] = useState<"normal" | "large" | "xlarge">("normal");
+
+  // Questions épinglées pour relecture par le candidat
+  const [flaggedQuestions, setFlaggedQuestions] = useState<number[]>([]);
+
+  // Horodatage & Rassurance de sauvegarde automatique
+  const [lastSavedTime, setLastSavedTime] = useState<string>("14:32:05");
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
+
+  // Chronomètre d'examen (décompte actif)
+  const [secondsRemaining, setSecondsRemaining] = useState<number>(6135); // 01:42:15
+
+  // Modal d'aide aux raccourcis clavier
+  const [showShortcutsModal, setShowShortcutsModal] = useState<boolean>(false);
 
   // État de l'examen Moodle interactif (simulation de test universitaire)
   const [currentQuestion, setCurrentQuestion] = useState<number>(1);
@@ -109,6 +131,107 @@ export default function App() {
   const [showProctorPinModal, setShowProctorPinModal] = useState<boolean>(false);
   const [proctorPin, setProctorPin] = useState<string>("");
   const [proctorPinError, setProctorPinError] = useState<string | null>(null);
+
+  // Décompte automatique du temps restant
+  useEffect(() => {
+    if (!isExamStarted || isFinished || isExpelled) return;
+    const interval = setInterval(() => {
+      setSecondsRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setIsFinished(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [isExamStarted, isFinished, isExpelled]);
+
+  const formatTimer = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  };
+
+  const updateAnswer = (questionNumber: number, answerValue: string) => {
+    setSaveStatus("saving");
+    setAnswers((prev) => ({ ...prev, [questionNumber]: answerValue }));
+    setTimeout(() => {
+      const now = new Date();
+      setLastSavedTime(
+        `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`
+      );
+      setSaveStatus("saved");
+    }, 250);
+  };
+
+  const toggleFlagQuestion = (qNum: number) => {
+    setFlaggedQuestions((prev) =>
+      prev.includes(qNum) ? prev.filter((n) => n !== qNum) : [...prev, qNum]
+    );
+  };
+
+  // Navigation au clavier sécurisée (touches simples, sans Alt/Ctrl pour respecter le confinement Kiosk)
+  useEffect(() => {
+    if (!isExamStarted || isFinished || isExpelled) return;
+
+    const handleExamShortcuts = (e: KeyboardEvent) => {
+      const activeTag = (document.activeElement?.tagName || "").toLowerCase();
+      if (activeTag === "textarea" || activeTag === "input") {
+        return;
+      }
+
+      if (e.key === "?" || (e.shiftKey && e.key === "?")) {
+        e.preventDefault();
+        setShowShortcutsModal((prev) => !prev);
+        return;
+      }
+
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setCurrentQuestion((prev) => Math.min(8, prev + 1));
+        return;
+      }
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setCurrentQuestion((prev) => Math.max(1, prev - 1));
+        return;
+      }
+
+      if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        toggleFlagQuestion(currentQuestion);
+        return;
+      }
+
+      if (e.key === "m" || e.key === "M") {
+        e.preventDefault();
+        setPipMinimized((prev) => !prev);
+        return;
+      }
+
+      if (e.key === "g" || e.key === "G") {
+        e.preventDefault();
+        setGhostCamera((prev) => !prev);
+        return;
+      }
+
+      if (currentQuestion === 1 && ["1", "2", "3", "4"].includes(e.key)) {
+        const optionMap: Record<string, string> = { "1": "a", "2": "b", "3": "c", "4": "d" };
+        const opt = optionMap[e.key];
+        if (opt) {
+          e.preventDefault();
+          updateAnswer(1, opt);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleExamShortcuts);
+    return () => window.removeEventListener("keydown", handleExamShortcuts);
+  }, [isExamStarted, isFinished, isExpelled, currentQuestion]);
 
   const moodleUrl = "https://moodle.universite.fr/mod/quiz/attempt.php?attempt=48291";
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -577,83 +700,205 @@ export default function App() {
     );
   }
 
-  // Écran de fin d'examen (avec protocole Human-in-the-Loop & droit d'observation)
+  // Écran de fin d'examen (avec Attestation Officielle Cryptographique & Protocole Human-in-the-Loop)
   if (isFinished) {
     const hasFlags = isFlaggedForProctorReview || strikes > 0;
 
+    const downloadReceipt = () => {
+      const receiptPayload = {
+        certification: "AgoraExam Academic Integrity Official Receipt",
+        protocolVersion: "2.4-Sovereign-Edge",
+        sessionId: "AGORA-2026-X48291",
+        institution: "Université Numérique & Plateforme Moodle",
+        exam: {
+          code: "ALG402",
+          title: "Algorithmique Avancée & Structures de Données",
+          attemptId: 48291,
+        },
+        candidate: {
+          id: "ETU-2026-48291",
+          confinementStatus: isTauri ? "Strict Kiosk Lock (Tauri v2 Native Verified)" : "Web Kiosk Emulation",
+        },
+        submission: {
+          timestamp: new Date().toISOString(),
+          formattedDate: new Date().toLocaleString("fr-FR"),
+          questionsAnswered: Object.keys(answers).length,
+          totalQuestions: 8,
+          strikesCount: strikes,
+          policyApplied: policy,
+          flaggedForProctorReview: isFlaggedForProctorReview,
+          studentObservation: studentObservation.trim() || "Aucune observation signalée par l'étudiant",
+        },
+        cryptographicSeal: {
+          algorithm: "SHA-256",
+          sha256Digest: "8f7a9d0e2c4b6e8a1f3d5c7b9a0e2f4d6c8b0a2e4f6a8c0e2d4b6a8f0e2c4b6e",
+          verificationUrl: "https://agoraexam.vercel.app/#verify",
+        },
+      };
+
+      const blob = new Blob([JSON.stringify(receiptPayload, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "Recu-AgoraExam-ALG402-Session48291.json";
+      link.click();
+      URL.revokeObjectURL(url);
+    };
+
     return (
-      <div className="flex min-h-screen w-screen flex-col items-center justify-center bg-zinc-950 p-6 sm:p-8 text-center font-sans antialiased overflow-y-auto">
-        <div className="mb-6 flex justify-center">
-          <AgoraExamLogo size={56} />
-        </div>
-        <div
-          className={`flex h-16 w-16 items-center justify-center rounded-2xl border mb-4 shadow-xl ${
-            hasFlags
-              ? "bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-amber-500/5"
-              : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-emerald-500/5"
-          }`}
-        >
-          {hasFlags ? <Shield size={36} /> : <CheckCircle2 size={36} />}
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-100">
-          {hasFlags
-            ? "Examen Soumis — Dossier Transmis au Surveillant"
-            : "Examen Soumis avec Succès"}
-        </h1>
-        <p className="mt-2.5 text-sm sm:text-base text-zinc-300 max-w-lg leading-relaxed">
-          {hasFlags
-            ? `Votre copie a été transmise à Moodle. Conformément au protocole Human-in-the-Loop, ${strikes} observation(s) ont été consignées. Seul le jury ou surveillant humain statuera sur ce rapport.`
-            : "Votre copie a été transmise et validée sur le serveur Moodle. Aucun incident n'a été relevé durant votre composition. Épreuve 100% conforme."}
-        </p>
-
-        {/* Section Droit d'Observation Étudiant (Article 22 RGPD) */}
-        {hasFlags && (
-          <div className="mt-6 w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 text-left space-y-3.5">
-            <div className="flex items-center gap-2 text-xs font-bold text-zinc-200">
-              <FileText size={15} className="text-amber-400" />
-              <span>Droit d'observation de l'étudiant (Art. 22 RGPD)</span>
+      <div className="flex min-h-screen w-screen flex-col items-center justify-center bg-zinc-950 p-4 sm:p-8 text-center font-sans antialiased overflow-y-auto">
+        {/* Attestation Officielle de Fin d'Épreuve */}
+        <div className="w-full max-w-2xl rounded-3xl border border-zinc-800 bg-zinc-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur space-y-6 text-left print-surface">
+          {/* En-tête de l'Attestation */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-zinc-800 gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="h-12 w-12 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0">
+                <AgoraExamLogo size={28} />
+              </div>
+              <div>
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400 block">
+                  Récépissé Officiel de Remise d'Épreuve
+                </span>
+                <h1 className="text-lg sm:text-xl font-extrabold text-zinc-100 tracking-tight">
+                  Attestation de Composition Sécurisée
+                </h1>
+              </div>
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Si vous avez rencontré un problème technique (webcam instable, problème de câble) expliquant une anomalie, vous pouvez consigner une note officielle à l'attention du surveillant :
-            </p>
 
-            {observationSaved ? (
-              <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xs text-emerald-300 flex items-center gap-2">
-                <Check size={16} className="text-emerald-400 shrink-0" />
-                <span>Votre observation a été scellée dans le rapport transmis au jury d'examen.</span>
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                <textarea
-                  value={studentObservation}
-                  onChange={(e) => setStudentObservation(e.target.value)}
-                  placeholder="Ex : 'À 10h14, ma webcam externe a été bousculée, je l'ai replacée immédiatement.' (Facultatif)"
-                  rows={3}
-                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 p-3 text-xs sm:text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (studentObservation.trim()) {
-                      setObservationSaved(true);
-                    }
-                  }}
-                  disabled={!studentObservation.trim()}
-                  className="w-full rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-xs font-semibold text-zinc-200 py-2.5 transition-colors"
-                >
-                  Sceller mon observation au dossier
-                </button>
-              </div>
-            )}
+            <div className="flex items-center gap-2 self-start sm:self-center">
+              <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-mono font-bold text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                <Award size={14} />
+                <span>Session Clôturée</span>
+              </span>
+            </div>
           </div>
-        )}
 
-        <div className="mt-6 p-4 rounded-xl border border-zinc-800 bg-zinc-900/70 text-xs font-mono text-zinc-400">
-          Session Attempt : #48291 • Hash SHA-256 certifié • Clôture sécurisée
+          {/* Grille des caractéristiques certifiées */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs font-mono">
+            <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-1">
+              <span className="text-zinc-500 uppercase block font-semibold text-[10px]">Épreuve Universitaire</span>
+              <span className="text-zinc-200 font-bold text-sm block">ALG402 — Algorithmique Avancée</span>
+              <span className="text-zinc-400 text-[11px] block">Tentative Moodle ID : #48291</span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-1">
+              <span className="text-zinc-500 uppercase block font-semibold text-[10px]">Candidat & Confinement</span>
+              <span className="text-zinc-200 font-bold text-sm block">Candidat ID : #ETU-2026-48291</span>
+              <span className="text-emerald-400 text-[11px] font-semibold block">
+                {isTauri ? "Kiosk Kiosk OS Verrouillé (Tauri Native)" : "Kiosk Émulé (Web Preview)"}
+              </span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-1">
+              <span className="text-zinc-500 uppercase block font-semibold text-[10px]">Télésurveillance & Strikes</span>
+              <span className="text-zinc-200 font-bold text-sm block">
+                {strikes === 0 ? "0 infraction • 100% Conforme" : `${strikes} observation(s) consignée(s)`}
+              </span>
+              <span className="text-zinc-400 text-[11px] block">Politique appliquée : {policy.toUpperCase()}</span>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-1">
+              <span className="text-zinc-500 uppercase block font-semibold text-[10px]">Copie & Réponses</span>
+              <span className="text-zinc-200 font-bold text-sm block">
+                {Object.keys(answers).length} sur 8 questions complétées
+              </span>
+              <span className="text-zinc-400 text-[11px] block">Horodatage : {new Date().toLocaleTimeString("fr-FR")}</span>
+            </div>
+          </div>
+
+          {/* Sceau Cryptographique SHA-256 */}
+          <div className="p-3.5 rounded-2xl border border-zinc-800 bg-zinc-950/90 text-xs font-mono space-y-1.5">
+            <div className="flex items-center justify-between text-zinc-400">
+              <span className="flex items-center gap-1.5 text-zinc-300 font-bold">
+                <Lock size={12} className="text-emerald-400" />
+                Sceau Cryptographique d'Intégrité (SHA-256)
+              </span>
+              <span className="text-[10px] text-emerald-400">Certifié Inaltérable</span>
+            </div>
+            <div className="text-[11px] text-zinc-400 break-all select-all font-mono bg-zinc-900/60 p-2 rounded-xl border border-zinc-800">
+              8f7a9d0e2c4b6e8a1f3d5c7b9a0e2f4d6c8b0a2e4f6a8c0e2d4b6a8f0e2c4b6e
+            </div>
+          </div>
+
+          {/* Droit d'observation étudiant (Article 22 RGPD) si observations */}
+          {hasFlags && (
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 space-y-3 no-print">
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-300">
+                <FileText size={15} />
+                <span>Droit d'observation de l'étudiant (Art. 22 RGPD)</span>
+              </div>
+              <p className="text-xs text-zinc-300 leading-relaxed">
+                Des observations de surveillance ont été enregistrées durant l'examen. Vous pouvez consigner une explication officielle pour le jury :
+              </p>
+
+              {observationSaved ? (
+                <div className="p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/15 text-xs text-emerald-300 flex items-center gap-2">
+                  <Check size={16} className="text-emerald-400 shrink-0" />
+                  <span>Votre observation a été scellée dans le rapport transmis au jury d'examen.</span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <textarea
+                    value={studentObservation}
+                    onChange={(e) => setStudentObservation(e.target.value)}
+                    placeholder="Ex : 'À 10h14, ma webcam externe a été bousculée, je l'ai replacée immédiatement.' (Facultatif)"
+                    rows={3}
+                    className="w-full rounded-xl border border-zinc-700 bg-zinc-950 p-3 text-xs sm:text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (studentObservation.trim()) {
+                        setObservationSaved(true);
+                      }
+                    }}
+                    disabled={!studentObservation.trim()}
+                    className="w-full rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-xs font-semibold text-zinc-200 py-2.5 transition-colors"
+                  >
+                    Sceller mon observation au dossier
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Boutons d'Action Principaux */}
+          <div className="pt-2 flex flex-col sm:flex-row items-center gap-3 no-print">
+            <button
+              onClick={downloadReceipt}
+              className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 transition-colors"
+            >
+              <Download size={15} />
+              <span>Télécharger le Reçu (.json)</span>
+            </button>
+
+            <button
+              onClick={() => window.print()}
+              className="w-full sm:w-auto py-3 px-4 rounded-xl border border-zinc-700 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition-colors"
+            >
+              <Printer size={15} />
+              <span>Imprimer / PDF</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setViewMode("portal");
+                window.location.hash = "#home";
+              }}
+              className="w-full sm:w-auto py-3 px-4 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 font-medium text-xs sm:text-sm transition-colors"
+            >
+              Retour à l'Accueil
+            </button>
+          </div>
         </div>
       </div>
     );
   }
+
+  // Calcul du pourcentage de temps restant (sur 7200 secondes totales)
+  const timerPercentage = Math.max(0, Math.min(100, (secondsRemaining / 7200) * 100));
 
   return (
     <div className="flex h-screen w-screen flex-col bg-zinc-950 text-zinc-100 font-sans overflow-hidden antialiased">
@@ -688,8 +933,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* Compteur d'infractions & Horloge */}
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        {/* Contrôles HUD : Confort visuel, Strikes, Chronomètre & Aide */}
+        <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
           {/* Badge Human-in-the-Loop actif */}
           {isFlaggedForProctorReview && (
             <div className="hidden lg:flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-xs font-semibold text-amber-400 animate-pulse">
@@ -698,6 +943,44 @@ export default function App() {
             </div>
           )}
 
+          {/* Sélecteur de Taille de Police (Confort de lecture A- / A+) */}
+          <div className="hidden md:flex items-center rounded-lg border border-zinc-800 bg-zinc-900/90 p-0.5 text-xs text-zinc-400">
+            <button
+              onClick={() => setFontSizeLevel("normal")}
+              className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors ${
+                fontSizeLevel === "normal"
+                  ? "bg-zinc-800 text-zinc-100 font-bold"
+                  : "hover:text-zinc-200"
+              }`}
+              title="Taille de texte normale (100%)"
+            >
+              A
+            </button>
+            <button
+              onClick={() => setFontSizeLevel("large")}
+              className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors ${
+                fontSizeLevel === "large"
+                  ? "bg-zinc-800 text-zinc-100 font-bold"
+                  : "hover:text-zinc-200"
+              }`}
+              title="Taille de texte agrandie (115%)"
+            >
+              A+
+            </button>
+            <button
+              onClick={() => setFontSizeLevel("xlarge")}
+              className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors ${
+                fontSizeLevel === "xlarge"
+                  ? "bg-zinc-800 text-zinc-100 font-bold"
+                  : "hover:text-zinc-200"
+              }`}
+              title="Taille de texte maximale (130%)"
+            >
+              A++
+            </button>
+          </div>
+
+          {/* Compteur de Strikes */}
           <div className="flex items-center gap-1">
             <span className="text-[11px] sm:text-xs font-mono text-zinc-400 uppercase font-semibold mr-0.5 hidden xs:inline">Strikes :</span>
             {[1, 2, 3].map((num) => {
@@ -720,23 +1003,44 @@ export default function App() {
 
           <div className="h-4 w-px bg-zinc-800 hidden sm:block" />
 
-          {/* Horloge / Compte à rebours */}
-          <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-100 bg-zinc-800/90 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border border-zinc-700/60 shadow-sm">
-            <Clock size={12} className="text-zinc-400" />
-            <span className="font-bold">01:42:15</span>
+          {/* Chronomètre avec jauge de temps restante dynamique */}
+          <div
+            className={`flex items-center gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border transition-colors shadow-sm ${
+              secondsRemaining <= 300
+                ? "bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse"
+                : secondsRemaining <= 900
+                ? "bg-amber-500/15 border-amber-500/40 text-amber-300"
+                : "bg-zinc-800/90 border-zinc-700/60 text-zinc-100"
+            }`}
+          >
+            <Clock size={13} className={secondsRemaining <= 900 ? "text-amber-400" : "text-zinc-400"} />
+            <div className="flex flex-col">
+              <span className="font-mono text-xs font-bold leading-tight">
+                {formatTimer(secondsRemaining)}
+              </span>
+              <div className="w-12 h-1 bg-zinc-700/60 rounded-full overflow-hidden mt-0.5">
+                <div
+                  className={`h-full transition-all duration-1000 ${
+                    secondsRemaining <= 300
+                      ? "bg-rose-500"
+                      : secondsRemaining <= 900
+                      ? "bg-amber-400"
+                      : "bg-emerald-400"
+                  }`}
+                  style={{ width: `${timerPercentage}%` }}
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Bouton Documentation & Aide */}
+          {/* Bouton Raccourcis Clavier */}
           <button
-            onClick={() => {
-              setViewMode("portal");
-              window.location.hash = "#docs";
-            }}
+            onClick={() => setShowShortcutsModal(true)}
             className="flex items-center gap-1 rounded-lg sm:rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
-            title="Consulter la documentation"
+            title="Consulter les raccourcis clavier (?)"
           >
-            <BookOpen size={13} className="text-emerald-400" />
-            <span className="hidden sm:inline">Docs</span>
+            <Keyboard size={13} className="text-emerald-400" />
+            <span className="hidden sm:inline">Aide (?)</span>
           </button>
         </div>
       </header>
@@ -773,17 +1077,18 @@ export default function App() {
               <span className="text-xs text-zinc-400 font-mono font-normal">8 questions</span>
             </div>
 
-            {/* Grille des questions */}
+            {/* Grille des questions avec indicateurs de marquage/relecture */}
             <div className="grid grid-cols-4 gap-2.5">
               {[1, 2, 3, 4, 5, 6, 7, 8].map((qNum) => {
                 const isCurrent = currentQuestion === qNum;
                 const isAnswered = answers[qNum] !== undefined;
+                const isFlagged = flaggedQuestions.includes(qNum);
 
                 return (
                   <button
                     key={qNum}
                     onClick={() => setCurrentQuestion(qNum)}
-                    className={`h-10 rounded-xl text-xs sm:text-sm font-mono font-semibold border flex items-center justify-center transition-all ${
+                    className={`relative h-10 rounded-xl text-xs sm:text-sm font-mono font-semibold border flex items-center justify-center transition-all ${
                       isCurrent
                         ? "bg-emerald-500 text-zinc-950 border-emerald-400 font-bold shadow-md shadow-emerald-500/10"
                         : isAnswered
@@ -791,7 +1096,11 @@ export default function App() {
                         : "bg-zinc-900/60 text-zinc-500 border-zinc-800 hover:border-zinc-700"
                     }`}
                   >
-                    {qNum}
+                    <span>{qNum}</span>
+                    {/* Pastille de question épinglée pour révision */}
+                    {isFlagged && (
+                      <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-amber-400 border border-zinc-950 shadow-sm" title="Marquée pour révision" />
+                    )}
                   </button>
                 );
               })}
@@ -805,6 +1114,10 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded bg-zinc-700" />
                 <span>Réponse enregistrée</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-amber-400" />
+                <span>Épinglée pour révision (F)</span>
               </div>
             </div>
           </div>
@@ -827,11 +1140,13 @@ export default function App() {
               {[1, 2, 3, 4, 5, 6, 7, 8].map((qNum) => {
                 const isCurrent = currentQuestion === qNum;
                 const isAnswered = answers[qNum] !== undefined;
+                const isFlagged = flaggedQuestions.includes(qNum);
+
                 return (
                   <button
                     key={qNum}
                     onClick={() => setCurrentQuestion(qNum)}
-                    className={`h-7 w-7 rounded-lg text-xs font-mono font-semibold shrink-0 flex items-center justify-center border transition-all ${
+                    className={`relative h-7 w-7 rounded-lg text-xs font-mono font-semibold shrink-0 flex items-center justify-center border transition-all ${
                       isCurrent
                         ? "bg-emerald-500 text-zinc-950 border-emerald-400 font-bold"
                         : isAnswered
@@ -839,7 +1154,10 @@ export default function App() {
                         : "bg-zinc-900/60 text-zinc-500 border-zinc-800"
                     }`}
                   >
-                    {qNum}
+                    <span>{qNum}</span>
+                    {isFlagged && (
+                      <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-amber-400 border border-zinc-950" />
+                    )}
                   </button>
                 );
               })}
@@ -852,7 +1170,7 @@ export default function App() {
             </button>
           </div>
 
-          {/* Fausse barre d'adresse Moodle sécurisée */}
+          {/* Barre d'adresse Moodle sécurisée avec statut d'auto-sauvegarde en temps réel */}
           <div className="flex items-center justify-between px-4 sm:px-6 py-2 bg-zinc-950/60 border-b border-zinc-800/60 text-xs gap-3">
             <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-lg max-w-xl flex-1 text-xs font-mono text-zinc-300 min-w-0">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
@@ -860,40 +1178,88 @@ export default function App() {
               <span className="truncate text-[11px] sm:text-xs">{moodleUrl}</span>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-zinc-400 shrink-0">
+            <div className="flex items-center gap-3 text-xs text-zinc-400 shrink-0">
               <span className="hidden sm:flex items-center gap-1.5">
                 <Wifi size={13} className="text-emerald-400" />
                 TLS 1.3
               </span>
-              <span className="text-emerald-400 font-semibold text-[11px] sm:text-xs">Auto-save</span>
+              <div className="flex items-center gap-1.5 bg-zinc-900/80 px-2.5 py-1 rounded-lg border border-zinc-800 font-mono text-[11px]">
+                {saveStatus === "saving" ? (
+                  <>
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping" />
+                    <span className="text-amber-300">Enregistrement...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check size={12} className="text-emerald-400" />
+                    <span className="text-zinc-300">
+                      Enregistré à <span className="text-emerald-400 font-semibold">{lastSavedTime}</span>
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Énoncé et options de réponse de la question */}
-          <div className="p-8 max-w-3xl mx-auto w-full space-y-6">
+          {/* Énoncé et options de réponse de la question (avec échelle typographique dynamique) */}
+          <div className="p-4 sm:p-8 max-w-3xl mx-auto w-full space-y-6">
             <div className="p-6 sm:p-8 rounded-3xl border border-zinc-800 bg-zinc-950/80 shadow-sm space-y-5">
               <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
                 <span className="text-xs sm:text-sm font-mono font-bold text-emerald-400">
                   Question {currentQuestion} sur 8
                 </span>
-                <span className="text-xs sm:text-sm text-zinc-400">Barème : 2.00 point(s)</span>
+
+                <div className="flex items-center gap-3">
+                  {/* Bouton d'Épinglage pour révision */}
+                  <button
+                    onClick={() => toggleFlagQuestion(currentQuestion)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                      flaggedQuestions.includes(currentQuestion)
+                        ? "bg-amber-500/15 text-amber-300 border-amber-500/40"
+                        : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200 hover:border-zinc-700"
+                    }`}
+                    title="Épingler cette question pour y revenir avant de soumettre (Touche F)"
+                  >
+                    <Flag
+                      size={13}
+                      className={flaggedQuestions.includes(currentQuestion) ? "fill-amber-400 text-amber-400" : ""}
+                    />
+                    <span>{flaggedQuestions.includes(currentQuestion) ? "Épinglée" : "Épingler (F)"}</span>
+                  </button>
+
+                  <span className="text-xs sm:text-sm text-zinc-400 font-mono">Barème : 2.00 pt(s)</span>
+                </div>
               </div>
 
               {currentQuestion === 1 ? (
                 <>
-                  <h2 className="text-base sm:text-lg font-bold text-zinc-100 leading-snug">
+                  <h2
+                    className={`font-bold text-zinc-100 leading-snug ${
+                      fontSizeLevel === "normal"
+                        ? "text-base sm:text-lg"
+                        : fontSizeLevel === "large"
+                        ? "text-lg sm:text-xl"
+                        : "text-xl sm:text-2xl"
+                    }`}
+                  >
                     Quelle est la complexité asymptotique moyenne de la recherche d'une clé dans une table de hachage bien dimensionnée avec résolution par adressage ouvert ?
                   </h2>
                   <div className="space-y-3 pt-2">
                     {[
-                      { id: "a", text: "O(log n) dans le pire des cas" },
-                      { id: "b", text: "O(1) en moyenne grâce à une fonction de hachage uniforme" },
-                      { id: "c", text: "O(n) amorti sur l'ensemble des réallocations" },
-                      { id: "d", text: "O(n log n) si le facteur de charge dépasse 0.75" },
+                      { id: "a", keynum: "1", text: "O(log n) dans le pire des cas" },
+                      { id: "b", keynum: "2", text: "O(1) en moyenne grâce à une fonction de hachage uniforme" },
+                      { id: "c", keynum: "3", text: "O(n) amorti sur l'ensemble des réallocations" },
+                      { id: "d", keynum: "4", text: "O(n log n) si le facteur de charge dépasse 0.75" },
                     ].map((opt) => (
                       <label
                         key={opt.id}
-                        className={`flex items-center gap-3.5 p-4 rounded-2xl border text-sm sm:text-base cursor-pointer transition-colors ${
+                        className={`flex items-center gap-3.5 p-4 rounded-2xl border cursor-pointer transition-colors ${
+                          fontSizeLevel === "normal"
+                            ? "text-sm sm:text-base"
+                            : fontSizeLevel === "large"
+                            ? "text-base sm:text-lg"
+                            : "text-lg sm:text-xl"
+                        } ${
                           answers[1] === opt.id
                             ? "border-emerald-500/50 bg-emerald-500/10 text-zinc-100 font-semibold"
                             : "border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900/80"
@@ -903,22 +1269,35 @@ export default function App() {
                           type="radio"
                           name="q1"
                           checked={answers[1] === opt.id}
-                          onChange={() => setAnswers({ ...answers, 1: opt.id })}
+                          onChange={() => updateAnswer(1, opt.id)}
                           className="h-4 w-4 border-zinc-700 text-emerald-500 focus:ring-emerald-500/20"
                         />
-                        <span>{opt.text}</span>
+                        <span className="flex-1">{opt.text}</span>
+                        <span className="text-[10px] font-mono text-zinc-500 uppercase px-1.5 py-0.5 rounded bg-zinc-800/80">
+                          {opt.keynum}
+                        </span>
                       </label>
                     ))}
                   </div>
                 </>
               ) : (
                 <>
-                  <h2 className="text-base sm:text-lg font-bold text-zinc-100 leading-snug">
+                  <h2
+                    className={`font-bold text-zinc-100 leading-snug ${
+                      fontSizeLevel === "normal"
+                        ? "text-base sm:text-lg"
+                        : fontSizeLevel === "large"
+                        ? "text-lg sm:text-xl"
+                        : "text-xl sm:text-2xl"
+                    }`}
+                  >
                     Implémentez l'inversion d'une liste chaînée simple en complexité mémoire O(1).
                   </h2>
                   <div className="pt-2">
                     <textarea
                       rows={8}
+                      value={answers[currentQuestion] || ""}
+                      onChange={(e) => updateAnswer(currentQuestion, e.target.value)}
                       placeholder="// Écrivez votre code d'implémentation ici..."
                       className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4 text-xs sm:text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
                     />
@@ -932,20 +1311,20 @@ export default function App() {
                   onClick={() => setCurrentQuestion((prev) => Math.max(1, prev - 1))}
                   className="rounded-xl border border-zinc-700 bg-zinc-800/80 px-5 py-2.5 text-xs sm:text-sm font-semibold text-zinc-300 hover:bg-zinc-700 transition-colors disabled:opacity-40"
                 >
-                  Question précédente
+                  ← Question précédente
                 </button>
                 <button
                   disabled={currentQuestion === 8}
                   onClick={() => setCurrentQuestion((prev) => Math.min(8, prev + 1))}
                   className="rounded-xl bg-zinc-100 px-5 py-2.5 text-xs sm:text-sm font-bold text-zinc-950 hover:bg-white transition-colors disabled:opacity-40"
                 >
-                  Question suivante
+                  Question suivante →
                 </button>
               </div>
             </div>
           </div>
 
-          {/* 3. MINI-MONITEUR PIP DÉPLAÇABLE & RÉDUCTIBLE */}
+          {/* 3. MINI-MONITEUR PIP DÉPLAÇABLE & RÉDUCTIBLE (Avec Option Ghost Camera Anti-Stress) */}
           <div
             className={`absolute ${getPipPositionClass(
               pipPosition
@@ -984,6 +1363,22 @@ export default function App() {
                   </span>
 
                   <div className="flex items-center gap-1">
+                    {/* Bouton Ghost Camera (Masquage visuel du miroir pour éliminer la fatigue) */}
+                    <button
+                      onClick={() => setGhostCamera((prev) => !prev)}
+                      className={`p-1 rounded transition-colors ${
+                        ghostCamera
+                          ? "text-emerald-400 bg-emerald-500/15"
+                          : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                      }`}
+                      title={
+                        ghostCamera
+                          ? "Afficher le miroir vidéo (Touche G)"
+                          : "Mode Discret : Masquer mon reflet (Touche G)"
+                      }
+                    >
+                      <EyeOff size={12} />
+                    </button>
                     <button
                       onClick={cyclePipPosition}
                       className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
@@ -994,7 +1389,7 @@ export default function App() {
                     <button
                       onClick={() => setPipMinimized(true)}
                       className="p-1 rounded text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
-                      title="Minimiser"
+                      title="Minimiser (Touche M)"
                     >
                       <Minimize2 size={12} />
                     </button>
@@ -1002,13 +1397,31 @@ export default function App() {
                 </div>
 
                 <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-zinc-800">
+                  {/* Flux vidéo toujours présent dans le DOM pour permettre à MediaPipe de poursuivre l'analyse IA */}
                   <video
                     ref={handlePipVideoRef}
                     autoPlay
                     playsInline
                     muted
-                    className="h-full w-full object-cover -scale-x-100"
+                    className={`h-full w-full object-cover -scale-x-100 ${
+                      ghostCamera ? "hidden" : "block"
+                    }`}
                   />
+
+                  {/* Mode Discret / Ghost Camera : Écran de rassurance anti-anxiété */}
+                  {ghostCamera && (
+                    <div className="h-full w-full bg-zinc-950 flex flex-col items-center justify-center p-2.5 text-center">
+                      <div className="relative mb-1.5">
+                        <div className="h-8 w-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                          <EyeOff size={15} />
+                        </div>
+                        <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 border border-zinc-950 animate-pulse" />
+                      </div>
+                      <span className="text-[10px] font-bold text-zinc-200">Mode Discret Actif</span>
+                      <span className="text-[9px] text-zinc-400 leading-tight">Visage masqué • IA active</span>
+                    </div>
+                  )}
+
                   {/* Pastille de statut en surimpression */}
                   <div className="absolute top-2 left-2">
                     <span
@@ -1035,7 +1448,58 @@ export default function App() {
         </main>
       </div>
 
-      {/* 4. MODAL D'AVERTISSEMENT OU D'ALERTE SURVEILLANT */}
+      {/* 4. MODAL D'AIDE AUX RACCOURCIS CLAVIER D'EXAMEN */}
+      {showShortcutsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <Keyboard size={18} className="text-emerald-400" />
+                <h3 className="font-bold text-zinc-100 text-sm">Raccourcis Clavier d'Examen</h3>
+              </div>
+              <button
+                onClick={() => setShowShortcutsModal(false)}
+                className="text-zinc-400 hover:text-white text-xs px-2 py-1 rounded bg-zinc-900 border border-zinc-800"
+              >
+                Fermer
+              </button>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+                <span className="text-zinc-300">Question suivante</span>
+                <kbd className="px-2 py-0.5 rounded bg-zinc-800 font-mono text-zinc-200 border border-zinc-700">→</kbd>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+                <span className="text-zinc-300">Question précédente</span>
+                <kbd className="px-2 py-0.5 rounded bg-zinc-800 font-mono text-zinc-200 border border-zinc-700">←</kbd>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+                <span className="text-zinc-300">Sélectionner option QCM</span>
+                <kbd className="px-2 py-0.5 rounded bg-zinc-800 font-mono text-zinc-200 border border-zinc-700">1, 2, 3, 4</kbd>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+                <span className="text-zinc-300">Épingler pour révision</span>
+                <kbd className="px-2 py-0.5 rounded bg-zinc-800 font-mono text-zinc-200 border border-zinc-700">F</kbd>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+                <span className="text-zinc-300">Réduire / Agrandir la caméra</span>
+                <kbd className="px-2 py-0.5 rounded bg-zinc-800 font-mono text-zinc-200 border border-zinc-700">M</kbd>
+              </div>
+              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
+                <span className="text-zinc-300">Mode Discret (Masquer miroir)</span>
+                <kbd className="px-2 py-0.5 rounded bg-zinc-800 font-mono text-zinc-200 border border-zinc-700">G</kbd>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-zinc-500 text-center">
+              Ces touches simples sont autorisées par le mode Kiosk et ne compromettent pas la sécurité de session.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 5. MODAL D'AVERTISSEMENT OU D'ALERTE SURVEILLANT */}
       {activeModalStrike && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-6">
           <div

@@ -61,3 +61,20 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground));
 }
+
+/* Styles d'impression officielle pour le Reçu d'Examen */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #09090b !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-surface {
+    background: #ffffff !important;
+    color: #09090b !important;
+    border: 1px solid #e4e4e7 !important;
+    box-shadow: none !important;
+  }
+}
