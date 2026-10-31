@@ -158,6 +158,105 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
     return "Documentation";
   };
 
+  // Palette de Commandes Rapide (⌘K / Ctrl+K)
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState<boolean>(false);
+  const [commandSearch, setCommandSearch] = useState<string>("");
+
+  // Modal d'assistance visuelle et reconnaissance du LOGO lors du téléchargement
+  const [downloadModalData, setDownloadModalData] = useState<{
+    os: "windows" | "mac" | "linux";
+    filename: string;
+    size: string;
+    sha256: string;
+    instructions: string[];
+    terminalCommand?: string;
+  } | null>(null);
+
+  // États interactifs du Mockup Hero (Démonstration en direct)
+  const [mockupSelectedOption, setMockupSelectedOption] = useState<string>("B");
+  const [mockupCamActive, setMockupCamActive] = useState<boolean>(false);
+  const [mockupCamError, setMockupCamError] = useState<string | null>(null);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Raccourci clavier universel ⌘K / Ctrl+K et Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K")) {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+      }
+      if (e.key === "Escape") {
+        setCommandPaletteOpen(false);
+        setDownloadModalData(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Déclenchement de téléchargement avec feedback visuel immédiat & reconnaissance de l'icône
+  const triggerDownload = (
+    os: "windows" | "mac" | "linux",
+    filename: string,
+    size: string,
+    url: string,
+    sha256: string,
+    instructions: string[],
+    terminalCommand?: string
+  ) => {
+    const a = document.createElement("a");
+    a.href = url;
+    a.setAttribute("download", filename);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    setDownloadModalData({
+      os,
+      filename,
+      size,
+      sha256,
+      instructions,
+      terminalCommand,
+    });
+  };
+
+  const toggleHeroCam = async () => {
+    if (mockupCamActive) {
+      if (heroVideoRef.current && heroVideoRef.current.srcObject) {
+        const stream = heroVideoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach((track) => track.stop());
+        heroVideoRef.current.srcObject = null;
+      }
+      setMockupCamActive(false);
+      return;
+    }
+
+    try {
+      setMockupCamError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: "user" },
+      });
+      setMockupCamActive(true);
+      if (heroVideoRef.current) {
+        heroVideoRef.current.srcObject = stream;
+        await heroVideoRef.current.play();
+      }
+    } catch (err: any) {
+      setMockupCamError("Webcam indisponible ou refusée");
+      setMockupCamActive(false);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (heroVideoRef.current && heroVideoRef.current.srcObject) {
+        const stream = heroVideoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach((t) => t.stop());
+      }
+    };
+  }, []);
+
   // États du générateur Moodle
   const [moodleQuizId, setMoodleQuizId] = useState<string>("142");
   const [moodleUrl, setMoodleUrl] = useState<string>("https://moodle.universite.fr");
@@ -230,8 +329,163 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
   </a>
 </div>`;
 
+  const ALL_COMMANDS = [
+    {
+      category: "Téléchargements Officiels",
+      items: [
+        {
+          id: "dl-win",
+          title: "Télécharger pour Windows (.exe)",
+          desc: "Binaire autonome 20.7 Mo • Sans droits administrateur",
+          badge: "Recommandé",
+          action: () => {
+            changeTab("download");
+            triggerDownload(
+              "windows",
+              "AgoraExam-Setup.exe",
+              "20.7 Mo",
+              "https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-Setup.exe",
+              "a8f9c2e0b571d849a64e101fbb9c24018274d8e57e1b6f00192a837c568912ef",
+              [
+                "Ouvrez votre dossier Téléchargements.",
+                "Repérez l'icône AgoraExam verte sur le fichier AgoraExam-Setup.exe.",
+                "Double-cliquez pour installer et composer sans mot de passe admin."
+              ]
+            );
+          },
+        },
+        {
+          id: "dl-mac-arm",
+          title: "Télécharger pour macOS (Apple Silicon)",
+          desc: "Image disque .dmg native 4.9 Mo pour M1, M2, M3, M4",
+          badge: "ARM64",
+          action: () => {
+            changeTab("download");
+            triggerDownload(
+              "mac",
+              "AgoraExam-aarch64.dmg",
+              "4.9 Mo",
+              "https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-aarch64.dmg",
+              "8c12a7bf9d6482310f54e198b10e3d5a76902cd81347895e4b6c2018ea349120",
+              [
+                "Ouvrez le fichier AgoraExam-aarch64.dmg téléchargé.",
+                "Glissez l'icône AgoraExam dans votre dossier Applications.",
+                "Si Gatekeeper affiche un avertissement au 1er lancement : Clic droit > Ouvrir ou exécutez la commande ci-dessous."
+              ],
+              "xattr -cr /Applications/AgoraExam.app"
+            );
+          },
+        },
+        {
+          id: "dl-linux",
+          title: "Télécharger pour Linux (AppImage)",
+          desc: "Binaire autonome universel pour Ubuntu, Debian, Fedora",
+          badge: "Linux",
+          action: () => {
+            changeTab("download");
+            triggerDownload(
+              "linux",
+              "AgoraExam.AppImage",
+              "84 Mo",
+              "https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.AppImage",
+              "3fa901bc74e92a865f1234098ebc12004589d71e23a490f89b6c0192a8492044",
+              [
+                "Téléchargez AgoraExam.AppImage dans votre dossier de travail.",
+                "Rendez le fichier exécutable via votre gestionnaire de fichiers ou terminal.",
+                "Lancez l'application."
+              ],
+              "chmod +x AgoraExam.AppImage && ./AgoraExam.AppImage"
+            );
+          },
+        },
+      ],
+    },
+    {
+      category: "Mode Web & Bac à Sable",
+      items: [
+        {
+          id: "cmd-web-kiosk",
+          title: "Lancer le Mode Web Kiosk",
+          desc: "Passer l'épreuve dans le navigateur sans installation",
+          badge: "Universel",
+          action: () => {
+            if (onLaunchApp) onLaunchApp();
+          },
+        },
+        {
+          id: "cmd-cam-sandbox",
+          title: "Tester ma Caméra en Direct",
+          desc: "Mire optique et diagnostic des capteurs vidéo/micro",
+          badge: "Live",
+          action: () => {
+            changeTab("docs");
+            selectDocSection("bac-a-sable");
+          },
+        },
+      ],
+    },
+    {
+      category: "Guides Pédagogiques & Sécurité",
+      items: [
+        {
+          id: "cmd-doc-intro",
+          title: "Architecture & Spécifications Générales",
+          desc: "Vision souveraine et confinement matériel",
+          action: () => {
+            changeTab("docs");
+            selectDocSection("intro");
+          },
+        },
+        {
+          id: "cmd-doc-strikes",
+          title: "Règle des 3 Strikes & Human-in-the-Loop",
+          desc: "Tolérance active 4s, Dossier Candidat & Arbitrage Humain",
+          badge: "Éthique",
+          action: () => {
+            changeTab("docs");
+            selectDocSection("regle-strikes");
+          },
+        },
+        {
+          id: "cmd-doc-moodle",
+          title: "Générateur de Bouton Moodle Enseignant",
+          desc: "Générer le bloc HTML sécurisé à coller dans le test",
+          badge: "Enseignant",
+          action: () => {
+            changeTab("docs");
+            selectDocSection("generateur-moodle");
+          },
+        },
+        {
+          id: "cmd-doc-dsi",
+          title: "Déploiement DSI (Intune, GPO & MSI)",
+          desc: "Installation silencieuse sur les postes universitaires",
+          badge: "DSI",
+          action: () => {
+            changeTab("docs");
+            selectDocSection("dsi-deploiement");
+          },
+        },
+      ],
+    },
+  ];
+
   return (
-    <div className="min-h-screen w-full bg-zinc-950 text-zinc-100 font-sans antialiased selection:bg-emerald-500/20 selection:text-emerald-300">
+    <div className="min-h-screen w-full bg-zinc-950 text-zinc-100 font-sans antialiased selection:bg-emerald-500/20 selection:text-emerald-300 relative overflow-x-hidden">
+      {/* Halo d'ambiance supérieur (Linear / Vercel style) */}
+      <div
+        className="pointer-events-none absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+        aria-hidden="true"
+      >
+        <div
+          className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-emerald-500/20 to-teal-400/10 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+          style={{
+            clipPath:
+              "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
+          }}
+        />
+      </div>
+
       {/* ========================================================================= */}
       {/* 1. BARRE DE NAVIGATION PRINCIPALE (HEADER RESPONSIVE)                      */}
       {/* ========================================================================= */}
@@ -294,6 +548,17 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
 
           {/* Actions Droite Desktop */}
           <div className="hidden sm:flex items-center gap-3">
+            {/* Bouton Palette de Commandes ⌘K */}
+            <button
+              onClick={() => setCommandPaletteOpen(true)}
+              className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 text-xs text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 transition-colors"
+              aria-label="Recherche rapide"
+            >
+              <Search size={13} className="text-zinc-500" />
+              <span>Rechercher...</span>
+              <kbd className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-mono text-zinc-400 border border-zinc-700">⌘K</kbd>
+            </button>
+
             <a
               href="https://github.com/fadelilyas01/AgoraExam"
               target="_blank"
@@ -323,8 +588,16 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             </button>
           </div>
 
-          {/* Bouton Hamburger Mobile (< md) */}
+          {/* Boutons Mobile (< sm) */}
           <div className="flex sm:hidden items-center gap-2">
+            <button
+              onClick={() => setCommandPaletteOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+              aria-label="Recherche rapide ⌘K"
+            >
+              <Search size={15} />
+            </button>
+
             <button
               onClick={() => changeTab("download")}
               className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400 transition-all"
@@ -448,45 +721,86 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             {/* Call To Actions de Téléchargement & Démo Web */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1 max-w-lg mx-auto">
               {detectedOs === "windows" ? (
-                <a
-                  href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-Setup.exe"
-                  className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-sm active:scale-[0.98]"
+                <button
+                  onClick={() =>
+                    triggerDownload(
+                      "windows",
+                      "AgoraExam-Setup.exe",
+                      "20.7 Mo",
+                      "https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-Setup.exe",
+                      "a8f9c2e0b571d849a64e101fbb9c24018274d8e57e1b6f00192a837c568912ef",
+                      [
+                        "Ouvrez votre dossier Téléchargements.",
+                        "Repérez l'icône AgoraExam verte sur le fichier AgoraExam-Setup.exe.",
+                        "Double-cliquez pour installer et composer sans mot de passe admin."
+                      ]
+                    )
+                  }
+                  className="w-full sm:w-auto min-h-[46px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
                 >
                   <WindowsLogo size={18} />
                   <span>Télécharger pour Windows (.exe)</span>
-                </a>
+                </button>
               ) : detectedOs === "mac" ? (
-                <a
-                  href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-aarch64.dmg"
-                  className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-sm active:scale-[0.98]"
+                <button
+                  onClick={() =>
+                    triggerDownload(
+                      "mac",
+                      "AgoraExam-aarch64.dmg",
+                      "4.9 Mo",
+                      "https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-aarch64.dmg",
+                      "8c12a7bf9d6482310f54e198b10e3d5a76902cd81347895e4b6c2018ea349120",
+                      [
+                        "Ouvrez le fichier AgoraExam-aarch64.dmg téléchargé.",
+                        "Glissez l'icône AgoraExam dans votre dossier Applications.",
+                        "Si Gatekeeper affiche un avertissement au 1er lancement : Clic droit > Ouvrir ou tapez xattr -cr dans le Terminal."
+                      ],
+                      "xattr -cr /Applications/AgoraExam.app"
+                    )
+                  }
+                  className="w-full sm:w-auto min-h-[46px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
                 >
                   <AppleLogo size={18} />
                   <span>Télécharger pour macOS (.dmg)</span>
-                </a>
+                </button>
               ) : (
-                <a
-                  href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.AppImage"
-                  className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-sm active:scale-[0.98]"
+                <button
+                  onClick={() =>
+                    triggerDownload(
+                      "linux",
+                      "AgoraExam.AppImage",
+                      "84 Mo",
+                      "https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.AppImage",
+                      "3fa901bc74e92a865f1234098ebc12004589d71e23a490f89b6c0192a8492044",
+                      [
+                        "Téléchargez AgoraExam.AppImage dans votre dossier de travail.",
+                        "Rendez le fichier exécutable via votre gestionnaire de fichiers ou terminal.",
+                        "Lancez l'application."
+                      ],
+                      "chmod +x AgoraExam.AppImage && ./AgoraExam.AppImage"
+                    )
+                  }
+                  className="w-full sm:w-auto min-h-[46px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
                 >
                   <LinuxLogo size={18} />
                   <span>Télécharger pour Linux (.AppImage)</span>
-                </a>
+                </button>
               )}
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 {onLaunchApp && (
                   <button
                     onClick={onLaunchApp}
-                    className="flex-1 sm:flex-initial min-h-[44px] flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-800 transition-colors"
+                    className="flex-1 sm:flex-initial min-h-[46px] flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-800 transition-colors"
                   >
                     <Maximize2 size={15} className="text-emerald-400" />
-                    <span>Mode Web</span>
+                    <span>Mode Web Kiosk</span>
                   </button>
                 )}
 
                 <button
                   onClick={() => changeTab("docs")}
-                  className="flex-1 sm:flex-initial min-h-[44px] flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-300 hover:bg-zinc-900 transition-colors"
+                  className="flex-1 sm:flex-initial min-h-[46px] flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-300 hover:bg-zinc-900 transition-colors"
                 >
                   <BookOpen size={15} className="text-zinc-400" />
                   <span>Documentation</span>
@@ -509,7 +823,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               </span>
             </div>
 
-            {/* Mockup Réaliste & Épuré de l'Interface Kiosk */}
+            {/* Mockup Interactif de l'Interface Kiosk */}
             <div className="pt-4 sm:pt-6">
               <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-2 sm:p-3 shadow-2xl ring-1 ring-zinc-800/80 max-w-4xl mx-auto overflow-hidden">
                 <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-3 sm:p-5 text-left space-y-3.5">
@@ -546,33 +860,90 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                         Quelle structure de données garantit une complexité de recherche en temps constant <code className="text-emerald-300 font-mono">O(1)</code> en moyenne ?
                       </p>
                       
-                      {/* Choix QCM réalistes */}
+                      {/* Choix QCM interactifs */}
                       <div className="space-y-2 pt-1 text-xs sm:text-sm">
-                        <div className="flex items-center gap-2.5 p-2 rounded-lg border border-zinc-800/80 bg-zinc-900/40 text-zinc-400">
-                          <div className="h-3.5 w-3.5 rounded-full border border-zinc-600 flex items-center justify-center" />
-                          <span>A. Arbre binaire de recherche équilibré (AVL)</span>
-                        </div>
-                        <div className="flex items-center gap-2.5 p-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 font-medium">
-                          <div className="h-3.5 w-3.5 rounded-full border border-emerald-400 flex items-center justify-center">
-                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                          </div>
-                          <span>B. Table de hachage avec adressage ouvert</span>
-                        </div>
-                        <div className="flex items-center gap-2.5 p-2 rounded-lg border border-zinc-800/80 bg-zinc-900/40 text-zinc-400">
-                          <div className="h-3.5 w-3.5 rounded-full border border-zinc-600 flex items-center justify-center" />
-                          <span>C. Liste doublement chaînée triée</span>
-                        </div>
+                        {[
+                          { id: "A", label: "A. Arbre binaire de recherche équilibré (AVL)" },
+                          { id: "B", label: "B. Table de hachage avec adressage ouvert", correct: true },
+                          { id: "C", label: "C. Liste doublement chaînée triée" },
+                        ].map((opt) => (
+                          <button
+                            key={opt.id}
+                            onClick={() => setMockupSelectedOption(opt.id)}
+                            className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-left transition-all ${
+                              mockupSelectedOption === opt.id
+                                ? opt.correct
+                                  ? "border-emerald-500/60 bg-emerald-500/10 text-emerald-300 font-medium shadow-sm"
+                                  : "border-zinc-700 bg-zinc-800/80 text-zinc-200 font-medium"
+                                : "border-zinc-800/80 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 truncate">
+                              <div
+                                className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                  mockupSelectedOption === opt.id
+                                    ? "border-emerald-400 bg-emerald-500/20"
+                                    : "border-zinc-600"
+                                }`}
+                              >
+                                {mockupSelectedOption === opt.id && (
+                                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                                )}
+                              </div>
+                              <span className="truncate">{opt.label}</span>
+                            </div>
+                            {mockupSelectedOption === opt.id && opt.correct && (
+                              <span className="text-[11px] font-mono text-emerald-400 shrink-0 hidden sm:inline">
+                                ✓ Réponse sauvegardée (TLS 1.3)
+                              </span>
+                            )}
+                          </button>
+                        ))}
                       </div>
                     </div>
 
                     <div className="p-4 rounded-xl bg-zinc-950/90 border border-zinc-800/80 flex flex-col justify-between gap-3">
                       <div className="space-y-2">
-                        <div className="text-xs font-semibold text-zinc-200 flex items-center gap-2">
-                          <Camera size={14} className="text-emerald-400" />
-                          <span>Webcam PiP Étudiant</span>
+                        <div className="flex items-center justify-between text-xs font-semibold text-zinc-200">
+                          <div className="flex items-center gap-2">
+                            <Camera size={14} className="text-emerald-400" />
+                            <span>Vérification Présence</span>
+                          </div>
+                          <button
+                            onClick={toggleHeroCam}
+                            className="text-[10px] font-mono text-emerald-400 hover:underline"
+                          >
+                            {mockupCamActive ? "Arrêter flux" : "Tester ma caméra"}
+                          </button>
                         </div>
-                        <div className="aspect-video w-full rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[11px] text-zinc-400 font-mono">
-                          Visage Détecté • Conforme
+                        <div className="relative aspect-video w-full rounded-lg bg-zinc-900 border border-zinc-800 overflow-hidden flex items-center justify-center">
+                          {mockupCamError ? (
+                            <div className="text-center p-2 space-y-1">
+                              <span className="text-[10px] text-rose-400 font-mono block">
+                                ⚠ {mockupCamError}
+                              </span>
+                            </div>
+                          ) : mockupCamActive ? (
+                            <>
+                              <video
+                                ref={heroVideoRef}
+                                autoPlay
+                                playsInline
+                                muted
+                                className="h-full w-full object-cover -scale-x-100"
+                              />
+                              <div className="absolute inset-2 border border-emerald-500/40 rounded pointer-events-none" />
+                              <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/70 text-[9px] font-mono text-emerald-400">
+                                30 FPS • Local
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-center p-2 space-y-1">
+                              <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse mx-auto" />
+                              <span className="text-[11px] text-zinc-300 font-mono block">Visage Centré • Conforme</span>
+                              <span className="text-[9px] text-zinc-500 font-mono block">Zéro paquet envoyé au cloud</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="space-y-1.5 pt-2 border-t border-zinc-800/80 text-xs font-mono">
@@ -581,7 +952,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                           <span className="text-emerald-400 font-semibold">0 / 3 (Conforme)</span>
                         </div>
                         <div className="flex items-center justify-between text-zinc-400">
-                          <span>Temps :</span>
+                          <span>Chrono :</span>
                           <span className="text-zinc-200">44:12 restants</span>
                         </div>
                       </div>
@@ -806,15 +1177,28 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 Binaire exécutable autonome (.exe). Double-cliquez pour installer et composer sans mot de passe administrateur.
               </p>
               <div className="pt-2 space-y-2">
-                <a
-                  href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-Setup.exe"
+                <button
+                  onClick={() =>
+                    triggerDownload(
+                      "windows",
+                      "AgoraExam-Setup.exe",
+                      "20.7 Mo",
+                      "https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-Setup.exe",
+                      "a8f9c2e0b571d849a64e101fbb9c24018274d8e57e1b6f00192a837c568912ef",
+                      [
+                        "Ouvrez votre dossier Téléchargements.",
+                        "Repérez l'icône verte AgoraExam sur AgoraExam-Setup.exe.",
+                        "Double-cliquez pour installer et composer sans mot de passe admin."
+                      ]
+                    )
+                  }
                   className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 py-3.5 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-md shadow-emerald-500/10 active:scale-[0.98] text-center"
                 >
                   <AgoraExamLogo size={18} />
                   <span>Télécharger AgoraExam-Setup.exe (20.7 Mo)</span>
-                </a>
+                </button>
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-zinc-400">
-                  <span>Téléchargement direct local certifié</span>
+                  <span>Téléchargement direct certifié</span>
                   <span>•</span>
                   <a
                     href="https://github.com/fadelilyas01/AgoraExam/releases/tag/v0.1.0"
@@ -848,13 +1232,27 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 Image disque (.dmg) native pour puces Apple Silicon. Glissez simplement dans le dossier Applications.
               </p>
               <div className="pt-2">
-                <a
-                  href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-aarch64.dmg"
+                <button
+                  onClick={() =>
+                    triggerDownload(
+                      "mac",
+                      "AgoraExam-aarch64.dmg",
+                      "4.9 Mo",
+                      "https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-aarch64.dmg",
+                      "8c12a7bf9d6482310f54e198b10e3d5a76902cd81347895e4b6c2018ea349120",
+                      [
+                        "Ouvrez le fichier AgoraExam-aarch64.dmg téléchargé.",
+                        "Glissez l'icône AgoraExam dans votre dossier Applications.",
+                        "Si Gatekeeper bloque l'ouverture : Clic droit > Ouvrir ou tapez xattr -cr dans le Terminal."
+                      ],
+                      "xattr -cr /Applications/AgoraExam.app"
+                    )
+                  }
                   className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-zinc-100 py-3.5 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-semibold text-zinc-950 hover:bg-white transition-colors text-center"
                 >
                   <AgoraExamLogo size={18} />
                   <span>Télécharger AgoraExam-aarch64.dmg (4.9 Mo)</span>
-                </a>
+                </button>
               </div>
               <div className="text-xs font-mono text-zinc-400 flex items-center justify-between pt-1">
                 <span>macOS 11.0 Big Sur minimum</span>
@@ -877,13 +1275,27 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 Image disque pour ordinateurs Apple équipés de processeurs Intel Core.
               </p>
               <div className="pt-2">
-                <a
-                  href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-x64.dmg"
+                <button
+                  onClick={() =>
+                    triggerDownload(
+                      "mac",
+                      "AgoraExam-x64.dmg",
+                      "13.4 Mo",
+                      "https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-x64.dmg",
+                      "2de108ca78190fe3241bb690d71a54089c104e7823ab1947238914c6708b5e91",
+                      [
+                        "Ouvrez le fichier AgoraExam-x64.dmg téléchargé.",
+                        "Glissez l'icône AgoraExam dans votre dossier Applications.",
+                        "Si Gatekeeper bloque l'ouverture : Clic droit > Ouvrir ou tapez xattr -cr."
+                      ],
+                      "xattr -cr /Applications/AgoraExam.app"
+                    )
+                  }
                   className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl border border-zinc-700 bg-zinc-800 py-3.5 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors text-center"
                 >
                   <AgoraExamLogo size={18} />
                   <span>Télécharger AgoraExam-x64.dmg (13.4 Mo)</span>
-                </a>
+                </button>
               </div>
               <div className="text-xs font-mono text-zinc-400 flex items-center justify-between pt-1">
                 <span>macOS 10.15 Catalina minimum</span>
@@ -906,20 +1318,48 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 Binaire autonome tout-en-un (.AppImage) ou paquet d'installation natif (.deb) pour distributions Linux académiques.
               </p>
               <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
-                <a
-                  href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.AppImage"
+                <button
+                  onClick={() =>
+                    triggerDownload(
+                      "linux",
+                      "AgoraExam.AppImage",
+                      "84 Mo",
+                      "https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.AppImage",
+                      "3fa901bc74e92a865f1234098ebc12004589d71e23a490f89b6c0192a8492044",
+                      [
+                        "Téléchargez AgoraExam.AppImage.",
+                        "Rendez le fichier exécutable via chmod +x.",
+                        "Lancez l'application."
+                      ],
+                      "chmod +x AgoraExam.AppImage && ./AgoraExam.AppImage"
+                    )
+                  }
                   className="flex-1 min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800 py-3.5 px-3 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors text-center"
                 >
                   <AgoraExamLogo size={16} />
                   <span>AgoraExam.AppImage (84 Mo)</span>
-                </a>
-                <a
-                  href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.deb"
+                </button>
+                <button
+                  onClick={() =>
+                    triggerDownload(
+                      "linux",
+                      "AgoraExam.deb",
+                      "6.3 Mo",
+                      "https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.deb",
+                      "5b78091ecb412984a601289de34018ec723049b1092847a9b0c2310f84719280",
+                      [
+                        "Téléchargez AgoraExam.deb.",
+                        "Installez via apt ou dpkg.",
+                        "Lancez AgoraExam depuis le menu des applications."
+                      ],
+                      "sudo dpkg -i AgoraExam.deb"
+                    )
+                  }
                   className="flex-1 min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800/80 py-3.5 px-3 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors text-center"
                 >
                   <AgoraExamLogo size={16} />
                   <span>Paquet Debian (.deb - 6.3 Mo)</span>
-                </a>
+                </button>
               </div>
               <div className="text-xs font-mono text-zinc-400 flex items-center justify-between pt-1">
                 <span>chmod +x puis exécuter</span>
@@ -1065,7 +1505,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                     placeholder="Filtrer les chapitres..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 pl-9 pr-3 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-emerald-500/50 focus:outline-none"
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 pl-9 pr-3 py-2.5 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
                   />
                 </div>
 
@@ -1131,7 +1571,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 placeholder="Filtrer les guides..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-900/80 pl-9 pr-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-emerald-500/50 focus:outline-none transition-colors"
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-900/80 pl-9 pr-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-500 focus:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none transition-colors"
               />
             </div>
 
@@ -1816,7 +2256,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                         type="text"
                         value={moodleQuizId}
                         onChange={(e) => setMoodleQuizId(e.target.value)}
-                        className="w-full rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm font-mono text-zinc-100 focus:border-emerald-500/50 focus:outline-none"
+                        className="w-full rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm font-mono text-zinc-100 focus:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
                       />
                     </div>
                     <div>
@@ -1825,7 +2265,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                         type="text"
                         value={moodleUrl}
                         onChange={(e) => setMoodleUrl(e.target.value)}
-                        className="w-full rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-100 focus:border-emerald-500/50 focus:outline-none"
+                        className="w-full rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-100 focus:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
                       />
                     </div>
                     <div>
@@ -1834,7 +2274,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                         type="text"
                         value={examName}
                         onChange={(e) => setExamName(e.target.value)}
-                        className="w-full rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-100 focus:border-emerald-500/50 focus:outline-none"
+                        className="w-full rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-100 focus:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
                       />
                     </div>
                   </div>
@@ -2061,6 +2501,228 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
           </a>
         </div>
       </footer>
+
+      {/* ========================================================================= */}
+      {/* MODAL DE RECONNAISSANCE DU LOGICIEL ET ASSISTANCE AU TÉLÉCHARGEMENT       */}
+      {/* ========================================================================= */}
+      {downloadModalData && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="download-modal-title"
+        >
+          <div
+            className="fixed inset-0"
+            onClick={() => setDownloadModalData(null)}
+          />
+          <div className="relative z-10 max-w-lg w-full rounded-3xl border border-zinc-800 bg-zinc-950 p-6 sm:p-8 space-y-6 shadow-2xl animate-in zoom-in-95 duration-150">
+            {/* Header avec grand Logo AgoraExam */}
+            <div className="flex items-start justify-between border-b border-zinc-800 pb-5">
+              <div className="flex items-center gap-4">
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-900 border border-emerald-500/40 p-2.5 shadow-xl shadow-emerald-500/10 shrink-0">
+                  <AgoraExamLogo size={42} />
+                  <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-zinc-950"></span>
+                  </span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
+                      Téléchargement Lancé
+                    </span>
+                    <span className="rounded bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/20">
+                      v0.1.0
+                    </span>
+                  </div>
+                  <h3 id="download-modal-title" className="text-lg sm:text-xl font-bold text-zinc-100">
+                    AgoraExam est en route !
+                  </h3>
+                  <p className="text-xs text-zinc-400 font-mono">
+                    {downloadModalData.filename} ({downloadModalData.size})
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDownloadModalData(null)}
+                className="rounded-xl p-2 text-zinc-400 hover:bg-zinc-900 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500"
+                aria-label="Fermer la fenêtre"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Encart Visuel de Reconnaissance du Fichier dans l'Explorateur */}
+            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-4 space-y-2.5">
+              <span className="text-xs font-semibold text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-emerald-400" />
+                <span>Reconnaître l'application dans vos Téléchargements</span>
+              </span>
+              <div className="flex items-center gap-3.5 p-3 rounded-xl bg-zinc-950/90 border border-zinc-800 shadow-inner">
+                <div className="h-12 w-12 rounded-xl bg-zinc-900 border border-emerald-500/40 p-2 flex items-center justify-center shrink-0">
+                  <AgoraExamLogo size={32} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs sm:text-sm font-bold text-zinc-100 truncate">
+                    {downloadModalData.filename}
+                  </div>
+                  <div className="text-[11px] text-zinc-400 font-mono">
+                    {downloadModalData.os === "windows"
+                      ? "Application Microsoft Windows (64-bit)"
+                      : downloadModalData.os === "mac"
+                      ? "Image Disque Apple (macOS)"
+                      : "Paquet Exécutable Universel Linux"}
+                  </div>
+                </div>
+                <span className="shrink-0 px-2.5 py-1 rounded-lg bg-zinc-800 text-[10px] font-mono font-semibold text-emerald-400 border border-zinc-700">
+                  Signé SHA-256
+                </span>
+              </div>
+            </div>
+
+            {/* Consignes pas à pas selon l'OS */}
+            <div className="space-y-2 text-xs sm:text-sm text-zinc-300">
+              <span className="font-semibold text-zinc-200 block text-xs uppercase tracking-wider font-mono">
+                Consignes d'ouverture :
+              </span>
+              <div className="space-y-2">
+                {downloadModalData.instructions.map((step, idx) => (
+                  <div key={idx} className="flex items-start gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-[11px] font-mono font-bold text-emerald-400 border border-zinc-700">
+                      {idx + 1}
+                    </span>
+                    <span className="leading-relaxed">{step}</span>
+                  </div>
+                ))}
+              </div>
+              {downloadModalData.terminalCommand && (
+                <div className="pt-2">
+                  <span className="text-[11px] text-zinc-400 block mb-1 font-mono">
+                    Commande terminal rapide (si nécessaire) :
+                  </span>
+                  <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900 p-2 text-xs font-mono">
+                    <code className="text-emerald-300 truncate mr-2">{downloadModalData.terminalCommand}</code>
+                    <button
+                      onClick={() => copyToClipboard(downloadModalData.terminalCommand!, "cmd")}
+                      className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold"
+                    >
+                      {copiedSnippet === "cmd" ? "Copié !" : "Copier"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer avec SHA-256 et validation */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-zinc-800 text-xs font-mono text-zinc-400">
+              <button
+                onClick={() => copyToClipboard(downloadModalData.sha256, "sha")}
+                className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors"
+                title="Copier l'empreinte SHA-256"
+              >
+                <Copy size={13} />
+                <span>SHA-256 : {downloadModalData.sha256.slice(0, 14)}...</span>
+                {copiedSnippet === "sha" && <span className="text-emerald-400">✓</span>}
+              </button>
+              <button
+                onClick={() => setDownloadModalData(null)}
+                className="w-full sm:w-auto min-h-[42px] px-6 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-semibold transition-all shadow-md shadow-emerald-500/10 active:scale-[0.98]"
+              >
+                J'ai compris, merci !
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* PALETTE DE COMMANDES RAPIDE (⌘K / Ctrl+K)                                 */}
+      {/* ========================================================================= */}
+      {commandPaletteOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Palette de commandes"
+        >
+          <div
+            className="fixed inset-0"
+            onClick={() => setCommandPaletteOpen(false)}
+          />
+          <div className="relative z-10 max-w-xl w-full rounded-3xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+            {/* Barre de recherche */}
+            <div className="flex items-center border-b border-zinc-800 px-4 py-3.5 gap-3">
+              <Search size={18} className="text-emerald-400 shrink-0" />
+              <input
+                autoFocus
+                type="text"
+                placeholder="Rechercher une action, un téléchargement, un guide..."
+                value={commandSearch}
+                onChange={(e) => setCommandSearch(e.target.value)}
+                className="w-full bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-2 focus-visible:ring-emerald-500 focus:outline-none rounded-lg px-2 py-1"
+              />
+              <kbd className="hidden sm:inline-block rounded bg-zinc-900 px-2 py-0.5 text-[10px] font-mono text-zinc-400 border border-zinc-800">
+                ESC
+              </kbd>
+            </div>
+
+            {/* Liste de commandes filtrées */}
+            <div className="max-h-96 overflow-y-auto p-2 space-y-4">
+              {ALL_COMMANDS.map((category) => {
+                const filtered = category.items.filter(
+                  (it) =>
+                    it.title.toLowerCase().includes(commandSearch.toLowerCase()) ||
+                    it.desc.toLowerCase().includes(commandSearch.toLowerCase())
+                );
+                if (filtered.length === 0) return null;
+
+                return (
+                  <div key={category.category} className="space-y-1">
+                    <span className="px-3 text-[11px] font-mono font-bold text-zinc-400 uppercase tracking-wider">
+                      {category.category}
+                    </span>
+                    <div className="space-y-0.5 pt-1">
+                      {filtered.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            item.action();
+                            setCommandPaletteOpen(false);
+                          }}
+                          className="w-full flex items-center justify-between rounded-xl px-3 py-2.5 text-left hover:bg-zinc-900 transition-colors group focus-visible:ring-2 focus-visible:ring-emerald-500"
+                        >
+                          <div className="min-w-0 pr-2">
+                            <div className="text-sm font-semibold text-zinc-200 group-hover:text-emerald-400 transition-colors">
+                              {item.title}
+                            </div>
+                            <div className="text-xs text-zinc-400 truncate">{item.desc}</div>
+                          </div>
+                          {item.badge && (
+                            <span className="shrink-0 rounded-md bg-zinc-800 px-2 py-0.5 text-[10px] font-mono text-zinc-300 border border-zinc-700">
+                              {item.badge}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer de la palette */}
+            <div className="flex items-center justify-between border-t border-zinc-800 px-4 py-2.5 bg-zinc-900/50 text-[11px] font-mono text-zinc-400">
+              <div className="flex items-center gap-3">
+                <span>↑↓ pour naviguer</span>
+                <span>•</span>
+                <span>Entrée pour valider</span>
+              </div>
+              <span className="text-emerald-400 font-semibold">AgoraExam ⌘K</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

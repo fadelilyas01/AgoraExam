@@ -209,7 +209,7 @@ export function DocumentationPortal({ onClose }: DocumentationPortalProps) {
               placeholder="Rechercher dans la documentation..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950/70 pl-8 pr-8 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500/50 focus:outline-none"
+              className="w-full rounded-lg border border-zinc-800 bg-zinc-950/70 pl-8 pr-8 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
             />
             <span className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-zinc-900 px-1.5 py-0.5 text-[9px] font-mono text-zinc-500 border border-zinc-800">
               ⌘K
@@ -641,7 +641,7 @@ export function DocumentationPortal({ onClose }: DocumentationPortalProps) {
                         type="text"
                         value={moodleQuizId}
                         onChange={(e) => setMoodleQuizId(e.target.value)}
-                        className="w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2 text-xs font-mono text-zinc-200 focus:border-emerald-500/50 focus:outline-none"
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2 text-xs font-mono text-zinc-200 focus:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
                       />
                     </div>
 
@@ -653,7 +653,7 @@ export function DocumentationPortal({ onClose }: DocumentationPortalProps) {
                         type="text"
                         value={moodleUrl}
                         onChange={(e) => setMoodleUrl(e.target.value)}
-                        className="w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2 text-xs text-zinc-200 focus:border-emerald-500/50 focus:outline-none"
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2 text-xs text-zinc-200 focus:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
                       />
                     </div>
 
@@ -665,7 +665,7 @@ export function DocumentationPortal({ onClose }: DocumentationPortalProps) {
                         type="text"
                         value={examName}
                         onChange={(e) => setExamName(e.target.value)}
-                        className="w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2 text-xs text-zinc-200 focus:border-emerald-500/50 focus:outline-none"
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2 text-xs text-zinc-200 focus:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
                       />
                     </div>
                   </div>
