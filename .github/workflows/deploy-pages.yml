@@ -36,15 +36,7 @@ jobs:
           GITHUB_PAGES: "true"
         run: npm run build
 
-      # 1. Sauvegarde sur la branche gh-pages (garantit la compatibilité avec "Deploy from branch")
-      - name: Deploy to gh-pages branch
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          force_orphan: true
-
-      # 2. Upload artifact pour le mode GitHub Actions
+      # Upload artifact pour le deploiement officiel GitHub Pages (actions/deploy-pages)
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
