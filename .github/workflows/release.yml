@@ -1,4 +1,4 @@
-name: Release AgoraExam
+name: Release AgoraExam Multiplateforme (Windows, macOS, Linux)
 
 on:
   push:
@@ -10,37 +10,119 @@ permissions:
   contents: write
 
 jobs:
-  publish-release:
-    name: Publish Official Release & Binaries
+  init-release:
+    name: Initialize Release
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Create or Update GitHub Release
+      - name: Create or Update GitHub Release Header
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name || 'v0.1.0' }}
-          name: AgoraExam ${{ github.ref_name || 'v0.1.0' }} — Distribution Officielle
+          name: AgoraExam ${{ github.ref_name || 'v0.1.0' }} — Distribution Multiplateforme (Windows, macOS, Linux)
           body: |
-            # AgoraExam v0.1.0 — Navigateur d'Examen Sécurisé & E-Proctoring Souverain pour Moodle
+            # AgoraExam — Navigateur d'Examen Sécurisé & E-Proctoring Souverain
 
-            Bienvenue sur la distribution officielle d'**AgoraExam**.
+            Bienvenue sur la distribution officielle multiplateforme d'**AgoraExam**.
 
             ### 📦 Binaires Officiels Disponibles au Téléchargement
-            - **Windows 10 & 11 (64-bit)** : [`AgoraExam-Setup.exe`](https://github.com/fadelilyas01/AgoraExam/releases/download/v0.1.0/AgoraExam-Setup.exe) (20.7 Mo) — Installateur sans droits administrateurs
-            - **Windows Exécutable Portable** : [`AgoraExam.exe`](https://github.com/fadelilyas01/AgoraExam/releases/download/v0.1.0/AgoraExam.exe) (20.7 Mo) — Binaire autonome tout-en-un
-            - **macOS (Apple Silicon & Intel)** : Image disque `.dmg`
-            - **Linux** : Paquet universel `.AppImage`
+            - **Windows (10/11 64-bit)** : [`AgoraExam-Setup.exe`](https://github.com/fadelilyas01/AgoraExam/releases/download/${{ github.ref_name || 'v0.1.0' }}/AgoraExam-Setup.exe) (Installateur) ou [`AgoraExam.exe`](https://github.com/fadelilyas01/AgoraExam/releases/download/${{ github.ref_name || 'v0.1.0' }}/AgoraExam.exe) (Portable)
+            - **macOS Apple Silicon (M1/M2/M3/M4)** : [`AgoraExam-aarch64.dmg`](https://github.com/fadelilyas01/AgoraExam/releases/download/${{ github.ref_name || 'v0.1.0' }}/AgoraExam-aarch64.dmg)
+            - **macOS Intel (x86_64)** : [`AgoraExam-x64.dmg`](https://github.com/fadelilyas01/AgoraExam/releases/download/${{ github.ref_name || 'v0.1.0' }}/AgoraExam-x64.dmg)
+            - **Linux (Ubuntu, Debian, Fedora)** : [`AgoraExam.AppImage`](https://github.com/fadelilyas01/AgoraExam/releases/download/${{ github.ref_name || 'v0.1.0' }}/AgoraExam.AppImage) et paquet Debian [`AgoraExam.deb`](https://github.com/fadelilyas01/AgoraExam/releases/download/${{ github.ref_name || 'v0.1.0' }}/AgoraExam.deb)
 
             ### 🛡️ Spécifications de Sécurité
-            - **Confinement Kiosk Matériel** : Plein écran forcé, neutralisation clavier (Alt+Tab, Alt+F4, F1-F12), blocage multi-écrans HDMI/DisplayPort.
-            - **Vision par Ordinateur Embarquée (Edge Computing)** : Détection faciale 100% en local (WebAssembly), zéro flux vidéo cloud, conforme RGPD.
-            - **Intégration Moodle Native** : Compatible Moodle 3.9+ et 4.x sans aucun plugin serveur obligatoire.
+            - **Confinement Kiosk Hermétique** : Plein écran forcé, neutralisation clavier (Alt+Tab, Alt+F4, F1-F12), blocage multi-écrans HDMI/DisplayPort/AirPlay.
+            - **Vision par Ordinateur Embarquée (Edge Vision)** : Détection de présence et mouvements suspects 100% en local (WebAssembly), zéro flux vidéo envoyé dans le cloud, conforme RGPD.
+            - **Intégration Moodle Universelle** : Compatible avec toutes les versions de Moodle sans plugin serveur obligatoire.
           draft: false
           prerelease: false
-          files: |
-            public/downloads/AgoraExam-Setup.exe
-            public/downloads/AgoraExam.exe
+
+  build-tauri:
+    name: Build ${{ matrix.platform-name }}
+    needs: init-release
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'macos-latest'
+            platform-name: 'macOS Apple Silicon (ARM64)'
+            os-type: 'macos-arm'
+          - platform: 'macos-13'
+            platform-name: 'macOS Intel (x86_64)'
+            os-type: 'macos-x64'
+          - platform: 'ubuntu-22.04'
+            platform-name: 'Linux (AppImage & DEB)'
+            os-type: 'linux'
+          - platform: 'windows-latest'
+            platform-name: 'Windows 10/11 (NSIS & MSI)'
+            os-type: 'windows'
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux dependencies
+        if: matrix.os-type == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libsoup-3.0-dev libjavascriptcoregtk-4.1-dev build-essential curl wget file
+
+      - name: Install Node dependencies
+        run: npm ci || npm install
+
+      - name: Build Tauri Application
+        run: npm run tauri build
+
+      - name: Package Artifacts (Linux)
+        if: matrix.os-type == 'linux'
+        run: |
+          mkdir -p artifacts
+          cp src-tauri/target/release/bundle/appimage/*.AppImage artifacts/AgoraExam.AppImage || true
+          cp src-tauri/target/release/bundle/deb/*.deb artifacts/AgoraExam.deb || true
+
+      - name: Package Artifacts (macOS ARM64)
+        if: matrix.os-type == 'macos-arm'
+        run: |
+          mkdir -p artifacts
+          cp src-tauri/target/release/bundle/dmg/*.dmg artifacts/AgoraExam-aarch64.dmg || true
+
+      - name: Package Artifacts (macOS Intel)
+        if: matrix.os-type == 'macos-x64'
+        run: |
+          mkdir -p artifacts
+          cp src-tauri/target/release/bundle/dmg/*.dmg artifacts/AgoraExam-x64.dmg || true
+
+      - name: Package Artifacts (Windows)
+        if: matrix.os-type == 'windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "artifacts"
+          $setup = Get-ChildItem -Path "src-tauri/target/release/bundle/nsis/*-setup.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($setup) { Copy-Item $setup.FullName "artifacts/AgoraExam-Setup.exe" }
+          $msi = Get-ChildItem -Path "src-tauri/target/release/bundle/msi/*.msi" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($msi) { Copy-Item $msi.FullName "artifacts/AgoraExam.msi" }
+
+      - name: Upload Artifacts to Release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name || 'v0.1.0' }}
+          files: artifacts/*
+          fail_on_unmatched_files: false

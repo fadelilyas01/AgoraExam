@@ -21,6 +21,7 @@ import {
   ChevronDown,
   ChevronRight,
   Monitor,
+  Maximize2,
 } from "lucide-react";
 import {
   AgoraExamLogo,
@@ -453,15 +454,31 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                   <WindowsLogo size={18} />
                   <span>Télécharger pour Windows (.exe)</span>
                 </a>
-              ) : (
-                <button
-                  onClick={() => changeTab("download")}
+              ) : detectedOs === "mac" ? (
+                <a
+                  href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-aarch64.dmg"
                   className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-7 py-3.5 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
                 >
-                  {detectedOs === "mac" ? <AppleLogo size={18} /> : <LinuxLogo size={18} />}
-                  <span>
-                    Télécharger pour {detectedOs === "mac" ? "macOS (.dmg)" : "Linux (.AppImage)"}
-                  </span>
+                  <AppleLogo size={18} />
+                  <span>Télécharger pour macOS (.dmg)</span>
+                </a>
+              ) : (
+                <a
+                  href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.AppImage"
+                  className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-7 py-3.5 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+                >
+                  <LinuxLogo size={18} />
+                  <span>Télécharger pour Linux (.AppImage)</span>
+                </a>
+              )}
+
+              {onLaunchApp && (
+                <button
+                  onClick={onLaunchApp}
+                  className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-6 py-3.5 text-sm sm:text-base font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                >
+                  <Maximize2 size={17} />
+                  <span>Lancer le Mode Web (Sans Installation)</span>
                 </button>
               )}
 
@@ -470,7 +487,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-7 py-3.5 text-sm sm:text-base font-semibold text-zinc-200 hover:bg-zinc-800 hover:text-white transition-colors"
               >
                 <BookOpen size={17} className="text-zinc-400" />
-                <span>Consulter la Documentation</span>
+                <span>Documentation</span>
               </button>
             </div>
 
@@ -826,19 +843,26 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                   Linux (Ubuntu, Debian, Fedora)
                 </span>
                 <span className="rounded bg-zinc-800 px-2.5 py-0.5 text-xs font-mono text-zinc-300">
-                  AppImage
+                  AppImage & DEB
                 </span>
               </div>
               <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                Binaire autonome tout-en-un compatible avec toutes les distributions Linux académiques.
+                Binaire autonome tout-en-un (.AppImage) ou paquet d'installation natif (.deb) pour distributions Linux académiques.
               </p>
-              <div className="pt-2">
+              <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
                 <a
                   href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.AppImage"
-                  className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl border border-zinc-700 bg-zinc-800 py-3.5 px-4 text-sm sm:text-base font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors"
+                  className="flex-1 min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl border border-zinc-700 bg-zinc-800 py-3.5 px-4 text-sm sm:text-base font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors"
                 >
                   <LinuxLogo size={18} />
-                  <span>Télécharger AgoraExam.AppImage (15.1 Mo)</span>
+                  <span>AgoraExam.AppImage</span>
+                </a>
+                <a
+                  href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.deb"
+                  className="flex-1 min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl border border-zinc-700 bg-zinc-800/80 py-3.5 px-4 text-sm sm:text-base font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors"
+                >
+                  <LinuxLogo size={18} />
+                  <span>Paquet Debian (.deb)</span>
                 </a>
               </div>
               <div className="text-xs font-mono text-zinc-400 flex items-center justify-between pt-1">
@@ -848,23 +872,87 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             </div>
           </div>
 
+          {/* Option Web Kiosk Universelle — Zéro installation */}
+          <div className="p-6 sm:p-8 rounded-2xl border border-emerald-500/30 bg-gradient-to-b from-emerald-950/20 to-zinc-950 p-6 sm:p-8 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <h3 className="text-base sm:text-lg font-bold text-zinc-100">
+                    Mode Web Kiosk Instantané (macOS, Linux & Chromebooks)
+                  </h3>
+                </div>
+                <p className="text-sm sm:text-base text-zinc-300 max-w-2xl leading-relaxed">
+                  Vous ne souhaitez pas ou ne pouvez pas installer d'application sur votre poste personnel ? Vous pouvez passer l'examen sécurisé directement dans votre navigateur moderne (Chrome, Safari, Edge, Firefox).
+                </p>
+              </div>
+              {onLaunchApp && (
+                <button
+                  onClick={onLaunchApp}
+                  className="shrink-0 min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3.5 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+                >
+                  <Maximize2 size={18} />
+                  <span>Lancer l'Épreuve en Ligne</span>
+                </button>
+              )}
+            </div>
+            <div className="pt-2 border-t border-zinc-800/80 flex flex-wrap gap-4 text-xs font-mono text-zinc-400">
+              <span className="flex items-center gap-1.5"><Check size={14} className="text-emerald-400" /> Analyse faciale 100% locale</span>
+              <span>•</span>
+              <span className="flex items-center gap-1.5"><Check size={14} className="text-emerald-400" /> Zéro flux vidéo dans le cloud</span>
+              <span>•</span>
+              <span className="flex items-center gap-1.5"><Check size={14} className="text-emerald-400" /> Compatible Safari 15+, Chrome 90+, Firefox 90+</span>
+            </div>
+          </div>
+
           {/* Guide Rapide Après Téléchargement */}
           <div className="p-6 sm:p-8 rounded-2xl border border-zinc-800 bg-zinc-950/80 space-y-4">
             <h3 className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2.5">
               <CheckCircle2 size={18} className="text-emerald-400" />
-              <span>Que faire après le téléchargement ?</span>
+              <span>Consignes d'installation selon votre système d'exploitation</span>
             </h3>
-            <ol className="list-decimal list-inside text-sm sm:text-base text-zinc-300 space-y-2 leading-relaxed pl-2">
-              <li>Installez le fichier téléchargé sur votre machine personnelle.</li>
-              <li>Lancez AgoraExam : le diagnostic automatique teste votre webcam et confirme l'écran unique.</li>
-              <li>
-                Consultez la{" "}
-                <button onClick={() => changeTab("docs")} className="text-emerald-400 underline font-semibold">
-                  Documentation officielle
-                </button>{" "}
-                si vous rencontrez le moindre problème d'accès caméra ou de permissions.
-              </li>
-            </ol>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+              <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40 space-y-2">
+                <span className="text-sm font-bold text-zinc-100 flex items-center gap-2">
+                  <WindowsLogo size={16} />
+                  <span>Windows 10 / 11</span>
+                </span>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  Double-cliquez sur <strong>AgoraExam-Setup.exe</strong>. L'installation s'effectue dans votre session personnelle sans aucun droit ni mot de passe administrateur.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40 space-y-2">
+                <span className="text-sm font-bold text-zinc-100 flex items-center gap-2">
+                  <AppleLogo size={16} />
+                  <span>macOS (Apple Silicon & Intel)</span>
+                </span>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  Ouvrez le <strong>.dmg</strong> et glissez AgoraExam dans <em>Applications</em>. Au premier lancement, si Gatekeeper bloque l'ouverture : faites <strong>Clic droit &gt; Ouvrir</strong> ou exécutez dans le Terminal :<br />
+                  <code className="text-[11px] font-mono text-emerald-300 block mt-1 bg-zinc-950 px-2 py-1 rounded">xattr -cr /Applications/AgoraExam.app</code>
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl border border-zinc-800 bg-zinc-900/40 space-y-2">
+                <span className="text-sm font-bold text-zinc-100 flex items-center gap-2">
+                  <LinuxLogo size={16} />
+                  <span>Linux (Ubuntu, Debian, Fedora)</span>
+                </span>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  Rendez le fichier exécutable et lancez-le directement :<br />
+                  <code className="text-[11px] font-mono text-emerald-300 block mt-1 bg-zinc-950 px-2 py-1 rounded">chmod +x AgoraExam.AppImage &amp;&amp; ./AgoraExam.AppImage</code>
+                  Ou via Debian : <code className="text-[11px] font-mono text-zinc-300">sudo dpkg -i AgoraExam.deb</code>.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2 text-xs text-zinc-400">
+              Besoin d'aide supplémentaire ? Consultez notre{" "}
+              <button onClick={() => changeTab("docs")} className="text-emerald-400 underline font-semibold">
+                Documentation technique complète
+              </button>{" "}
+              ou demandez assistance à votre équipe pédagogique.
+            </div>
           </div>
         </div>
       )}
