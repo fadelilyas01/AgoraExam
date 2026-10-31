@@ -5,72 +5,19 @@ interface LogoProps {
 
 /**
  * Logo Officiel de Marque AgoraExam
- * Monogramme géométrique alliant le bouclier de sécurité institutionnelle,
- * les colonnes de l'agora académique et le verrou cryptographique souverain.
+ * Utilise l'icône officielle de l'application (app-icon.png)
+ * harmonisée pour l'ensemble du site, du portail et de l'interface d'examen.
  */
 export function AgoraExamLogo({ size = 28, className = "" }: LogoProps) {
   return (
-    <svg
+    <img
+      src="/app-icon.png"
+      alt="AgoraExam"
       width={size}
       height={size}
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      aria-label="Logo AgoraExam"
-    >
-      <defs>
-        <linearGradient id="agoraShieldGrad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#10b981" />
-          <stop offset="100%" stopColor="#059669" />
-        </linearGradient>
-        <linearGradient id="agoraInnerGrad" x1="24" y1="10" x2="24" y2="38" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#ffffff" />
-          <stop offset="100%" stopColor="#a7f3d0" />
-        </linearGradient>
-        <filter id="agoraGlow" x="0" y="0" width="48" height="48" filterUnits="userSpaceOnUse">
-          <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#10b981" floodOpacity="0.25" />
-        </filter>
-      </defs>
-
-      {/* Bouclier d'encadrement géométrique souverain */}
-      <path
-        d="M24 4L7 11V23.5C7 34.2 14.3 43.1 24 45.8C33.7 43.1 41 34.2 41 23.5V11L24 4Z"
-        fill="#09090b"
-        stroke="url(#agoraShieldGrad)"
-        strokeWidth="2.5"
-        strokeLinejoin="round"
-        filter="url(#agoraGlow)"
-      />
-
-      {/* Cadre biseauté interne */}
-      <path
-        d="M24 8L11 13.8V23.2C11 31.8 16.7 39.2 24 41.5C31.3 39.2 37 31.8 37 23.2V13.8L24 8Z"
-        fill="#18181b"
-        opacity="0.85"
-      />
-
-      {/* Fronton de l'Agora & Colonnes académiques stylisées */}
-      {/* Fronton triangulaire */}
-      <path
-        d="M24 13L17 17.5H31L24 13Z"
-        fill="url(#agoraInnerGrad)"
-      />
-
-      {/* Les 3 colonnes de l'agora (Défense en profondeur) */}
-      <rect x="18" y="19.5" width="2.5" height="11" rx="1.2" fill="#34d399" />
-      <rect x="22.75" y="19.5" width="2.5" height="11" rx="1.2" fill="#ffffff" />
-      <rect x="27.5" y="19.5" width="2.5" height="11" rx="1.2" fill="#34d399" />
-
-      {/* Base du temple / livre ouvert scellé */}
-      <path
-        d="M16 32H32V33.8C32 34.5 31.4 35 30.7 35H17.3C16.6 35 16 34.5 16 33.8V32Z"
-        fill="url(#agoraInnerGrad)"
-      />
-
-      {/* Point focal de vérification cryptographique */}
-      <circle cx="24" cy="24.5" r="1.5" fill="#10b981" />
-    </svg>
+      className={`rounded-lg object-contain inline-block shrink-0 ${className}`}
+      loading="eager"
+    />
   );
 }
 
