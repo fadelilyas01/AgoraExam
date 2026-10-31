@@ -51,11 +51,8 @@ jobs:
       matrix:
         include:
           - platform: 'macos-latest'
-            platform-name: 'macOS Apple Silicon (ARM64)'
-            os-type: 'macos-arm'
-          - platform: 'macos-13'
-            platform-name: 'macOS Intel (x86_64)'
-            os-type: 'macos-x64'
+            platform-name: 'macOS (Apple Silicon & Intel)'
+            os-type: 'macos'
           - platform: 'ubuntu-22.04'
             platform-name: 'Linux (AppImage & DEB)'
             os-type: 'linux'
@@ -76,6 +73,8 @@ jobs:
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.os-type == 'macos' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Install Linux dependencies
         if: matrix.os-type == 'linux'
@@ -86,7 +85,14 @@ jobs:
       - name: Install Node dependencies
         run: npm ci || npm install
 
-      - name: Build Tauri Application
+      - name: Build Tauri Application (macOS Apple Silicon & Intel)
+        if: matrix.os-type == 'macos'
+        run: |
+          npm run tauri build -- --target aarch64-apple-darwin
+          npm run tauri build -- --target x86_64-apple-darwin
+
+      - name: Build Tauri Application (Linux & Windows)
+        if: matrix.os-type != 'macos'
         run: npm run tauri build
 
       - name: Package Artifacts (Linux)
@@ -96,17 +102,12 @@ jobs:
           cp src-tauri/target/release/bundle/appimage/*.AppImage artifacts/AgoraExam.AppImage || true
           cp src-tauri/target/release/bundle/deb/*.deb artifacts/AgoraExam.deb || true
 
-      - name: Package Artifacts (macOS ARM64)
-        if: matrix.os-type == 'macos-arm'
+      - name: Package Artifacts (macOS)
+        if: matrix.os-type == 'macos'
         run: |
           mkdir -p artifacts
-          cp src-tauri/target/release/bundle/dmg/*.dmg artifacts/AgoraExam-aarch64.dmg || true
-
-      - name: Package Artifacts (macOS Intel)
-        if: matrix.os-type == 'macos-x64'
-        run: |
-          mkdir -p artifacts
-          cp src-tauri/target/release/bundle/dmg/*.dmg artifacts/AgoraExam-x64.dmg || true
+          cp src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg artifacts/AgoraExam-aarch64.dmg || true
+          cp src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg artifacts/AgoraExam-x64.dmg || true
 
       - name: Package Artifacts (Windows)
         if: matrix.os-type == 'windows'
