@@ -68,6 +68,17 @@ Il est recommandé de tester l'installation 24 heures avant l'examen officiel :
    - Les étudiants se connectant depuis un navigateur classique ne possèdent pas la clé et ne peuvent pas démarrer la tentative.
    - Les candidats utilisant AgoraExam bénéficient de l'injection automatique de la clé et du basculement en mode Kiosk verrouillé.
 
+### Politiques de surveillance configurables & Protocole Human-in-the-Loop
+
+AgoraExam applique le principe de **l'humain dans la boucle (Human-in-the-Loop)** recommandé par le cadre européen de l'IA (AI Act) et les comités d'éthique universitaires :
+
+1. **Aucune déconnexion arbitraire par l'IA :** Les incidents détectés (disparition du visage > 4s, présence de tiers) sont consignés dans le dossier numérique du candidat avec photos chiffrées et horodatées.
+2. **Alerte surveillant en temps réel :** Au 3ème avertissement (Mode Hybride par défaut), une notification d'urgence est transmise au surveillant ou enseignant. **Seul le surveillant humain a l'autorité de valider une exclusion** ou d'autoriser l'étudiant à poursuivre.
+3. **Modes adaptables selon la politique de l'établissement :**
+   - **Mode Hybride (Défaut)** : 3 avertissements avec consignation au dossier -> Alerte directe du surveillant humain.
+   - **Mode Audit Trail (Pédagogique)** : Enregistrement continu des anomalies pour revue a posteriori sans interruption de l'étudiant.
+   - **Mode Strict (Concours)** : Scellement automatique via l'API Moodle (`finishattempt=1`) réservé aux épreuves certificatives à tolérance zéro.
+
 ### Exploitation des éléments de preuve post-examen
 
 - Toute infraction confirmée (départ prolongé de plus de 4 secondes ou présence de plusieurs personnes) génère un cliché photographique horodaté stocké localement dans `%AppData%/AgoraExam/evidence/[attempt_id]/`.

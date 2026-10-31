@@ -22,6 +22,8 @@ import {
   ChevronRight,
   Monitor,
   Maximize2,
+  UserCheck,
+  SlidersHorizontal,
 } from "lucide-react";
 import {
   AgoraExamLogo,
@@ -75,7 +77,7 @@ const DOC_GROUPS: DocGroup[] = [
     group: "Guide Candidat",
     items: [
       { id: "etudiant-guide", title: "Déroulement de l'Examen", desc: "Étapes avant et pendant l'épreuve" },
-      { id: "regle-strikes", title: "Règle 3 Strikes & 4s", desc: "Tolérance anti-faux positifs & Kill Switch", badge: "Important" },
+      { id: "regle-strikes", title: "Human-in-the-Loop & Strikes", desc: "Tolérance 4s, Dossier Candidat & Politiques", badge: "Éthique" },
       { id: "depannage-camera", title: "Dépannage Caméra & Micro", desc: "Résolution des conflits de capteurs" },
     ],
   },
@@ -1178,11 +1180,11 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
 
                     <div className="p-5 rounded-2xl border border-zinc-800 bg-zinc-950/60 space-y-2.5">
                       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                        <Server size={18} />
+                        <UserCheck size={18} />
                       </div>
-                      <h3 className="text-sm sm:text-base font-bold text-zinc-100">Kill Switch Moodle</h3>
+                      <h3 className="text-sm sm:text-base font-bold text-zinc-100">Surveillance Human-in-the-Loop</h3>
                       <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                        Règle des 3 avertissements avec tolérance 4s. Au 3ème strike, soumission et scellement automatique de la tentative sur Moodle via l'API Web Services.
+                        Consignation au dossier et alerte au surveillant au 3ème strike. Seul un humain arbitre une expulsion. 3 politiques configurables (Hybride, Audit, Strict).
                       </p>
                     </div>
                   </div>

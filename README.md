@@ -19,7 +19,7 @@
 | **Inférence IA** | **100% sur l'ordinateur de l'étudiant** (MediaPipe WebAssembly). Aucun flux vidéo n'est diffusé sur internet. |
 | **Sécurité système** | Confinement plein écran forcé, masquage de barre des tâches, blocage clavier en phase de capture, watchdog Rust 400ms. |
 | **Intégration LMS** | Compatible nativement avec **Moodle 3.9+, 4.x et 5.x** via l'API Web Services REST scellée. |
-| **Politique d'exclusion** | Règle des 3 avertissements avec filtre anti-faux positifs de 4s et **Kill Switch Moodle** immédiat. |
+| **Politique d'exclusion** | **Human-in-the-Loop (Défaut)** : 3 avertissements avec tolérance 4s, consignation au dossier et alerte du surveillant humain (seul habilité à exclure). 3 politiques configurables (Hybride, Audit, Strict). |
 
 ---
 
@@ -31,8 +31,9 @@
 | **Analyse faciale de présence** | **Intégrée en local (Edge AI)** | Non (nécessite Monitor payant) | Non | Enregistrement Cloud invasif |
 | **Respect de la vie privée (RGPD)** | **Zéro streaming cloud** | Vidéos hébergées sur serveurs tiers | N/A | Analyse faciale déportée |
 | **Filtre anti-faux positifs** | **Tolérance active de 4s** | Faux positifs fréquents | N/A | Alertes arbitraires |
-| **Kill Switch Moodle automatique** | **Oui (`finishattempt=1`)** | Non (manuel par enseignant) | Non | Non |
-| **Preuves horodatées d'infraction** | **Captures chiffrées locales** | Vidéos complètes stockées | Aucune preuve visuelle | Vidéos complètes stockées |
+| **Gouvernance & Décision** | **Human-in-the-Loop (AI Act)** | Décision opaque / Cloud | N/A | Exclusion automatisée contestée |
+| **Politiques configurables** | **3 modes (Hybride, Audit, Strict)** | Figé | Manuel SEB | Figé |
+| **Preuves horodatées d'infraction** | **Dossier d'examen chiffré local** | Vidéos complètes stockées | Aucune preuve visuelle | Vidéos complètes stockées |
 | **Empreinte mémoire et CPU** | **Faible (~85 Mo RAM)** | Élevée (> 300 Mo RAM) | Moyenne | Très élevée |
 
 ---
@@ -55,26 +56,35 @@ Les installateurs officiels prêts au déploiement pour vos sessions d'examens :
 
 ---
 
-## Cycle de vie de l'examen et protocole de surveillance
+## Cycle de vie de l'examen et protocole Human-in-the-Loop
 
 ```mermaid
 flowchart TD
-    A["1. Démarrage AgoraExam"] --> B["2. Pre-Flight Check Matériel\n- Webcam & Audio validés\n- Contrôle Écran Unique (Anti-Dual Monitor)"]
-    B --> C["3. Validation de la Charte Éthique"]
+    A["1. Démarrage AgoraExam"] --> B["2. Pre-Flight Check Matériel\n- Webcam & Audio validés\n- Contrôle Écran Unique\n- Choix Politique (Hybride / Audit / Strict)"]
+    B --> C["3. Validation de la Charte Éthique (AI Act)"]
     C --> D["4. Verrouillage Kiosk Actif\n- Plein écran sans bordure\n- Raccourcis OS neutralisés\n- Watchdog focus armé (400ms)"]
     D --> E["5. Session d'Examen Moodle\n- Analyse MediaPipe locale (5 FPS)\n- PiP discret déplaçable"]
     
-    E -->|Visage absent > 4s OU Multi-visages| F["Détection d'Infraction"]
-    F --> G["Enregistrement Preuve Horodatée locale"]
+    E -->|Visage absent > 4s OU Multi-visages| F["Détection d'Activité Suspecte"]
+    F --> G["Consignation au Dossier Candidat\n(Capture horodatée chiffrée)"]
     
     G --> H{"Compteur de Strikes"}
-    H -->|Strike 1 ou 2| I["Modal Bloquant à l'écran\nRecapture forcée du focus\nAlerte horodatée transmise"]
+    H -->|Strike 1 ou 2| I["Modal Bloquant à l'écran\nRecapture forcée du focus\nAvertissement pédagogique consigné"]
     I --> E
     
-    H -->|Strike 3| J["KILL SWITCH MOODLE DÉCLENCHÉ"]
-    J --> K["Appel API Moodle mod_quiz_process_attempt\nfinishattempt = 1 (Soumission forcée)"]
-    K --> L["Écran d'Exclusion & Fermeture Propre"]
+    H -->|Strike 3| J{"Politique Active"}
+    J -->|Mode Hybride (Défaut)| K["ALERTE SURVEILLANT HUMAIN\nDossier d'infractions transmis\nL'étudiant continue l'épreuve\nSeul le surveillant peut décider de l'exclusion"]
+    J -->|Mode Audit Trail| L["Consignation Silencieuse\nAucune interruption\nRevue post-examen"]
+    J -->|Mode Strict| M["Kill Switch Moodle\nfinishattempt = 1 (Soumission forcée)\nÉcran de clôture définitive"]
 ```
+
+### Les 3 Politiques de Surveillance Configurables
+1. **Mode Hybride — Human-in-the-Loop (Recommandé & Par Défaut) :**  
+   Conforme à l'AI Act européen et aux recommandations pédagogiques. Toute activité suspecte est d'abord consignée au dossier du candidat. Au bout de 3 avertissements, une alerte d'urgence avec les pièces à conviction est notifiée au surveillant humain. L'IA n'exclut jamais automatiquement l'étudiant : **seul le surveillant humain dispose de l'autorité d'exclure** ou de réinitialiser le statut.
+2. **Mode Pédagogique — Audit Trail :**  
+   Pour les devoirs surveillés ou épreuves formatives. Les anomalies sont consignées dans les journaux d'audit sans interrompre l'étudiant ni alerter activement de surveillant en direct.
+3. **Mode Strict — Concours & Certifications :**  
+   Pour les concours nationaux à tolérance zéro où un scellement immédiat est requis par le règlement institutionnel. Déclenche la soumission automatique via l'API Web Services Moodle (`mod_quiz_process_attempt` avec `finishattempt=1`).
 
 ---
 

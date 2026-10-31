@@ -48,6 +48,16 @@ pub struct StrikeNotification {
     pub timestamp: String,
 }
 
+#[derive(Serialize, Clone)]
+pub struct ProctorAlertNotification {
+    pub attempt_id: u64,
+    pub strike_number: u8,
+    pub reason: String,
+    pub evidence_path: Option<String>,
+    pub timestamp: String,
+    pub status: String,
+}
+
 #[derive(Deserialize, Zeroize, ZeroizeOnDrop)]
 pub struct MoodleCredentials {
     pub moodle_url: String,
@@ -291,6 +301,37 @@ async fn signaler_avertissement(
     Ok(())
 }
 
+/// Alerte un surveillant humain sans expulser l'étudiant (Conforme RGPD & Human-in-the-Loop)
+#[tauri::command]
+async fn alerter_surveillant(
+    app: AppHandle,
+    attempt_id: u64,
+    strike_count: u8,
+    motif: String,
+    evidence_path: Option<String>,
+) -> Result<(), ProctorError> {
+    tracing::warn!(
+        attempt_id = attempt_id,
+        strike = strike_count,
+        motif = %motif,
+        "ALERTE SURVEILLANT HUMAIN ENVOYÉE (Human-in-the-Loop - Examen maintenu actif)"
+    );
+
+    let notification = ProctorAlertNotification {
+        attempt_id,
+        strike_number: strike_count,
+        reason: motif,
+        evidence_path,
+        timestamp: chrono::Utc::now().to_rfc3339(),
+        status: "flagged_for_human_review".to_string(),
+    };
+
+    app.emit("proctor_alert", &notification)
+        .map_err(|_| ProctorError::WindowError)?;
+
+    Ok(())
+}
+
 // -----------------------------------------------------------------------------
 // 4. Point d'Entrée Principal & Runtime Tauri
 // -----------------------------------------------------------------------------
@@ -303,7 +344,8 @@ pub fn run() {
             verrouiller_examen,
             enregistrer_preuve,
             expulser_etudiant,
-            signaler_avertissement
+            signaler_avertissement,
+            alerter_surveillant
         ])
         .setup(|app| {
             if let Some(main_window) = app.get_webview_window("main") {

@@ -11,6 +11,7 @@ import {
   Eye,
   BookOpen,
   CheckCircle2,
+  ShieldCheck,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { AgoraExamLogo, MoodleLogo } from "./Logos";
@@ -28,6 +29,8 @@ interface PreFlightCheckProps {
   mediaStream: MediaStream | null;
   onStreamReady: (stream: MediaStream) => void;
   onOpenDocs?: () => void;
+  policy?: "hybrid" | "audit" | "strict";
+  onPolicyChange?: (policy: "hybrid" | "audit" | "strict") => void;
 }
 
 export function PreFlightCheck({
@@ -35,6 +38,8 @@ export function PreFlightCheck({
   mediaStream,
   onStreamReady,
   onOpenDocs,
+  policy = "hybrid",
+  onPolicyChange,
 }: PreFlightCheckProps) {
   const [hardware, setHardware] = useState<HardwareStatus>({
     singleMonitor: true,
@@ -486,16 +491,48 @@ export function PreFlightCheck({
               </div>
             </div>
 
-            {/* Engagement & Consentement de l'étudiant */}
-            <div className="p-5 rounded-2xl bg-zinc-950/70 border border-zinc-800 text-xs sm:text-sm text-zinc-300 space-y-3">
+            {/* Politique d'Examen & Human-in-the-Loop */}
+            <div className="p-5 rounded-2xl bg-zinc-950/70 border border-zinc-800 text-xs sm:text-sm text-zinc-300 space-y-3.5">
+              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-emerald-400" />
+                  <span className="font-semibold text-zinc-200">
+                    Politique de Surveillance : {policy === "hybrid" ? "Contrôle Humain Obligatoire" : policy === "audit" ? "Audit Trail Silencieux" : "Mode Strict"}
+                  </span>
+                </div>
+                {onPolicyChange && (
+                  <select
+                    value={policy}
+                    onChange={(e) => onPolicyChange(e.target.value as "hybrid" | "audit" | "strict")}
+                    className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-200 focus:outline-none"
+                    aria-label="Sélectionner la politique de surveillance"
+                  >
+                    <option value="hybrid">Mode Hybride (Human-in-the-Loop - Défaut)</option>
+                    <option value="audit">Mode Pédagogique (Audit Trail)</option>
+                    <option value="strict">Mode Strict (Concours)</option>
+                  </select>
+                )}
+              </div>
+
               <div className="flex items-start gap-3">
                 <Lock size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
-                <p className="text-zinc-300 leading-relaxed">
-                  <strong>Règle des 3 Strikes :</strong> Une absence prolongée (+4s) ou la présence
-                  d'une tierce personne déclenchera un avertissement. Au 3ème avertissement,
-                  l'examen sera automatiquement soumis et scellé sur Moodle.
+                <p className="text-zinc-300 leading-relaxed text-xs">
+                  {policy === "hybrid" ? (
+                    <>
+                      <strong>Garantie Éthique (AI Act &amp; RGPD) :</strong> En cas d'anomalies répétées (+3 avertissements), votre dossier d'épreuve est consigné avec preuve photographique et <strong>transmis à un surveillant humain</strong>. Vous continuez votre examen ; seul le surveillant habilité détient le pouvoir d'arbitrer.
+                    </>
+                  ) : policy === "audit" ? (
+                    <>
+                      <strong>Mode Pédagogique :</strong> Les anomalies sont consignées de manière transparente au dossier sans interruption de l'épreuve.
+                    </>
+                  ) : (
+                    <>
+                      <strong>Mode Strict :</strong> Au 3ème avertissement avéré, la tentative est clôturée automatiquement conformément au règlement du concours.
+                    </>
+                  )}
                 </p>
               </div>
+
               <label className="flex items-center gap-3 pt-1 text-zinc-200 cursor-pointer select-none">
                 <input
                   type="checkbox"
@@ -504,7 +541,7 @@ export function PreFlightCheck({
                   className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500/20"
                 />
                 <span className="text-xs sm:text-sm font-medium">
-                  J'accepte le protocole de vérification locale et le confinement en plein écran exclusif.
+                  J'accepte le protocole d'examen et le confinement en plein écran exclusif.
                 </span>
               </label>
             </div>

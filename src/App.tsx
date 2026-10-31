@@ -11,6 +11,7 @@ import {
   Wifi,
   Move,
   BookOpen,
+  Shield,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -19,12 +20,15 @@ import { OfficialPortal } from "./components/OfficialPortal";
 import { proctorVision } from "./services/faceDetection";
 import { AgoraExamLogo, MoodleLogo } from "./components/Logos";
 
+export type SurveillancePolicy = "hybrid" | "audit" | "strict";
+
 interface StrikeEvent {
   strike_number: number;
   max_strikes: number;
   reason: string;
   timestamp: string;
   evidencePath?: string;
+  isProctorAlert?: boolean;
 }
 
 type PipPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
@@ -66,6 +70,17 @@ export default function App() {
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
+
+  // Politique de surveillance configurable (Human-in-the-Loop par défaut)
+  const [policy, setPolicy] = useState<SurveillancePolicy>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlPolicy = params.get("policy");
+      if (urlPolicy === "audit" || urlPolicy === "strict") return urlPolicy;
+    }
+    return "hybrid";
+  });
+  const [isFlaggedForProctorReview, setIsFlaggedForProctorReview] = useState<boolean>(false);
 
   // État de l'examen et de la télésurveillance
   const [strikes, setStrikes] = useState<number>(0);
@@ -149,28 +164,61 @@ export default function App() {
         console.error("Échec signalement avertissement :", e);
       }
 
-      setActiveModalStrike({
-        strike_number: newStrikeCount,
-        max_strikes: 3,
-        reason,
-        timestamp: new Date().toLocaleTimeString(),
-        evidencePath,
-      });
-    } else {
-      // Strike 3 : Kill switch Moodle & verrouillage définitif
-      setIsExpelled(true);
-      try {
-        await invoke("expulser_etudiant", {
-          moodleUrl: "https://moodle.universite.fr",
-          wstoken: "secret_token_session_placeholder",
-          attemptId: 48291,
-          motif: reason,
+      if (policy !== "audit") {
+        setActiveModalStrike({
+          strike_number: newStrikeCount,
+          max_strikes: 3,
+          reason,
+          timestamp: new Date().toLocaleTimeString(),
+          evidencePath,
+          isProctorAlert: false,
         });
-      } catch (e) {
-        console.error("Échec expulsion étudiant :", e);
+      }
+    } else {
+      // 3ème avertissement : Application de la politique choisie
+      if (policy === "hybrid") {
+        // 1. POLITIQUE HYBRIDE RECOMMANDÉE (Human-in-the-Loop) :
+        // Aucune expulsion automatique par l'IA !
+        // L'incident est consigné au dossier et seul un surveillant humain est alerté pour arbitrer.
+        setIsFlaggedForProctorReview(true);
+        try {
+          await invoke("alerter_surveillant", {
+            attemptId: 48291,
+            strikeCount: newStrikeCount,
+            motif: reason,
+            evidencePath: evidencePath || null,
+          });
+        } catch (e) {
+          console.error("Échec transmission alerte surveillant :", e);
+        }
+
+        setActiveModalStrike({
+          strike_number: newStrikeCount,
+          max_strikes: 3,
+          reason: `${reason} — Anomalie consignée au dossier. Un surveillant humain a été alerté pour vérification. Vous pouvez continuer à composer.`,
+          timestamp: new Date().toLocaleTimeString(),
+          evidencePath,
+          isProctorAlert: true,
+        });
+      } else if (policy === "strict") {
+        // 2. POLITIQUE STRICTE (Concours spécifiques avec exclusion immédiate)
+        setIsExpelled(true);
+        try {
+          await invoke("expulser_etudiant", {
+            moodleUrl: "https://moodle.universite.fr",
+            wstoken: "secret_token_session_placeholder",
+            attemptId: 48291,
+            motif: reason,
+          });
+        } catch (e) {
+          console.error("Échec expulsion étudiant :", e);
+        }
+      } else {
+        // 3. POLITIQUE PÉDAGOGIQUE (Audit Trail Silencieux pour TP/Contrôle continu)
+        setIsFlaggedForProctorReview(true);
       }
     }
-  }, [strikes, captureEvidenceSnapshot]);
+  }, [strikes, captureEvidenceSnapshot, policy]);
 
   // Boucle de vision locale avec Tolérance 4s (Anti-faux positifs)
   useEffect(() => {
@@ -389,6 +437,8 @@ export default function App() {
         onExamReady={() => setIsExamStarted(true)}
         mediaStream={mediaStream}
         onStreamReady={(stream) => setMediaStream(stream)}
+        policy={policy}
+        onPolicyChange={(newPolicy) => setPolicy(newPolicy)}
         onOpenDocs={() => {
           setViewMode("portal");
           window.location.hash = "#docs";
@@ -495,6 +545,14 @@ export default function App() {
 
         {/* Compteur d'infractions & Horloge */}
         <div className="flex items-center gap-4">
+          {/* Badge Human-in-the-Loop actif */}
+          {isFlaggedForProctorReview && (
+            <div className="hidden sm:flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-xs font-semibold text-amber-400 animate-pulse">
+              <Shield size={13} />
+              <span>Dossier Transmis au Surveillant</span>
+            </div>
+          )}
+
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-mono text-zinc-400 uppercase font-semibold mr-1">Strikes :</span>
             {[1, 2, 3].map((num) => {
@@ -784,20 +842,46 @@ export default function App() {
         </main>
       </div>
 
-      {/* 4. MODAL D'AVERTISSEMENT (STRIKE NOTIFICATION) */}
+      {/* 4. MODAL D'AVERTISSEMENT OU D'ALERTE SURVEILLANT */}
       {activeModalStrike && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-6">
-          <div className="w-full max-w-md rounded-3xl border border-rose-500/40 bg-zinc-950 p-6 sm:p-8 shadow-2xl text-center space-y-5 animate-in fade-in zoom-in-95">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20">
-              <AlertTriangle size={32} />
+          <div
+            className={`w-full max-w-md rounded-3xl border bg-zinc-950 p-6 sm:p-8 shadow-2xl text-center space-y-5 animate-in fade-in zoom-in-95 ${
+              activeModalStrike.isProctorAlert
+                ? "border-amber-500/40"
+                : "border-rose-500/40"
+            }`}
+          >
+            <div
+              className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border ${
+                activeModalStrike.isProctorAlert
+                  ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                  : "bg-rose-500/10 text-rose-500 border-rose-500/20"
+              }`}
+            >
+              {activeModalStrike.isProctorAlert ? (
+                <Shield size={32} />
+              ) : (
+                <AlertTriangle size={32} />
+              )}
             </div>
 
             <div>
-              <span className="inline-block rounded-full bg-rose-500/20 px-3.5 py-1 text-xs font-mono font-bold text-rose-300 border border-rose-500/30 mb-2">
-                Avertissement {activeModalStrike.strike_number} sur {activeModalStrike.max_strikes}
+              <span
+                className={`inline-block rounded-full px-3.5 py-1 text-xs font-mono font-bold mb-2 border ${
+                  activeModalStrike.isProctorAlert
+                    ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                    : "bg-rose-500/20 text-rose-300 border-rose-500/30"
+                }`}
+              >
+                {activeModalStrike.isProctorAlert
+                  ? "Alerte Surveillant — Contrôle Humain Obligatoire"
+                  : `Avertissement ${activeModalStrike.strike_number} sur ${activeModalStrike.max_strikes}`}
               </span>
               <h3 className="text-lg font-bold text-zinc-100">
-                Incident de Surveillance Constaté
+                {activeModalStrike.isProctorAlert
+                  ? "Dossier Transmis au Surveillant Humain"
+                  : "Incident de Surveillance Constaté"}
               </h3>
               <p className="mt-1 text-xs sm:text-sm text-zinc-300 leading-relaxed">
                 {activeModalStrike.reason}
@@ -806,17 +890,34 @@ export default function App() {
 
             <div className="p-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 text-xs sm:text-sm text-zinc-300 space-y-1.5 text-left font-mono">
               <div><strong className="text-zinc-100">Horodatage :</strong> {activeModalStrike.timestamp}</div>
-              <div><strong className="text-zinc-100">Statut :</strong> Preuve photographique archivée</div>
-              <div className="text-rose-400 pt-1 font-semibold">
-                Au 3ème avertissement, votre épreuve sera clôturée définitivement.
+              <div>
+                <strong className="text-zinc-100">Statut :</strong>{" "}
+                {activeModalStrike.isProctorAlert
+                  ? "Dossier d'incident consigné pour arbitrage"
+                  : "Preuve photographique archivée"}
+              </div>
+              <div
+                className={`pt-1 font-semibold ${
+                  activeModalStrike.isProctorAlert ? "text-amber-400" : "text-rose-400"
+                }`}
+              >
+                {activeModalStrike.isProctorAlert
+                  ? "⚖️ Conformément au RGPD et à l'AI Act, aucune décision d'expulsion n'est prise par l'IA seule. Vous pouvez poursuivre votre épreuve. Seul le surveillant humain pourra statuer."
+                  : "Au 3ème avertissement, le dossier est transmis au surveillant pour décision."}
               </div>
             </div>
 
             <button
               onClick={() => setActiveModalStrike(null)}
-              className="w-full rounded-xl bg-zinc-100 py-3 text-xs sm:text-sm font-bold text-zinc-950 hover:bg-white transition-colors min-h-[44px]"
+              className={`w-full rounded-xl py-3 text-xs sm:text-sm font-bold transition-colors min-h-[44px] ${
+                activeModalStrike.isProctorAlert
+                  ? "bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
+                  : "bg-zinc-100 text-zinc-950 hover:bg-white"
+              }`}
             >
-              J'ai compris — Reprendre l'épreuve
+              {activeModalStrike.isProctorAlert
+                ? "Poursuivre mon examen"
+                : "J'ai compris — Reprendre l'épreuve"}
             </button>
           </div>
         </div>
