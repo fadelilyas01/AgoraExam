@@ -12,6 +12,7 @@ import {
   BookOpen,
   CheckCircle2,
   ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { AgoraExamLogo } from "./Logos";
@@ -22,6 +23,9 @@ interface HardwareStatus {
   monitorMessage: string;
   cameraReady: boolean;
   micReady: boolean;
+  antiIntrusionReady: boolean;
+  antiIntrusionMessage: string;
+  remoteThreats: string[];
 }
 
 interface PreFlightCheckProps {
@@ -47,6 +51,9 @@ export function PreFlightCheck({
     monitorMessage: "Vérification de l'affichage...",
     cameraReady: false,
     micReady: false,
+    antiIntrusionReady: true,
+    antiIntrusionMessage: "Vérification des processus en arrière-plan...",
+    remoteThreats: [],
   });
 
   const [isChecking, setIsChecking] = useState<boolean>(true);
@@ -295,12 +302,35 @@ export function PreFlightCheck({
     // C. Diagnostic universel d'écran unique / multi-écrans (Tauri Natif + Navigateur Web)
     const monitorStatus = await detectMonitors();
 
+    // D. Diagnostic Anti-Intrusion (Processus distants & télé-assistance)
+    let antiIntrusionOk = true;
+    let antiIntrusionMsg = "Aucun logiciel de télé-assistance détecté (AnyDesk, TeamViewer, RDP neutralisés).";
+    let remoteThreats: string[] = [];
+
+    if (isTauri) {
+      try {
+        const report = await invoke<{
+          is_safe: boolean;
+          detected_threats: string[];
+          message: string;
+        }>("detecter_outils_distance");
+        antiIntrusionOk = report.is_safe;
+        antiIntrusionMsg = report.message;
+        remoteThreats = report.detected_threats || [];
+      } catch (err) {
+        console.warn("Erreur invoke detecter_outils_distance :", err);
+      }
+    }
+
     setHardware({
       singleMonitor: monitorStatus.singleMonitor,
       monitorCount: monitorStatus.monitorCount,
       monitorMessage: monitorStatus.monitorMessage,
       cameraReady: camOk,
       micReady: micOk,
+      antiIntrusionReady: antiIntrusionOk,
+      antiIntrusionMessage: antiIntrusionMsg,
+      remoteThreats,
     });
 
     setIsChecking(false);
@@ -436,9 +466,12 @@ export function PreFlightCheck({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // L'examen exige obligatoirement 1 seul écran et une webcam réelle certifiée (simulation strictement interdite en natif)
+  // L'examen exige obligatoirement 1 seul écran, une webcam certifiée et un bouclier anti-intrusion sans menace
   const allChecksPass =
-    hardware.singleMonitor && hardware.cameraReady && (!isTauri || !isSimulatedStream);
+    hardware.singleMonitor &&
+    hardware.cameraReady &&
+    hardware.antiIntrusionReady &&
+    (!isTauri || !isSimulatedStream);
 
   const handleStartExam = async () => {
     if (!allChecksPass || !agreed) return;
@@ -616,8 +649,8 @@ export function PreFlightCheck({
               </div>
             )}
 
-            {/* Cartes des contrôles matériels */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Cartes des contrôles matériels & anti-intrusion */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Carte 1 : Écran Unique */}
               <div
                 className={`rounded-2xl border p-5 transition-colors ${
@@ -713,6 +746,63 @@ export function PreFlightCheck({
                       ? "Flux synthétique de démo actif (simulation sans webcam)."
                       : "Flux actif et prêt pour la vérification de présence."
                     : "Autorisation requise pour composer."}
+                </p>
+              </div>
+
+              {/* Carte 3 : Bouclier Anti-Intrusion (Anti-Remote & Anti-Tamper) */}
+              <div
+                className={`rounded-2xl border p-5 transition-colors ${
+                  hardware.antiIntrusionReady
+                    ? "border-zinc-800 bg-zinc-950/60"
+                    : "border-rose-500/40 bg-rose-500/10"
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                        hardware.antiIntrusionReady
+                          ? "bg-zinc-800 text-zinc-100"
+                          : "bg-rose-500/20 text-rose-400"
+                      }`}
+                    >
+                      {hardware.antiIntrusionReady ? (
+                        <ShieldCheck size={18} className="text-emerald-400" />
+                      ) : (
+                        <ShieldAlert size={18} className="text-rose-400" />
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-sm font-bold block text-zinc-100">
+                        Bouclier Anti-Intrusion
+                      </span>
+                      <span
+                        className={`text-xs font-mono ${
+                          hardware.antiIntrusionReady
+                            ? "text-zinc-400"
+                            : "text-rose-400 font-semibold"
+                        }`}
+                      >
+                        {hardware.antiIntrusionReady
+                          ? "Système étanche"
+                          : `${hardware.remoteThreats.length} menace(s) active(s)`}
+                      </span>
+                    </div>
+                  </div>
+                  {hardware.antiIntrusionReady ? (
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <Check size={14} />
+                    </span>
+                  ) : (
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-500/20 text-rose-400">
+                      <AlertTriangle size={14} />
+                    </span>
+                  )}
+                </div>
+                <p className="mt-3 text-xs sm:text-sm leading-relaxed text-zinc-300">
+                  {hardware.antiIntrusionReady
+                    ? "Aucun outil de télé-assistance détecté (AnyDesk, TeamViewer, RDP neutralisés)."
+                    : hardware.antiIntrusionMessage}
                 </p>
               </div>
             </div>
