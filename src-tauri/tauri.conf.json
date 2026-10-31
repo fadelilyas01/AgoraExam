@@ -43,6 +43,14 @@
       "minimumSystemVersion": "10.15",
       "entitlements": null,
       "infoPlist": "Info.plist"
+    },
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
+      "nsis": {
+        "installMode": "currentUser"
+      }
     }
   }
 }

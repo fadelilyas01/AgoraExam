@@ -447,8 +447,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
               {detectedOs === "windows" ? (
                 <a
-                  href="./downloads/AgoraExam-Setup.exe"
-                  download="AgoraExam-Setup.exe"
+                  href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-Setup.exe"
                   className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-7 py-3.5 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
                 >
                   <WindowsLogo size={18} />
@@ -735,8 +734,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               </p>
               <div className="pt-2 space-y-2">
                 <a
-                  href="./downloads/AgoraExam-Setup.exe"
-                  download="AgoraExam-Setup.exe"
+                  href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-Setup.exe"
                   className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 py-3.5 px-4 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-md shadow-emerald-500/10 active:scale-[0.98]"
                 >
                   <WindowsLogo size={18} />
@@ -1182,8 +1180,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                         </div>
                       </div>
                       <a
-                        href="./downloads/AgoraExam-Setup.exe"
-                        download="AgoraExam-Setup.exe"
+                        href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-Setup.exe"
                         className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors whitespace-nowrap shadow-sm shadow-emerald-500/10"
                       >
                         <WindowsLogo size={16} />

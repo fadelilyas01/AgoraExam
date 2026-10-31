@@ -34,3 +34,5 @@ release-bin/
 .env.*.local
 
 .vercel
+.netlify
+.vercel

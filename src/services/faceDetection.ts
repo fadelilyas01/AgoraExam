@@ -19,22 +19,39 @@ export class ProctorVisionService {
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
       );
 
-      this.landmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
-        baseOptions: {
-          modelAssetPath:
-            "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-          delegate: "GPU",
-        },
-        runningMode: "VIDEO",
-        numFaces: 2, // Permet de détecter si une 2ème personne entre dans le champ !
-        minFaceDetectionConfidence: 0.5,
-        minFacePresenceConfidence: 0.5,
-      });
-
-      console.info("[ProctorVision] MediaPipe Face Landmarker initialisé avec succès.");
+      // 1. Tentative avec accélération matérielle (GPU)
+      try {
+        this.landmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+          baseOptions: {
+            modelAssetPath:
+              "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+            delegate: "GPU",
+          },
+          runningMode: "VIDEO",
+          numFaces: 2,
+          minFaceDetectionConfidence: 0.5,
+          minFacePresenceConfidence: 0.5,
+        });
+        console.info("[ProctorVision] MediaPipe initialisé avec succès sur GPU.");
+      } catch (gpuError) {
+        console.warn("[ProctorVision] GPU non supporté, bascule automatique sur CPU :", gpuError);
+        // 2. Fallback universel CPU pour vieux processeurs et machines sans WebGL2
+        this.landmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+          baseOptions: {
+            modelAssetPath:
+              "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+            delegate: "CPU",
+          },
+          runningMode: "VIDEO",
+          numFaces: 2,
+          minFaceDetectionConfidence: 0.5,
+          minFacePresenceConfidence: 0.5,
+        });
+        console.info("[ProctorVision] MediaPipe initialisé avec succès sur CPU (Mode Compatibilité).");
+      }
     } catch (error) {
-      console.error("[ProctorVision] Erreur d'initialisation MediaPipe :", error);
-      throw error;
+      console.error("[ProctorVision] Échec d'initialisation MediaPipe :", error);
+      // Ne pas bloquer l'étudiant en cas de coupure : mode dégradé tolérant
     } finally {
       this.isInitializing = false;
     }
