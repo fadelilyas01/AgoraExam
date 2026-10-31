@@ -7,6 +7,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter, Manager, WindowEvent};
 use thiserror::Error;
 use zeroize::{Zeroize, ZeroizeOnDrop};
+use sha2::{Digest, Sha256};
 
 // -----------------------------------------------------------------------------
 // 1. Types d'Erreurs Métier Robustes (Zero-Panic Policy)
@@ -27,6 +28,9 @@ pub enum ProctorError {
 
     #[error("Échec de sauvegarde de la preuve d'infraction")]
     EvidenceStorageError,
+
+    #[error("URL Moodle invalide ou non sécurisée (SSRF bloqué par la politique de sécurité)")]
+    InvalidMoodleUrl,
 }
 
 // -----------------------------------------------------------------------------
@@ -211,10 +215,59 @@ async fn enregistrer_preuve(
     let filename = format!("strike_{}_{}.jpg", strike_number, timestamp);
     let file_path = evidence_dir.join(&filename);
 
-    fs::write(&file_path, image_bytes).map_err(|_| ProctorError::EvidenceStorageError)?;
+    // Calcul de l'empreinte cryptographique SHA-256 (Inviolabilité des preuves d'audit)
+    let hash_hex = format!("{:x}", Sha256::digest(&image_bytes));
+    let manifest_filename = format!("strike_{}_{}.sha256", strike_number, timestamp);
+    let manifest_path = evidence_dir.join(&manifest_filename);
 
-    tracing::info!("Preuve sauvegardée avec succès dans : {:?}", file_path);
+    fs::write(&file_path, &image_bytes).map_err(|_| ProctorError::EvidenceStorageError)?;
+    fs::write(&manifest_path, format!("{}  {}\n", hash_hex, filename))
+        .map_err(|_| ProctorError::EvidenceStorageError)?;
+
+    tracing::info!(
+        path = ?file_path,
+        sha256 = %hash_hex,
+        "Preuve sauvegardée et scellée cryptographiquement avec succès"
+    );
     Ok(file_path.to_string_lossy().to_string())
+}
+
+/// Valide et assainit l'URL Moodle pour bloquer les attaques SSRF (CWE-918)
+fn valider_url_moodle(url: &str) -> Result<String, ProctorError> {
+    let trimmed = url.trim().trim_end_matches('/');
+
+    let is_https = trimmed.starts_with("https://");
+    let is_local_dev = trimmed.starts_with("http://localhost") || trimmed.starts_with("http://127.0.0.1");
+
+    if !is_https && !is_local_dev {
+        tracing::error!(url = %trimmed, "SSRF Guard : Le protocole doit obligatoirement être HTTPS.");
+        return Err(ProctorError::InvalidMoodleUrl);
+    }
+
+    // Protection anti-SSRF : Interdiction des adresses de métadonnées cloud et adresses réservées en prod
+    if !is_local_dev {
+        let lower = trimmed.to_lowercase();
+        let forbidden_targets = [
+            "169.254.169.254", // AWS/GCP/Azure Metadata
+            "metadata.google.internal",
+            "127.0.0.1",
+            "localhost",
+            "0.0.0.0",
+            "::1",
+            "10.",
+            "192.168.",
+            "172.16.",
+        ];
+
+        for target in &forbidden_targets {
+            if lower.contains(target) {
+                tracing::error!(url = %trimmed, target = %target, "SSRF Guard : Tentative de ciblage d'adresse privée ou de métadonnées bloquée.");
+                return Err(ProctorError::InvalidMoodleUrl);
+            }
+        }
+    }
+
+    Ok(trimmed.to_string())
 }
 
 /// Commande déclenchée lors du 3ème avertissement (Kill Switch Moodle)
@@ -232,12 +285,15 @@ async fn expulser_etudiant(
         "EXPULSION ÉTUDIANT DÉCLENCHÉE - Soumission immédiate sur Moodle"
     );
 
+    // Validation stricte anti-SSRF avant toute émission réseau
+    let safe_moodle_url = valider_url_moodle(&moodle_url)?;
+
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(10))
         .build()
         .map_err(|_| ProctorError::NetworkError)?;
 
-    let endpoint = format!("{}/webservice/rest/server.php", moodle_url.trim_end_matches('/'));
+    let endpoint = format!("{}/webservice/rest/server.php", safe_moodle_url);
 
     let params = [
         ("wstoken", wstoken.as_str()),

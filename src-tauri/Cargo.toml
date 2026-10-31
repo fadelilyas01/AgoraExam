@@ -23,6 +23,7 @@ tokio = { version = "1.38", features = ["full"] }
 thiserror = "1.0"
 zeroize = { version = "1.8", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
+sha2 = "0.10"
 base64 = "0.22"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
