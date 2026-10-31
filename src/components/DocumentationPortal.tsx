@@ -61,7 +61,7 @@ export function DocumentationPortal({ onClose }: DocumentationPortalProps) {
   const [sandboxStream, setSandboxStream] = useState<MediaStream | null>(null);
   const [sandboxActive, setSandboxActive] = useState<boolean>(false);
   const [sandboxError, setSandboxError] = useState<string | null>(null);
-  const sandboxVideoRef = useRef<HTMLVideoElement>(null);
+  const sandboxVideoRef = useRef<HTMLVideoElement | null>(null);
 
   // Copier dans le presse-papier avec confirmation visuelle
   const copyToClipboard = (text: string, id: string) => {
@@ -81,23 +81,30 @@ export function DocumentationPortal({ onClose }: DocumentationPortalProps) {
       return;
     }
 
+    if (typeof navigator === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setSandboxError("L'accès à la webcam requiert une connexion HTTPS sécurisée ou un navigateur moderne.");
+      setSandboxActive(false);
+      return;
+    }
+
     try {
       setSandboxError(null);
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+        audio: false,
       });
       setSandboxStream(stream);
       setSandboxActive(true);
-      if (sandboxVideoRef.current) {
-        sandboxVideoRef.current.srcObject = stream;
-        await sandboxVideoRef.current.play();
-      }
     } catch (err: any) {
-      setSandboxError(
-        err.name === "NotAllowedError"
-          ? "Permission refusée. Vérifiez vos autorisations de navigateur."
-          : `Erreur d'accès caméra : ${err.message || err.name}`
-      );
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        setSandboxError("Permission refusée. Veuillez autoriser la caméra dans la barre d'adresse.");
+      } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+        setSandboxError("Aucune webcam détectée sur cette machine.");
+      } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
+        setSandboxError("Webcam occupée par un autre logiciel (Zoom, Teams, Discord).");
+      } else {
+        setSandboxError(`Erreur d'accès caméra : ${err.message || err.name}`);
+      }
       setSandboxActive(false);
     }
   };
@@ -871,7 +878,13 @@ export function DocumentationPortal({ onClose }: DocumentationPortalProps) {
                     {sandboxActive ? (
                       <>
                         <video
-                          ref={sandboxVideoRef}
+                          ref={(el) => {
+                            sandboxVideoRef.current = el;
+                            if (el && sandboxStream && el.srcObject !== sandboxStream) {
+                              el.srcObject = sandboxStream;
+                              el.play().catch((err) => console.warn("Lecture sandbox :", err));
+                            }
+                          }}
                           autoPlay
                           playsInline
                           muted

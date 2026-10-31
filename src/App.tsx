@@ -111,14 +111,25 @@ export default function App() {
   const [proctorPinError, setProctorPinError] = useState<string | null>(null);
 
   const moodleUrl = "https://moodle.universite.fr/mod/quiz/attempt.php?attempt=48291";
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const absenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Attacher le flux vidéo au mini-moniteur PiP
+  const handlePipVideoRef = useCallback(
+    (el: HTMLVideoElement | null) => {
+      videoRef.current = el;
+      if (el && mediaStream && el.srcObject !== mediaStream) {
+        el.srcObject = mediaStream;
+        el.play().catch((err) => console.log("Lecture vidéo PiP au montage :", err));
+      }
+    },
+    [mediaStream]
+  );
+
   useEffect(() => {
-    if (isExamStarted && videoRef.current && mediaStream) {
+    if (isExamStarted && videoRef.current && mediaStream && videoRef.current.srcObject !== mediaStream) {
       videoRef.current.srcObject = mediaStream;
       videoRef.current
         .play()
@@ -905,7 +916,7 @@ export default function App() {
 
                 <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-zinc-800">
                   <video
-                    ref={videoRef}
+                    ref={handlePipVideoRef}
                     autoPlay
                     playsInline
                     muted

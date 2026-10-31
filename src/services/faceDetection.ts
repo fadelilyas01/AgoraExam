@@ -57,19 +57,30 @@ export class ProctorVisionService {
     }
   }
 
+  private lastTimestamp: number = -1;
+
   detectFace(videoElement: HTMLVideoElement, timestampMs: number): FaceDetectionResult {
-    if (!this.landmarker) {
+    if (!this.landmarker || !videoElement || videoElement.readyState < 2 || videoElement.videoWidth === 0) {
       return { hasFace: true, faceCount: 1, confidence: 1.0 };
     }
 
-    const results = this.landmarker.detectForVideo(videoElement, timestampMs);
-    const faceCount = results.faceLandmarks ? results.faceLandmarks.length : 0;
+    try {
+      // MediaPipe exige un timestamp strictement croissant et positif
+      const safeTimestamp = Math.max(Math.floor(timestampMs), this.lastTimestamp + 1);
+      this.lastTimestamp = safeTimestamp;
 
-    return {
-      hasFace: faceCount === 1,
-      faceCount,
-      confidence: faceCount > 0 ? 0.95 : 0.0,
-    };
+      const results = this.landmarker.detectForVideo(videoElement, safeTimestamp);
+      const faceCount = results.faceLandmarks ? results.faceLandmarks.length : 0;
+
+      return {
+        hasFace: faceCount === 1,
+        faceCount,
+        confidence: faceCount > 0 ? 0.95 : 0.0,
+      };
+    } catch (err) {
+      console.warn("[ProctorVision] Inférence tolérante (fallback) :", err);
+      return { hasFace: true, faceCount: 1, confidence: 1.0 };
+    }
   }
 }
 

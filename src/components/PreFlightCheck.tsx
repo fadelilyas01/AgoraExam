@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Monitor,
   Camera,
@@ -53,12 +53,164 @@ export function PreFlightCheck({
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [agreed, setAgreed] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<"check" | "privacy">("check");
+  const [isSimulatedStream, setIsSimulatedStream] = useState<boolean>(false);
 
-  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+  const currentStreamRef = useRef<MediaStream | null>(mediaStream);
 
-  // 1. Connexion du flux vidéo dès qu'il est fourni
+  // Générateur d'un flux vidéo synthétique (Mode Démo / Simulateur sans webcam)
+  const createSimulatedFaceStream = (): MediaStream => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 640;
+    canvas.height = 480;
+    const ctx = canvas.getContext("2d");
+
+    let frame = 0;
+    let animId: number;
+
+    const render = () => {
+      if (!ctx) return;
+      frame++;
+
+      // Arrière-plan d'examen sobre
+      ctx.fillStyle = "#09090b";
+      ctx.fillRect(0, 0, 640, 480);
+
+      // Grille de repères optiques 40px
+      ctx.strokeStyle = "#18181b";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < 640; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, 480);
+        ctx.stroke();
+      }
+      for (let y = 0; y < 480; y += 40) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(640, y);
+        ctx.stroke();
+      }
+
+      // Mouvement naturel subtil (respiration et clignement)
+      const breathe = Math.sin(frame * 0.04) * 3;
+      const isBlinking = frame % 100 < 5;
+
+      // Épaules
+      ctx.fillStyle = "#27272a";
+      ctx.beginPath();
+      ctx.ellipse(320, 450 + breathe, 150, 80, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cou
+      ctx.fillStyle = "#d4d4d8";
+      ctx.fillRect(295, 270 + breathe, 50, 70);
+
+      // Tête
+      ctx.fillStyle = "#e4e4e7";
+      ctx.beginPath();
+      ctx.ellipse(320, 220 + breathe, 80, 100, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Cheveux
+      ctx.fillStyle = "#18181b";
+      ctx.beginPath();
+      ctx.ellipse(320, 155 + breathe, 82, 45, 0, Math.PI, Math.PI * 2);
+      ctx.fill();
+
+      // Yeux
+      ctx.fillStyle = "#18181b";
+      if (isBlinking) {
+        ctx.fillRect(285, 210 + breathe, 25, 2);
+        ctx.fillRect(330, 210 + breathe, 25, 2);
+      } else {
+        ctx.beginPath();
+        ctx.ellipse(298, 210 + breathe, 8, 5, 0, 0, Math.PI * 2);
+        ctx.ellipse(342, 210 + breathe, 8, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Nez discret
+      ctx.strokeStyle = "#a1a1aa";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(320, 220 + breathe);
+      ctx.lineTo(316, 238 + breathe);
+      ctx.lineTo(324, 238 + breathe);
+      ctx.stroke();
+
+      // Bouche
+      ctx.strokeStyle = "#71717a";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(320, 260 + breathe, 16, 0.1 * Math.PI, 0.9 * Math.PI);
+      ctx.stroke();
+
+      // Badge incrusté en bas à gauche
+      ctx.fillStyle = "rgba(16, 185, 129, 0.15)";
+      ctx.strokeStyle = "rgba(16, 185, 129, 0.4)";
+      ctx.lineWidth = 1;
+      ctx.fillRect(16, 16, 260, 28);
+      ctx.strokeRect(16, 16, 260, 28);
+
+      ctx.fillStyle = "#10b981";
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("● FLUX SIMULÉ (MODE DÉMO WEB)", 26, 34);
+
+      animId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    const stream: MediaStream = (canvas as any).captureStream(30);
+    const track = stream.getVideoTracks()[0];
+    if (track) {
+      const origStop = track.stop.bind(track);
+      track.stop = () => {
+        cancelAnimationFrame(animId);
+        origStop();
+      };
+    }
+
+    return stream;
+  };
+
+  const startSimulationStream = () => {
+    try {
+      const simStream = createSimulatedFaceStream();
+      currentStreamRef.current = simStream;
+      setIsSimulatedStream(true);
+      setCameraError(null);
+      onStreamReady(simStream);
+      setHardware((prev) => ({
+        ...prev,
+        cameraReady: true,
+        micReady: true,
+      }));
+      setIsChecking(false);
+
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = simStream;
+        localVideoRef.current.play().catch(() => {});
+      }
+    } catch (e: any) {
+      console.error("Erreur d'activation de la simulation :", e);
+    }
+  };
+
+  // 1. Synchronisation instantanée du flux vidéo dès le montage du composant DOM
+  const handleVideoRef = useCallback((el: HTMLVideoElement | null) => {
+    localVideoRef.current = el;
+    const stream = currentStreamRef.current;
+    if (el && stream && el.srcObject !== stream) {
+      el.srcObject = stream;
+      el.play().catch((err) => console.log("Lecture vidéo au montage DOM :", err));
+    }
+  }, []);
+
   useEffect(() => {
-    if (localVideoRef.current && mediaStream) {
+    currentStreamRef.current = mediaStream;
+    if (localVideoRef.current && mediaStream && localVideoRef.current.srcObject !== mediaStream) {
       localVideoRef.current.srcObject = mediaStream;
       localVideoRef.current
         .play()
@@ -71,11 +223,20 @@ export function PreFlightCheck({
     setIsChecking(true);
     setCameraError(null);
 
+    // Vérification du contexte sécurisé (HTTPS / localhost requis par WebRTC)
+    if (typeof navigator === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setCameraError(
+        "Accès webcam indisponible : le navigateur exige une connexion HTTPS sécurisée ou localhost pour utiliser WebRTC."
+      );
+      setIsChecking(false);
+      return;
+    }
+
     let stream: MediaStream | null = mediaStream;
     let camOk = false;
     let micOk = false;
 
-    // A. Caméra
+    // A. Caméra physique
     try {
       if (!stream || stream.getVideoTracks().length === 0 || !stream.active) {
         stream = await navigator.mediaDevices.getUserMedia({
@@ -89,39 +250,42 @@ export function PreFlightCheck({
       }
 
       camOk = stream.getVideoTracks().length > 0 && stream.getVideoTracks()[0].readyState === "live";
+      currentStreamRef.current = stream;
+      setIsSimulatedStream(false);
       onStreamReady(stream);
 
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
-        await localVideoRef.current.play();
+        await localVideoRef.current.play().catch(() => {});
       }
     } catch (err: any) {
       console.error("Erreur d'accès webcam :", err);
 
       if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
         setCameraError(
-          "L'accès à la caméra a été refusé. Veuillez autoriser AgoraExam dans les paramètres de confidentialité de votre système d'exploitation."
+          "L'accès à la caméra a été refusé. Veuillez autoriser la webcam en cliquant sur l'icône de cadenas ou de caméra dans la barre d'adresse de votre navigateur."
         );
       } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
         setCameraError(
-          "Aucune caméra n'a été détectée. Veuillez brancher une webcam USB ou vérifier le périphérique intégré."
+          "Aucune caméra physique n'a été détectée. Vous pouvez utiliser le Mode Démo simulé pour tester la surveillance sans webcam."
         );
       } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
         setCameraError(
-          "Votre caméra est actuellement utilisée par une autre application (Zoom, Teams, Discord). Fermez-les avant de relancer le test."
+          "Votre caméra est actuellement verrouillée par un autre logiciel (Zoom, Teams, Discord). Fermez-le ou activez le flux de simulation démo."
         );
       } else {
         setCameraError(`Erreur d'accès à la caméra : ${err.message || err.name}`);
       }
     }
 
-    // B. Micro (contrôle discret)
+    // B. Détection discrète des périphériques audio (sans déclencher de second prompt intempestif)
     try {
-      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      micOk = audioStream.getAudioTracks().length > 0;
-      audioStream.getTracks().forEach((t) => t.stop());
+      if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        micOk = devices.some((d) => d.kind === "audioinput");
+      }
     } catch {
-      micOk = false;
+      micOk = true;
     }
 
     // C. Détection du multi-écran via Tauri Backend
@@ -312,18 +476,24 @@ export function PreFlightCheck({
 
             {/* Message d'Erreur Caméra Actionnable */}
             {cameraError && (
-              <div className="p-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-xs sm:text-sm space-y-2">
+              <div className="p-4 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-xs sm:text-sm space-y-3">
                 <div className="flex items-center gap-2 font-bold text-rose-400">
                   <AlertTriangle size={16} />
                   <span>Caméra non disponible</span>
                 </div>
                 <p className="leading-relaxed text-zinc-300">{cameraError}</p>
-                <div className="pt-1">
+                <div className="pt-1 flex flex-wrap items-center gap-2.5">
                   <button
                     onClick={requestCameraPermission}
-                    className="rounded-xl bg-rose-500 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-rose-600 transition-colors"
+                    className="min-h-[40px] rounded-xl bg-rose-500 px-4 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-rose-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
                   >
-                    Réessayer
+                    Réessayer la détection
+                  </button>
+                  <button
+                    onClick={startSimulationStream}
+                    className="min-h-[40px] rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2 text-xs sm:text-sm font-semibold text-emerald-400 hover:bg-zinc-700 hover:text-emerald-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                  >
+                    Activer le Mode Démo (Simulation Visage)
                   </button>
                 </div>
               </div>
@@ -416,7 +586,9 @@ export function PreFlightCheck({
                 </div>
                 <p className="mt-3 text-xs sm:text-sm leading-relaxed text-zinc-300">
                   {hardware.cameraReady
-                    ? "Flux actif et prêt pour la vérification de présence."
+                    ? isSimulatedStream
+                      ? "Flux synthétique de démo actif (simulation sans webcam)."
+                      : "Flux actif et prêt pour la vérification de présence."
                     : "Autorisation requise pour composer."}
                 </p>
               </div>
@@ -430,7 +602,11 @@ export function PreFlightCheck({
                   Mire Optique de Cadrage Candidat
                 </span>
                 <span className="text-xs text-zinc-400 font-mono">
-                  {hardware.cameraReady ? "640x480 • 30 FPS" : "Flux inactif"}
+                  {hardware.cameraReady
+                    ? isSimulatedStream
+                      ? "Simulation • 30 FPS"
+                      : "640x480 • 30 FPS"
+                    : "Flux inactif"}
                 </span>
               </div>
 
@@ -445,7 +621,7 @@ export function PreFlightCheck({
                   ) : hardware.cameraReady ? (
                     <>
                       <video
-                        ref={localVideoRef}
+                        ref={handleVideoRef}
                         autoPlay
                         playsInline
                         muted
@@ -459,7 +635,7 @@ export function PreFlightCheck({
                       <div className="absolute bottom-3 right-3 w-3 h-3 border-b-2 border-r-2 border-emerald-400 pointer-events-none" />
                       <div className="absolute bottom-2 inset-x-2 text-center pointer-events-none">
                         <span className="inline-block rounded-full bg-zinc-950/80 px-2 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/30 backdrop-blur">
-                          Position Valide
+                          {isSimulatedStream ? "Position Valide (Simulateur Démo)" : "Position Valide"}
                         </span>
                       </div>
                     </>
@@ -467,6 +643,12 @@ export function PreFlightCheck({
                     <div className="flex flex-col items-center justify-center text-zinc-600 gap-2 p-4 text-center">
                       <VideoOff size={26} />
                       <span className="text-xs">Caméra non initialisée</span>
+                      <button
+                        onClick={startSimulationStream}
+                        className="mt-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                      >
+                        Tester en mode simulateur
+                      </button>
                     </div>
                   )}
                 </div>
@@ -478,14 +660,22 @@ export function PreFlightCheck({
                       : "AgoraExam requiert l'accès à la webcam pour certifier la présence continue du candidat."}
                   </p>
                   {!hardware.cameraReady && (
-                    <button
-                      onClick={requestCameraPermission}
-                      disabled={isChecking}
-                      className="inline-flex items-center gap-2 rounded-xl bg-zinc-100 px-4 py-2 text-xs sm:text-sm font-semibold text-zinc-950 hover:bg-white transition-colors"
-                    >
-                      <Camera size={15} />
-                      <span>{isChecking ? "Vérification..." : "Activer la Caméra"}</span>
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <button
+                        onClick={requestCameraPermission}
+                        disabled={isChecking}
+                        className="inline-flex min-h-[40px] items-center gap-2 rounded-xl bg-zinc-100 px-4 py-2 text-xs sm:text-sm font-semibold text-zinc-950 hover:bg-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 disabled:opacity-40"
+                      >
+                        <Camera size={15} />
+                        <span>{isChecking ? "Vérification..." : "Activer la Caméra"}</span>
+                      </button>
+                      <button
+                        onClick={startSimulationStream}
+                        className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-800/80 px-3.5 py-2 text-xs sm:text-sm font-semibold text-emerald-400 hover:bg-zinc-700 hover:text-emerald-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                      >
+                        <span>Simuler sans webcam</span>
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>

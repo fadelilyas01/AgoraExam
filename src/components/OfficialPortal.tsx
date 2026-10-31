@@ -176,7 +176,8 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
   const [mockupSelectedOption, setMockupSelectedOption] = useState<string>("B");
   const [mockupCamActive, setMockupCamActive] = useState<boolean>(false);
   const [mockupCamError, setMockupCamError] = useState<string | null>(null);
-  const heroVideoRef = useRef<HTMLVideoElement>(null);
+  const [mockupStream, setMockupStream] = useState<MediaStream | null>(null);
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
 
   // Raccourci clavier universel ⌘K / Ctrl+K et Escape
   useEffect(() => {
@@ -223,11 +224,16 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
 
   const toggleHeroCam = async () => {
     if (mockupCamActive) {
-      if (heroVideoRef.current && heroVideoRef.current.srcObject) {
-        const stream = heroVideoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach((track) => track.stop());
-        heroVideoRef.current.srcObject = null;
+      if (mockupStream) {
+        mockupStream.getTracks().forEach((track) => track.stop());
       }
+      setMockupStream(null);
+      setMockupCamActive(false);
+      return;
+    }
+
+    if (typeof navigator === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setMockupCamError("Webcam indisponible : le navigateur exige une connexion HTTPS ou localhost.");
       setMockupCamActive(false);
       return;
     }
@@ -235,27 +241,33 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
     try {
       setMockupCamError(null);
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 320 }, height: { ideal: 240 }, facingMode: "user" },
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+        audio: false,
       });
+      setMockupStream(stream);
       setMockupCamActive(true);
-      if (heroVideoRef.current) {
-        heroVideoRef.current.srcObject = stream;
-        await heroVideoRef.current.play();
-      }
     } catch (err: any) {
-      setMockupCamError("Webcam indisponible ou refusée");
+      console.error("Erreur caméra mockup :", err);
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        setMockupCamError("Permission refusée. Cliquez sur l'icône de cadenas/caméra dans l'URL pour autoriser.");
+      } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+        setMockupCamError("Aucune webcam détectée sur cet appareil.");
+      } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
+        setMockupCamError("Webcam occupée par un autre logiciel (Zoom, Teams, Discord).");
+      } else {
+        setMockupCamError(`Erreur webcam : ${err.message || err.name}`);
+      }
       setMockupCamActive(false);
     }
   };
 
   useEffect(() => {
     return () => {
-      if (heroVideoRef.current && heroVideoRef.current.srcObject) {
-        const stream = heroVideoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach((t) => t.stop());
+      if (mockupStream) {
+        mockupStream.getTracks().forEach((t) => t.stop());
       }
     };
-  }, []);
+  }, [mockupStream]);
 
   // États du générateur Moodle
   const [moodleQuizId, setMoodleQuizId] = useState<string>("142");
@@ -266,7 +278,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
   const [sandboxStream, setSandboxStream] = useState<MediaStream | null>(null);
   const [sandboxActive, setSandboxActive] = useState<boolean>(false);
   const [sandboxError, setSandboxError] = useState<string | null>(null);
-  const sandboxVideoRef = useRef<HTMLVideoElement>(null);
+  const sandboxVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -284,23 +296,31 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
       return;
     }
 
+    if (typeof navigator === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setSandboxError("L'accès à la webcam requiert une connexion HTTPS sécurisée ou un navigateur moderne.");
+      setSandboxActive(false);
+      return;
+    }
+
     try {
       setSandboxError(null);
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+        audio: false,
       });
       setSandboxStream(stream);
       setSandboxActive(true);
-      if (sandboxVideoRef.current) {
-        sandboxVideoRef.current.srcObject = stream;
-        await sandboxVideoRef.current.play();
-      }
     } catch (err: any) {
-      setSandboxError(
-        err.name === "NotAllowedError"
-          ? "Permission refusée. Veuillez autoriser la webcam dans votre navigateur."
-          : `Erreur d'accès à la caméra : ${err.message || err.name}`
-      );
+      console.error("Erreur webcam sandbox :", err);
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        setSandboxError("Permission refusée. Veuillez autoriser la webcam dans la barre d'adresse de votre navigateur.");
+      } else if (err.name === "NotFoundError" || err.name === "DevicesNotFoundError") {
+        setSandboxError("Aucune webcam détectée sur votre ordinateur.");
+      } else if (err.name === "NotReadableError" || err.name === "TrackStartError") {
+        setSandboxError("La webcam est actuellement verrouillée par un autre logiciel (Teams, Zoom, etc.).");
+      } else {
+        setSandboxError(`Erreur d'accès à la caméra : ${err.message || err.name}`);
+      }
       setSandboxActive(false);
     }
   };
@@ -922,11 +942,23 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                               <span className="text-[10px] text-rose-400 font-mono block">
                                 ⚠ {mockupCamError}
                               </span>
+                              <button
+                                onClick={() => setMockupCamError(null)}
+                                className="text-[10px] font-semibold text-zinc-400 hover:text-zinc-200 underline"
+                              >
+                                Fermer l'alerte
+                              </button>
                             </div>
                           ) : mockupCamActive ? (
                             <>
                               <video
-                                ref={heroVideoRef}
+                                ref={(el) => {
+                                  heroVideoRef.current = el;
+                                  if (el && mockupStream && el.srcObject !== mockupStream) {
+                                    el.srcObject = mockupStream;
+                                    el.play().catch((err) => console.warn("Lecture mockup :", err));
+                                  }
+                                }}
                                 autoPlay
                                 playsInline
                                 muted
@@ -2447,7 +2479,13 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                     <div className="aspect-video w-full max-w-xl mx-auto rounded-2xl overflow-hidden bg-black border border-zinc-800 flex items-center justify-center relative shadow-inner">
                       {sandboxActive ? (
                         <video
-                          ref={sandboxVideoRef}
+                          ref={(el) => {
+                            sandboxVideoRef.current = el;
+                            if (el && sandboxStream && el.srcObject !== sandboxStream) {
+                              el.srcObject = sandboxStream;
+                              el.play().catch((err) => console.warn("Lecture sandbox :", err));
+                            }
+                          }}
                           autoPlay
                           playsInline
                           muted
