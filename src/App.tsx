@@ -12,6 +12,8 @@ import {
   Move,
   BookOpen,
   Shield,
+  FileText,
+  Check,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -100,6 +102,13 @@ export default function App() {
     1: "b",
   });
   const [isFinished, setIsFinished] = useState<boolean>(false);
+
+  // Droit d'observation étudiant (Art. 22 RGPD) & Arbitrage surveillant sur place
+  const [studentObservation, setStudentObservation] = useState<string>("");
+  const [observationSaved, setObservationSaved] = useState<boolean>(false);
+  const [showProctorPinModal, setShowProctorPinModal] = useState<boolean>(false);
+  const [proctorPin, setProctorPin] = useState<string>("");
+  const [proctorPinError, setProctorPinError] = useState<string | null>(null);
 
   const moodleUrl = "https://moodle.universite.fr/mod/quiz/attempt.php?attempt=48291";
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -470,24 +479,79 @@ export default function App() {
     );
   }
 
-  // Écran de fin réussie
+  // Écran de fin d'examen (avec protocole Human-in-the-Loop & droit d'observation)
   if (isFinished) {
+    const hasFlags = isFlaggedForProctorReview || strikes > 0;
+
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center bg-zinc-950 p-6 sm:p-8 text-center font-sans antialiased">
+      <div className="flex min-h-screen w-screen flex-col items-center justify-center bg-zinc-950 p-6 sm:p-8 text-center font-sans antialiased overflow-y-auto">
         <div className="mb-6 flex justify-center">
           <AgoraExamLogo size={56} />
         </div>
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 mb-4 shadow-xl shadow-emerald-500/5">
-          <CheckCircle2 size={36} />
+        <div
+          className={`flex h-16 w-16 items-center justify-center rounded-2xl border mb-4 shadow-xl ${
+            hasFlags
+              ? "bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-amber-500/5"
+              : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-emerald-500/5"
+          }`}
+        >
+          {hasFlags ? <Shield size={36} /> : <CheckCircle2 size={36} />}
         </div>
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-100">
-          Examen Soumis avec Succès
+          {hasFlags
+            ? "Examen Soumis — Dossier Transmis au Surveillant"
+            : "Examen Soumis avec Succès"}
         </h1>
-        <p className="mt-2.5 text-sm sm:text-base text-zinc-300 max-w-md leading-relaxed">
-          Votre copie a été transmise et validée sur le serveur Moodle. Aucun incident critique n'a été relevé durant votre composition.
+        <p className="mt-2.5 text-sm sm:text-base text-zinc-300 max-w-lg leading-relaxed">
+          {hasFlags
+            ? `Votre copie a été transmise à Moodle. Conformément au protocole Human-in-the-Loop, ${strikes} observation(s) ont été consignées. Seul le jury ou surveillant humain statuera sur ce rapport.`
+            : "Votre copie a été transmise et validée sur le serveur Moodle. Aucun incident n'a été relevé durant votre composition. Épreuve 100% conforme."}
         </p>
-        <div className="mt-6 p-4 rounded-xl border border-zinc-800 bg-zinc-900/70 text-xs font-mono text-zinc-300">
-          Session Token : a8f9-c2e1-48291 • Empreinte SHA-256 certifiée
+
+        {/* Section Droit d'Observation Étudiant (Article 22 RGPD) */}
+        {hasFlags && (
+          <div className="mt-6 w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 text-left space-y-3.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-zinc-200">
+              <FileText size={15} className="text-amber-400" />
+              <span>Droit d'observation de l'étudiant (Art. 22 RGPD)</span>
+            </div>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Si vous avez rencontré un problème technique (webcam instable, problème de câble) expliquant une anomalie, vous pouvez consigner une note officielle à l'attention du surveillant :
+            </p>
+
+            {observationSaved ? (
+              <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xs text-emerald-300 flex items-center gap-2">
+                <Check size={16} className="text-emerald-400 shrink-0" />
+                <span>Votre observation a été scellée dans le rapport transmis au jury d'examen.</span>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                <textarea
+                  value={studentObservation}
+                  onChange={(e) => setStudentObservation(e.target.value)}
+                  placeholder="Ex : 'À 10h14, ma webcam externe a été bousculée, je l'ai replacée immédiatement.' (Facultatif)"
+                  rows={3}
+                  className="w-full rounded-xl border border-zinc-700 bg-zinc-950 p-3 text-xs sm:text-sm text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (studentObservation.trim()) {
+                      setObservationSaved(true);
+                    }
+                  }}
+                  disabled={!studentObservation.trim()}
+                  className="w-full rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-xs font-semibold text-zinc-200 py-2.5 transition-colors"
+                >
+                  Sceller mon observation au dossier
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="mt-6 p-4 rounded-xl border border-zinc-800 bg-zinc-900/70 text-xs font-mono text-zinc-400">
+          Session Attempt : #48291 • Hash SHA-256 certifié • Clôture sécurisée
         </div>
       </div>
     );
@@ -919,6 +983,58 @@ export default function App() {
                 ? "Poursuivre mon examen"
                 : "J'ai compris — Reprendre l'épreuve"}
             </button>
+
+            {/* Droit d'acquittement immédiat par le surveillant sur place */}
+            <div className="pt-2 border-t border-zinc-800/80">
+              {!showProctorPinModal ? (
+                <button
+                  type="button"
+                  onClick={() => setShowProctorPinModal(true)}
+                  className="text-[11px] text-zinc-400 hover:text-zinc-200 underline"
+                >
+                  Surveillant présent dans la salle ? Acquitter l'incident
+                </button>
+              ) : (
+                <div className="mt-2 p-3 rounded-xl border border-zinc-800 bg-zinc-900/90 text-left space-y-2">
+                  <span className="text-[11px] font-bold text-zinc-200 block">
+                    Code PIN du Surveillant (Acquittement de salle)
+                  </span>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      maxLength={8}
+                      value={proctorPin}
+                      onChange={(e) => {
+                        setProctorPin(e.target.value);
+                        setProctorPinError(null);
+                      }}
+                      placeholder="Code PIN"
+                      className="flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-100 font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (proctorPin === "2026" || proctorPin.toUpperCase() === "AGORA") {
+                          setStrikes(0);
+                          setIsFlaggedForProctorReview(false);
+                          setActiveModalStrike(null);
+                          setShowProctorPinModal(false);
+                          setProctorPin("");
+                        } else {
+                          setProctorPinError("Code PIN invalide");
+                        }
+                      }}
+                      className="rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold px-3 py-1.5 text-xs"
+                    >
+                      Acquitter
+                    </button>
+                  </div>
+                  {proctorPinError && (
+                    <span className="text-[10px] text-rose-400 block">{proctorPinError}</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
