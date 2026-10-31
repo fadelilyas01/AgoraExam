@@ -55,6 +55,7 @@ export function PreFlightCheck({
   const [activeTab, setActiveTab] = useState<"check" | "privacy">("check");
   const [isSimulatedStream, setIsSimulatedStream] = useState<boolean>(false);
 
+  const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
   const localVideoRef = useRef<HTMLVideoElement | null>(null);
   const currentStreamRef = useRef<MediaStream | null>(mediaStream);
 
@@ -176,6 +177,9 @@ export function PreFlightCheck({
   };
 
   const startSimulationStream = () => {
+    // La simulation est strictement interdite dans l'application native d'examen
+    if (isTauri) return;
+
     try {
       const simStream = createSimulatedFaceStream();
       currentStreamRef.current = simStream;
@@ -322,8 +326,9 @@ export function PreFlightCheck({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const allChecksPass = hardware.singleMonitor && hardware.cameraReady;
-  const isTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+  // L'examen exige obligatoirement 1 seul écran et une webcam réelle certifiée (simulation strictement interdite en natif)
+  const allChecksPass =
+    hardware.singleMonitor && hardware.cameraReady && (!isTauri || !isSimulatedStream);
 
   const handleStartExam = async () => {
     if (!allChecksPass || !agreed) return;
@@ -489,12 +494,14 @@ export function PreFlightCheck({
                   >
                     Réessayer la détection
                   </button>
-                  <button
-                    onClick={startSimulationStream}
-                    className="min-h-[40px] rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2 text-xs sm:text-sm font-semibold text-emerald-400 hover:bg-zinc-700 hover:text-emerald-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                  >
-                    Activer le Mode Démo (Simulation Visage)
-                  </button>
+                  {!isTauri && (
+                    <button
+                      onClick={startSimulationStream}
+                      className="min-h-[40px] rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-2 text-xs sm:text-sm font-semibold text-emerald-400 hover:bg-zinc-700 hover:text-emerald-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                    >
+                      Activer le Mode Démo (Simulation Visage)
+                    </button>
+                  )}
                 </div>
               </div>
             )}
@@ -643,12 +650,14 @@ export function PreFlightCheck({
                     <div className="flex flex-col items-center justify-center text-zinc-600 gap-2 p-4 text-center">
                       <VideoOff size={26} />
                       <span className="text-xs">Caméra non initialisée</span>
-                      <button
-                        onClick={startSimulationStream}
-                        className="mt-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                      >
-                        Tester en mode simulateur
-                      </button>
+                      {!isTauri && (
+                        <button
+                          onClick={startSimulationStream}
+                          className="mt-1 rounded-lg bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 text-[11px] font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                        >
+                          Tester en mode simulateur
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
@@ -657,7 +666,7 @@ export function PreFlightCheck({
                   <p>
                     {hardware.cameraReady
                       ? "Votre visage est centré dans la mire. Conservez votre regard orienté vers l'écran durant toute la durée de la composition."
-                      : "AgoraExam requiert l'accès à la webcam pour certifier la présence continue du candidat."}
+                      : "AgoraExam requiert impérativement l'accès à la webcam physique du poste pour certifier la présence continue du candidat."}
                   </p>
                   {!hardware.cameraReady && (
                     <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -669,12 +678,14 @@ export function PreFlightCheck({
                         <Camera size={15} />
                         <span>{isChecking ? "Vérification..." : "Activer la Caméra"}</span>
                       </button>
-                      <button
-                        onClick={startSimulationStream}
-                        className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-800/80 px-3.5 py-2 text-xs sm:text-sm font-semibold text-emerald-400 hover:bg-zinc-700 hover:text-emerald-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                      >
-                        <span>Simuler sans webcam</span>
-                      </button>
+                      {!isTauri && (
+                        <button
+                          onClick={startSimulationStream}
+                          className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-zinc-700 bg-zinc-800/80 px-3.5 py-2 text-xs sm:text-sm font-semibold text-emerald-400 hover:bg-zinc-700 hover:text-emerald-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                        >
+                          <span>Simuler sans webcam</span>
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
