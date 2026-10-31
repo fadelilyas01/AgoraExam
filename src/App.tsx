@@ -563,89 +563,70 @@ export default function App() {
       <canvas ref={canvasRef} className="hidden" />
 
       {/* 1. TOP HUD / BARRE DE SÉCURITÉ OFFICIELLE */}
-      <header className="flex h-16 items-center justify-between border-b border-zinc-800/80 bg-zinc-900/95 px-6 backdrop-blur z-20">
+      <header className="flex h-16 items-center justify-between border-b border-zinc-800/80 bg-zinc-900/95 px-3 sm:px-6 backdrop-blur z-20">
         {/* Identité logicielle & Statut Kiosk */}
-        <div className="flex items-center gap-3.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-950 border border-zinc-800 shadow-sm">
-            <AgoraExamLogo size={22} />
+        <div className="flex items-center gap-2.5 sm:gap-3.5">
+          <div className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-xl bg-zinc-950 border border-zinc-800 shadow-sm shrink-0">
+            <AgoraExamLogo size={20} />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold tracking-tight text-zinc-100">AgoraExam</span>
+              <span className="text-xs sm:text-sm font-bold tracking-tight text-zinc-100">AgoraExam</span>
               {isTauri ? (
-                <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
+                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] sm:text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5 whitespace-nowrap">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Kiosk Matériel Verrouillé
+                  Kiosk Verrouillé
                 </span>
               ) : (
-                <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
+                <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] sm:text-xs font-mono font-semibold text-amber-300 border border-amber-500/30 flex items-center gap-1.5 whitespace-nowrap">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-ping" />
-                  Aperçu Web (Lancez npm run tauri dev pour Kiosk OS)
+                  <span>Aperçu Web</span>
                 </span>
               )}
             </div>
-            <p className="text-xs text-zinc-400">
+            <p className="text-[11px] text-zinc-400 hidden sm:block truncate">
               Algorithmique Avancée • Réf: ALG402 • Épreuve Universitaire
             </p>
           </div>
         </div>
 
-        {/* Jauge progressive de tolérance d'absence (Debounce 4s) */}
-        {absenceCountdown !== null && (
-          <div className="flex items-center gap-3 rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-2 text-xs sm:text-sm font-medium text-amber-400 animate-pulse">
-            <AlertTriangle size={17} />
-            <div className="space-y-0.5">
-              <span>Visage hors champ — Repositionnez-vous face à l'écran</span>
-              <div className="h-1.5 w-36 bg-amber-950 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-amber-400 transition-all duration-1000"
-                  style={{ width: `${(absenceCountdown / 4) * 100}%` }}
-                />
-              </div>
-            </div>
-            <span className="font-mono font-bold text-sm">{absenceCountdown}s</span>
-          </div>
-        )}
-
         {/* Compteur d'infractions & Horloge */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
           {/* Badge Human-in-the-Loop actif */}
           {isFlaggedForProctorReview && (
-            <div className="hidden sm:flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-xs font-semibold text-amber-400 animate-pulse">
+            <div className="hidden lg:flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-xs font-semibold text-amber-400 animate-pulse">
               <Shield size={13} />
               <span>Dossier Transmis au Surveillant</span>
             </div>
           )}
 
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs font-mono text-zinc-400 uppercase font-semibold mr-1">Strikes :</span>
+          <div className="flex items-center gap-1">
+            <span className="text-[11px] sm:text-xs font-mono text-zinc-400 uppercase font-semibold mr-0.5 hidden xs:inline">Strikes :</span>
             {[1, 2, 3].map((num) => {
               const isActive = strikes >= num;
               return (
                 <div
                   key={num}
-                  className={`h-7 px-3 rounded-lg text-xs font-mono font-bold flex items-center gap-1 border transition-colors ${
+                  className={`h-6 sm:h-7 px-2 sm:px-2.5 rounded-md sm:rounded-lg text-[10px] sm:text-xs font-mono font-bold flex items-center gap-1 border transition-colors ${
                     isActive
                       ? "bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm shadow-rose-500/10"
                       : "bg-zinc-800/40 text-zinc-500 border-zinc-800"
                   }`}
                 >
-                  <AlertTriangle size={12} />
+                  <AlertTriangle size={11} />
                   <span>{num}</span>
                 </div>
               );
             })}
           </div>
 
-          <div className="h-5 w-px bg-zinc-800" />
+          <div className="h-4 w-px bg-zinc-800 hidden sm:block" />
 
           {/* Horloge / Compte à rebours */}
-          <div className="flex items-center gap-2 text-xs sm:text-sm text-zinc-100 font-mono bg-zinc-800/90 px-3.5 py-1.5 rounded-xl border border-zinc-700/60 shadow-sm">
-            <Clock size={14} className="text-zinc-400" />
+          <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-100 bg-zinc-800/90 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border border-zinc-700/60 shadow-sm">
+            <Clock size={12} className="text-zinc-400" />
             <span className="font-bold">01:42:15</span>
           </div>
-
-          <div className="h-5 w-px bg-zinc-800" />
 
           {/* Bouton Documentation & Aide */}
           <button
@@ -653,19 +634,38 @@ export default function App() {
               setViewMode("portal");
               window.location.hash = "#docs";
             }}
-            className="flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+            className="flex items-center gap-1 rounded-lg sm:rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
             title="Consulter la documentation"
           >
-            <BookOpen size={14} className="text-emerald-400" />
-            <span>Docs</span>
+            <BookOpen size={13} className="text-emerald-400" />
+            <span className="hidden sm:inline">Docs</span>
           </button>
         </div>
       </header>
 
+      {/* Jauge d'absence responsive en bannière fine sous le header */}
+      {absenceCountdown !== null && (
+        <div className="w-full bg-amber-500/15 border-b border-amber-500/40 px-4 py-2 flex items-center justify-between text-xs sm:text-sm text-amber-300 z-10 animate-pulse">
+          <div className="flex items-center gap-2">
+            <AlertTriangle size={15} className="shrink-0" />
+            <span className="font-semibold">Visage hors champ — Repositionnez-vous face à la webcam</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-1.5 w-24 sm:w-36 bg-amber-950 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-amber-400 transition-all duration-1000"
+                style={{ width: `${(absenceCountdown / 4) * 100}%` }}
+              />
+            </div>
+            <span className="font-mono font-bold">{absenceCountdown}s</span>
+          </div>
+        </div>
+      )}
+
       {/* 2. ZONE CENTRALE : NAVIGATEUR MOODLE INTÉGRÉ & QUESTIONNAIRE RÉEL */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Volet latéral gauche : Navigation du Quiz Moodle */}
-        <aside className="w-64 border-r border-zinc-800/80 bg-zinc-950/70 p-5 flex flex-col justify-between flex-shrink-0">
+        {/* Volet latéral gauche : Navigation du Quiz Moodle (Desktop uniquement) */}
+        <aside className="hidden md:flex w-64 border-r border-zinc-800/80 bg-zinc-950/70 p-5 flex-col justify-between flex-shrink-0">
           <div className="space-y-4">
             <div className="text-xs font-mono font-bold text-zinc-300 uppercase tracking-wider pb-3 border-b border-zinc-800/60 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
@@ -722,21 +722,52 @@ export default function App() {
 
         {/* Contenu principal : Feuille d'examen Moodle */}
         <main className="flex-1 flex flex-col bg-zinc-900/20 overflow-y-auto relative">
-          {/* Fausse barre d'adresse Moodle sécurisée avec vrai logo Moodle */}
-          <div className="flex items-center justify-between px-6 py-2.5 bg-zinc-950/60 border-b border-zinc-800/60 text-xs">
-            <div className="flex items-center gap-2.5 bg-zinc-900 border border-zinc-800 px-3.5 py-1.5 rounded-lg max-w-xl flex-1 text-xs font-mono text-zinc-300">
-              <MoodleLogo size={15} />
-              <Lock size={13} className="text-emerald-400 flex-shrink-0" />
-              <span className="truncate">{moodleUrl}</span>
+          {/* Navigation mobile compacte des questions (< md) */}
+          <div className="md:hidden flex items-center justify-between px-3 py-2 bg-zinc-950/90 border-b border-zinc-800/80 gap-2">
+            <span className="text-[11px] font-mono text-zinc-400 shrink-0">Questions :</span>
+            <div className="flex items-center gap-1 overflow-x-auto py-0.5">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((qNum) => {
+                const isCurrent = currentQuestion === qNum;
+                const isAnswered = answers[qNum] !== undefined;
+                return (
+                  <button
+                    key={qNum}
+                    onClick={() => setCurrentQuestion(qNum)}
+                    className={`h-7 w-7 rounded-lg text-xs font-mono font-semibold shrink-0 flex items-center justify-center border transition-all ${
+                      isCurrent
+                        ? "bg-emerald-500 text-zinc-950 border-emerald-400 font-bold"
+                        : isAnswered
+                        ? "bg-zinc-800 text-zinc-200 border-zinc-700"
+                        : "bg-zinc-900/60 text-zinc-500 border-zinc-800"
+                    }`}
+                  >
+                    {qNum}
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setIsFinished(true)}
+              className="shrink-0 px-2 py-1 rounded-lg border border-zinc-700 bg-zinc-900 text-[11px] font-semibold text-zinc-200 hover:bg-zinc-800"
+            >
+              Finir
+            </button>
+          </div>
+
+          {/* Fausse barre d'adresse Moodle sécurisée */}
+          <div className="flex items-center justify-between px-4 sm:px-6 py-2 bg-zinc-950/60 border-b border-zinc-800/60 text-xs gap-3">
+            <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-lg max-w-xl flex-1 text-xs font-mono text-zinc-300 min-w-0">
+              <MoodleLogo size={14} className="shrink-0" />
+              <Lock size={12} className="text-emerald-400 flex-shrink-0" />
+              <span className="truncate text-[11px] sm:text-xs">{moodleUrl}</span>
             </div>
 
-            <div className="flex items-center gap-3 text-xs text-zinc-400">
-              <span className="flex items-center gap-1.5">
-                <Wifi size={14} className="text-emerald-400" />
-                TLS 1.3 Chiffré
+            <div className="flex items-center gap-2 text-xs text-zinc-400 shrink-0">
+              <span className="hidden sm:flex items-center gap-1.5">
+                <Wifi size={13} className="text-emerald-400" />
+                TLS 1.3
               </span>
-              <span className="text-zinc-600">|</span>
-              <span className="text-emerald-400 font-semibold">Auto-save actif</span>
+              <span className="text-emerald-400 font-semibold text-[11px] sm:text-xs">Auto-save</span>
             </div>
           </div>
 

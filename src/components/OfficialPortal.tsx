@@ -427,30 +427,30 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
       {activeTab === "home" && (
         <div className="space-y-20 sm:space-y-28 pb-24">
           {/* Hero Section */}
-          <section className="relative overflow-hidden pt-12 sm:pt-20 lg:pt-28 text-center px-4 sm:px-6 max-w-5xl mx-auto space-y-6 sm:space-y-8">
-            {/* Pill Notification Institutionnelle (Zéro Cliché IA) */}
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs sm:text-sm font-medium text-emerald-300">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400" />
-              <span>Version 0.1.0 Stable Disponible — Alternative Open-Source et Souveraine à Respondus</span>
+          <section className="relative overflow-hidden pt-8 sm:pt-16 lg:pt-24 text-center px-4 sm:px-6 max-w-5xl mx-auto space-y-6 sm:space-y-8">
+            {/* Pill Notification Institutionnelle */}
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-medium text-emerald-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <span>v0.1.0 Multiplateforme • Confinement Kiosk &amp; Inférence Locale</span>
             </div>
 
             {/* Titre & Sous-titre Épurés et Rigoureux */}
-            <div className="space-y-4 sm:space-y-5 max-w-4xl mx-auto">
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-zinc-100 leading-[1.15]">
-                Le Navigateur d'Examen Sécurisé & Verrouillage Kiosk pour Moodle
+            <div className="space-y-3 sm:space-y-4 max-w-3xl mx-auto">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-zinc-100 leading-tight">
+                Le Navigateur d'Examen Sécurisé pour Moodle
               </h1>
-              <p className="text-base sm:text-lg lg:text-xl text-zinc-300 max-w-3xl mx-auto leading-relaxed">
-                Verrouillage hermétique du système d'exploitation et vérification de présence biométrique exécutée{" "}
-                <strong>100% sur l'ordinateur de l'étudiant</strong>. Zéro flux vidéo dans le cloud. Conforme RGPD et souveraineté académique.
+              <p className="text-sm sm:text-base lg:text-lg text-zinc-300 max-w-2xl mx-auto leading-relaxed">
+                Verrouillage hermétique de l'ordinateur et présence faciale <strong>100% locale (Edge AI)</strong>.
+                Zéro flux vidéo dans le cloud. Conforme RGPD et souveraineté académique.
               </p>
             </div>
 
-            {/* Call To Actions de Téléchargement */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
+            {/* Call To Actions de Téléchargement & Démo Web */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1 max-w-lg mx-auto">
               {detectedOs === "windows" ? (
                 <a
                   href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-Setup.exe"
-                  className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-7 py-3.5 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+                  className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-sm active:scale-[0.98]"
                 >
                   <WindowsLogo size={18} />
                   <span>Télécharger pour Windows (.exe)</span>
@@ -458,7 +458,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               ) : detectedOs === "mac" ? (
                 <a
                   href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-aarch64.dmg"
-                  className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-7 py-3.5 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+                  className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-sm active:scale-[0.98]"
                 >
                   <AppleLogo size={18} />
                   <span>Télécharger pour macOS (.dmg)</span>
@@ -466,101 +466,124 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               ) : (
                 <a
                   href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.AppImage"
-                  className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-7 py-3.5 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+                  className="w-full sm:w-auto min-h-[44px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-sm active:scale-[0.98]"
                 >
                   <LinuxLogo size={18} />
                   <span>Télécharger pour Linux (.AppImage)</span>
                 </a>
               )}
 
-              {onLaunchApp && (
-                <button
-                  onClick={onLaunchApp}
-                  className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-6 py-3.5 text-sm sm:text-base font-semibold text-emerald-400 hover:bg-emerald-500/20 transition-colors"
-                >
-                  <Maximize2 size={17} />
-                  <span>Lancer le Mode Web (Sans Installation)</span>
-                </button>
-              )}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {onLaunchApp && (
+                  <button
+                    onClick={onLaunchApp}
+                    className="flex-1 sm:flex-initial min-h-[44px] flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-800 transition-colors"
+                  >
+                    <Maximize2 size={15} className="text-emerald-400" />
+                    <span>Mode Web</span>
+                  </button>
+                )}
 
-              <button
-                onClick={() => changeTab("docs")}
-                className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/80 px-7 py-3.5 text-sm sm:text-base font-semibold text-zinc-200 hover:bg-zinc-800 hover:text-white transition-colors"
-              >
-                <BookOpen size={17} className="text-zinc-400" />
-                <span>Documentation</span>
-              </button>
+                <button
+                  onClick={() => changeTab("docs")}
+                  className="flex-1 sm:flex-initial min-h-[44px] flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-300 hover:bg-zinc-900 transition-colors"
+                >
+                  <BookOpen size={15} className="text-zinc-400" />
+                  <span>Documentation</span>
+                </button>
+              </div>
             </div>
 
             {/* Micro-labels rassurants */}
-            <div className="pt-3 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-zinc-400 font-mono">
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-5 text-xs text-zinc-400 font-mono">
               <span className="flex items-center gap-1.5">
-                <Check size={16} className="text-emerald-400" /> &lt; 21 Mo
+                <Check size={14} className="text-emerald-400" /> &lt; 21 Mo
               </span>
-              <span className="hidden sm:inline">•</span>
+              <span>•</span>
               <span className="flex items-center gap-1.5">
-                <Check size={16} className="text-emerald-400" /> Zéro Inscription
+                <Check size={14} className="text-emerald-400" /> Zéro Inscription
               </span>
-              <span className="hidden sm:inline">•</span>
+              <span>•</span>
               <span className="flex items-center gap-1.5">
-                <Check size={16} className="text-emerald-400" /> 100% Open-Source MIT
+                <Check size={14} className="text-emerald-400" /> 100% Open-Source MIT
               </span>
             </div>
 
-            {/* Mockup / Aperçu Réaliste de l'Interface de l'Application Kiosk */}
-            <div className="pt-6 sm:pt-8">
+            {/* Mockup Réaliste & Épuré de l'Interface Kiosk */}
+            <div className="pt-4 sm:pt-6">
               <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-2 sm:p-3 shadow-2xl ring-1 ring-zinc-800/80 max-w-4xl mx-auto overflow-hidden">
-                <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/50 p-4 sm:p-6 text-left space-y-4">
+                <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-3 sm:p-5 text-left space-y-3.5">
                   {/* Fausse barre de titre avec Logo Réel AgoraExam */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800 pb-3 gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800/80 pb-3 gap-2">
                     <div className="flex items-center gap-2.5">
                       <div className="flex items-center gap-1.5 mr-2">
-                        <div className="h-3 w-3 rounded-full bg-rose-500/80" />
-                        <div className="h-3 w-3 rounded-full bg-amber-500/80" />
-                        <div className="h-3 w-3 rounded-full bg-emerald-500/80" />
+                        <div className="h-2.5 w-2.5 rounded-full bg-rose-500/80" />
+                        <div className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
+                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
                       </div>
                       <AgoraExamLogo size={18} />
-                      <span className="text-xs sm:text-sm font-mono text-zinc-200 font-semibold">
+                      <span className="text-xs sm:text-sm font-mono text-zinc-200 font-semibold truncate">
                         AgoraExam • Session Kiosk Verrouillée
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs font-mono text-emerald-400">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                      Vérification de Présence Locale : 30 FPS (0 flux cloud)
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Vision Locale : 30 FPS • 0 flux cloud
                     </div>
                   </div>
 
-                  {/* Contenu simulé responsive */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-                    <div className="md:col-span-2 p-4 sm:p-5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 space-y-3">
-                      <div className="flex items-center justify-between text-xs sm:text-sm font-mono text-zinc-400">
-                        <span className="flex items-center gap-1.5">
+                  {/* Questionnaire Moodle simulé authentique */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
+                    <div className="md:col-span-2 p-4 rounded-xl bg-zinc-950/90 border border-zinc-800/80 space-y-3">
+                      <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
+                        <span className="flex items-center gap-1.5 truncate">
                           <MoodleLogo size={14} />
-                          <span>Épreuve : Algorithmique Avancée</span>
+                          <span>Partiel d'Informatique • Semestre 2</span>
                         </span>
-                        <span className="text-emerald-400 font-semibold">Question 3 / 8</span>
+                        <span className="text-emerald-400 font-semibold whitespace-nowrap">Question 3 / 8</span>
                       </div>
-                      <p className="text-sm sm:text-base text-zinc-200 leading-relaxed">
-                        Implémentation d'une table de hachage avec adressage ouvert et détection de collisions...
+                      <p className="text-xs sm:text-sm text-zinc-200 font-medium leading-relaxed">
+                        Quelle structure de données garantit une complexité de recherche en temps constant <code className="text-emerald-300 font-mono">O(1)</code> en moyenne ?
                       </p>
-                      <div className="rounded-lg bg-zinc-900/90 border border-zinc-800 p-3 font-mono text-xs sm:text-sm text-zinc-300 overflow-x-auto">
-                        fn hash_search(key: &amp;str) -&gt; Option&lt;u32&gt; &#123; ... &#125;
+                      
+                      {/* Choix QCM réalistes */}
+                      <div className="space-y-2 pt-1 text-xs sm:text-sm">
+                        <div className="flex items-center gap-2.5 p-2 rounded-lg border border-zinc-800/80 bg-zinc-900/40 text-zinc-400">
+                          <div className="h-3.5 w-3.5 rounded-full border border-zinc-600 flex items-center justify-center" />
+                          <span>A. Arbre binaire de recherche équilibré (AVL)</span>
+                        </div>
+                        <div className="flex items-center gap-2.5 p-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 font-medium">
+                          <div className="h-3.5 w-3.5 rounded-full border border-emerald-400 flex items-center justify-center">
+                            <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                          </div>
+                          <span>B. Table de hachage avec adressage ouvert</span>
+                        </div>
+                        <div className="flex items-center gap-2.5 p-2 rounded-lg border border-zinc-800/80 bg-zinc-900/40 text-zinc-400">
+                          <div className="h-3.5 w-3.5 rounded-full border border-zinc-600 flex items-center justify-center" />
+                          <span>C. Liste doublement chaînée triée</span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="p-4 sm:p-5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 flex flex-col justify-between gap-4">
-                      <div className="space-y-2.5">
-                        <div className="text-xs sm:text-sm font-semibold text-zinc-200 flex items-center gap-2">
-                          <Camera size={15} className="text-emerald-400" />
-                          <span>Webcam PiP Candidat</span>
+                    <div className="p-4 rounded-xl bg-zinc-950/90 border border-zinc-800/80 flex flex-col justify-between gap-3">
+                      <div className="space-y-2">
+                        <div className="text-xs font-semibold text-zinc-200 flex items-center gap-2">
+                          <Camera size={14} className="text-emerald-400" />
+                          <span>Webcam PiP Étudiant</span>
                         </div>
-                        <div className="aspect-video w-full rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs text-zinc-400 font-mono">
-                          1 Visage • Cadrage Conforme
+                        <div className="aspect-video w-full rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[11px] text-zinc-400 font-mono">
+                          Visage Détecté • Conforme
                         </div>
                       </div>
-                      <div className="text-xs sm:text-sm text-zinc-400 font-mono pt-3 border-t border-zinc-800 flex items-center justify-between">
-                        <span>Strikes : 0 / 3</span>
-                        <span className="text-emerald-400 font-semibold">Statut Conforme</span>
+                      <div className="space-y-1.5 pt-2 border-t border-zinc-800/80 text-xs font-mono">
+                        <div className="flex items-center justify-between text-zinc-400">
+                          <span>Strikes :</span>
+                          <span className="text-emerald-400 font-semibold">0 / 3 (Conforme)</span>
+                        </div>
+                        <div className="flex items-center justify-between text-zinc-400">
+                          <span>Temps :</span>
+                          <span className="text-zinc-200">44:12 restants</span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -580,70 +603,70 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               {/* Carte 1 */}
-              <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3.5 hover:border-zinc-700 transition-colors">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
-                  <Lock size={22} />
+              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3 hover:border-zinc-700 transition-colors">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
+                  <Lock size={20} />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-zinc-100">Verrouillage Système Absolu</h3>
-                <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                  Plein écran forcé, neutralisation d'Alt+Tab, Alt+F4, Cmd+Tab, captures d'écran, masquage du Dock et de la barre des tâches.
+                <h3 className="text-sm sm:text-base font-bold text-zinc-100">Verrouillage Kiosk Hermétique</h3>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  Plein écran forcé, neutralisation d'Alt+Tab, Alt+F4, captures d'écran, masquage du Dock et de la barre des tâches de l'OS.
                 </p>
               </div>
 
               {/* Carte 2 */}
-              <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3.5 hover:border-zinc-700 transition-colors">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800 text-blue-400 border border-zinc-700/60">
-                  <Monitor size={22} />
+              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3 hover:border-zinc-700 transition-colors">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
+                  <Monitor size={20} />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-zinc-100">Anti-Multi-Écran Matériel</h3>
-                <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                  Interrogation directe du système d'exploitation en Rust : impossible de lancer l'examen si un câble HDMI, DisplayPort ou AirPlay est actif.
+                <h3 className="text-sm sm:text-base font-bold text-zinc-100">Anti-Double Écran Matériel</h3>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  Contrôle direct du gestionnaire d'affichage en Rust : impossible de lancer l'examen si un câble HDMI, DisplayPort ou AirPlay est actif.
                 </p>
               </div>
 
-              {/* Carte 3 - Vision Locale (Non-Hype AI) */}
-              <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3.5 hover:border-zinc-700 transition-colors">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
-                  <Eye size={22} />
+              {/* Carte 3 - Vision Locale */}
+              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3 hover:border-zinc-700 transition-colors">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
+                  <Eye size={20} />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-zinc-100">Vision Embarquée Souveraine</h3>
-                <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                  Analyse des repères faciaux exécutée localement dans la mémoire vive de l'ordinateur. Aucun flux vidéo n'est envoyé vers des serveurs distants.
+                <h3 className="text-sm sm:text-base font-bold text-zinc-100">Vision Embarquée Souveraine</h3>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  Analyse faciale MediaPipe exécutée 100% dans la mémoire vive de l'ordinateur. Aucun flux vidéo n'est envoyé vers des serveurs distants.
                 </p>
               </div>
 
-              {/* Carte 4 */}
-              <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3.5 hover:border-zinc-700 transition-colors">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800 text-amber-400 border border-zinc-700/60">
-                  <AlertTriangle size={22} />
+              {/* Carte 4 - Human in the loop */}
+              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3 hover:border-zinc-700 transition-colors">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-amber-400 border border-zinc-700/60">
+                  <AlertTriangle size={20} />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-zinc-100">3 Strikes avec Tolérance 4s</h3>
-                <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                  Pas de pénalité arbitraire sur un clignement d'yeux ou un éternuement. Au 3ème avertissement avéré, soumission automatique sur Moodle.
+                <h3 className="text-sm sm:text-base font-bold text-zinc-100">Human-in-the-Loop &amp; 3 Strikes</h3>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  Tolérance active de 4s anti-faux positifs. Au 3ème avertissement, transmission du dossier au surveillant humain (seul habilité à arbitrer).
                 </p>
               </div>
 
               {/* Carte 5 */}
-              <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3.5 hover:border-zinc-700 transition-colors">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800 text-purple-400 border border-zinc-700/60">
-                  <Camera size={22} />
+              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3 hover:border-zinc-700 transition-colors">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
+                  <Camera size={20} />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-zinc-100">Preuves Photographiques Scellées</h3>
-                <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                  Seules les infractions avérées enregistrent une photo locale horodatée scellée avec son empreinte SHA-256 pour les jurys.
+                <h3 className="text-sm sm:text-base font-bold text-zinc-100">Preuves Photographiques Scellées</h3>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  Seules les infractions avérées génèrent une photo locale horodatée pour examen ultérieur par la commission pédagogique.
                 </p>
               </div>
 
               {/* Carte 6 - Moodle Logo */}
-              <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3.5 hover:border-zinc-700 transition-colors">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-zinc-800 text-orange-400 border border-zinc-700/60">
-                  <MoodleLogo size={22} />
+              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3 hover:border-zinc-700 transition-colors">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-orange-400 border border-zinc-700/60">
+                  <MoodleLogo size={20} />
                 </div>
-                <h3 className="text-base sm:text-lg font-bold text-zinc-100">Zéro Plugin Moodle Obligatoire</h3>
-                <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                  L'enseignant configure son test avec un mot de passe masqué et insère un simple bouton lien. Aucune installation serveur requise.
+                <h3 className="text-sm sm:text-base font-bold text-zinc-100">Zéro Plugin Moodle Obligatoire</h3>
+                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+                  L'enseignant configure son test avec un mot de passe masqué et insère un bouton d'accès direct. Aucune extension serveur requise.
                 </p>
               </div>
             </div>
@@ -734,6 +757,38 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             </p>
           </div>
 
+          {/* Badge Identité Officielle du Logiciel Téléchargeable */}
+          <div className="flex flex-col sm:flex-row items-center justify-between p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/60 backdrop-blur gap-4">
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-zinc-950 border border-zinc-700/80 p-2.5 flex items-center justify-center shadow-lg shadow-emerald-500/10 shrink-0">
+                <AgoraExamLogo size={46} />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg sm:text-xl font-bold text-zinc-100">AgoraExam</h2>
+                  <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20">
+                    v0.1.0 Officielle
+                  </span>
+                </div>
+                <p className="text-xs sm:text-sm text-zinc-300">
+                  Logo officiel du logiciel • Repérez ce blason vert émeraude dans votre dossier <em>Téléchargements</em> ou sur votre bureau.
+                </p>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] font-mono text-zinc-400 pt-0.5">
+                  <span className="text-emerald-400 font-semibold">Tauri v2 + Rust</span>
+                  <span>•</span>
+                  <span>SHA-256 Certifié</span>
+                  <span>•</span>
+                  <span>Licence MIT</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex sm:flex-col items-center sm:items-end gap-2 shrink-0">
+              <span className="rounded-lg bg-zinc-800/80 px-3 py-1.5 text-xs font-mono text-zinc-300 border border-zinc-700">
+                Statut : Stable
+              </span>
+            </div>
+          </div>
+
           {/* Grille des plateformes avec vrais logos officiels */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
             {/* Windows */}
@@ -741,7 +796,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               <div className="flex items-center justify-between">
                 <span className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2.5">
                   <WindowsLogo size={22} />
-                  Windows 10 & 11 (64-bit)
+                  <span>Windows 10 &amp; 11 (64-bit)</span>
                 </span>
                 <span className="rounded bg-emerald-500/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20">
                   Recommandé
@@ -753,9 +808,9 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               <div className="pt-2 space-y-2">
                 <a
                   href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-Setup.exe"
-                  className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 py-3.5 px-4 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-md shadow-emerald-500/10 active:scale-[0.98]"
+                  className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 py-3.5 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-colors shadow-md shadow-emerald-500/10 active:scale-[0.98] text-center"
                 >
-                  <WindowsLogo size={18} />
+                  <AgoraExamLogo size={18} />
                   <span>Télécharger AgoraExam-Setup.exe (20.7 Mo)</span>
                 </a>
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-zinc-400">
@@ -783,7 +838,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               <div className="flex items-center justify-between">
                 <span className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2.5">
                   <AppleLogo size={22} className="text-zinc-100" />
-                  macOS (Apple Silicon M1 à M4)
+                  <span>macOS (Apple Silicon M1 à M4)</span>
                 </span>
                 <span className="rounded bg-zinc-800 px-2.5 py-0.5 text-xs font-mono text-zinc-300">
                   ARM64
@@ -795,10 +850,10 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               <div className="pt-2">
                 <a
                   href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-aarch64.dmg"
-                  className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-zinc-100 py-3.5 px-4 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-white transition-colors"
+                  className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-zinc-100 py-3.5 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-semibold text-zinc-950 hover:bg-white transition-colors text-center"
                 >
-                  <AppleLogo size={18} />
-                  <span>Télécharger AgoraExam-aarch64.dmg (12.8 Mo)</span>
+                  <AgoraExamLogo size={18} />
+                  <span>Télécharger AgoraExam-aarch64.dmg (4.9 Mo)</span>
                 </a>
               </div>
               <div className="text-xs font-mono text-zinc-400 flex items-center justify-between pt-1">
@@ -812,7 +867,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               <div className="flex items-center justify-between">
                 <span className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2.5">
                   <AppleLogo size={22} className="text-zinc-400" />
-                  macOS (Processeurs Intel)
+                  <span>macOS (Processeurs Intel)</span>
                 </span>
                 <span className="rounded bg-zinc-800 px-2.5 py-0.5 text-xs font-mono text-zinc-300">
                   x86_64
@@ -824,9 +879,9 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               <div className="pt-2">
                 <a
                   href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam-x64.dmg"
-                  className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl border border-zinc-700 bg-zinc-800 py-3.5 px-4 text-sm sm:text-base font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors"
+                  className="w-full min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl border border-zinc-700 bg-zinc-800 py-3.5 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors text-center"
                 >
-                  <AppleLogo size={18} />
+                  <AgoraExamLogo size={18} />
                   <span>Télécharger AgoraExam-x64.dmg (13.4 Mo)</span>
                 </a>
               </div>
@@ -841,10 +896,10 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               <div className="flex items-center justify-between">
                 <span className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2.5">
                   <LinuxLogo size={22} />
-                  Linux (Ubuntu, Debian, Fedora)
+                  <span>Linux (Ubuntu, Debian, Fedora)</span>
                 </span>
                 <span className="rounded bg-zinc-800 px-2.5 py-0.5 text-xs font-mono text-zinc-300">
-                  AppImage & DEB
+                  AppImage &amp; DEB
                 </span>
               </div>
               <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
@@ -853,17 +908,17 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
                 <a
                   href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.AppImage"
-                  className="flex-1 min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl border border-zinc-700 bg-zinc-800 py-3.5 px-4 text-sm sm:text-base font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors"
+                  className="flex-1 min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800 py-3.5 px-3 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors text-center"
                 >
-                  <LinuxLogo size={18} />
-                  <span>AgoraExam.AppImage</span>
+                  <AgoraExamLogo size={16} />
+                  <span>AgoraExam.AppImage (84 Mo)</span>
                 </a>
                 <a
                   href="https://github.com/fadelilyas01/AgoraExam/releases/latest/download/AgoraExam.deb"
-                  className="flex-1 min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl border border-zinc-700 bg-zinc-800/80 py-3.5 px-4 text-sm sm:text-base font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors"
+                  className="flex-1 min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-800/80 py-3.5 px-3 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-700 transition-colors text-center"
                 >
-                  <LinuxLogo size={18} />
-                  <span>Paquet Debian (.deb)</span>
+                  <AgoraExamLogo size={16} />
+                  <span>Paquet Debian (.deb - 6.3 Mo)</span>
                 </a>
               </div>
               <div className="text-xs font-mono text-zinc-400 flex items-center justify-between pt-1">

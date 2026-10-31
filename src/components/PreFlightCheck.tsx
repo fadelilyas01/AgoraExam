@@ -492,19 +492,19 @@ export function PreFlightCheck({
             </div>
 
             {/* Politique d'Examen & Human-in-the-Loop */}
-            <div className="p-5 rounded-2xl bg-zinc-950/70 border border-zinc-800 text-xs sm:text-sm text-zinc-300 space-y-3.5">
-              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2.5">
+            <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950/70 border border-zinc-800 text-xs sm:text-sm text-zinc-300 space-y-3.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/80 pb-2.5">
                 <div className="flex items-center gap-2">
-                  <ShieldCheck size={16} className="text-emerald-400" />
+                  <ShieldCheck size={16} className="text-emerald-400 shrink-0" />
                   <span className="font-semibold text-zinc-200">
-                    Politique de Surveillance : {policy === "hybrid" ? "Contrôle Humain Obligatoire" : policy === "audit" ? "Audit Trail Silencieux" : "Mode Strict"}
+                    Politique : {policy === "hybrid" ? "Contrôle Humain" : policy === "audit" ? "Audit Silencieux" : "Mode Strict"}
                   </span>
                 </div>
                 {onPolicyChange && (
                   <select
                     value={policy}
                     onChange={(e) => onPolicyChange(e.target.value as "hybrid" | "audit" | "strict")}
-                    className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-200 focus:outline-none"
+                    className="w-full sm:w-auto rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                     aria-label="Sélectionner la politique de surveillance"
                   >
                     <option value="hybrid">Mode Hybride (Human-in-the-Loop - Défaut)</option>
