@@ -16,7 +16,7 @@ export class ProctorVisionService {
 
     try {
       const filesetResolver = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
       );
 
       // 1. Tentative avec accélération matérielle (GPU)
@@ -60,8 +60,9 @@ export class ProctorVisionService {
   private lastTimestamp: number = -1;
 
   detectFace(videoElement: HTMLVideoElement, timestampMs: number): FaceDetectionResult {
+    // Fail-Secure : si le modèle n'est pas initialisé ou la vidéo indisponible, refuser par défaut (CWE-636)
     if (!this.landmarker || !videoElement || videoElement.readyState < 2 || videoElement.videoWidth === 0) {
-      return { hasFace: true, faceCount: 1, confidence: 1.0 };
+      return { hasFace: false, faceCount: 0, confidence: 0.0 };
     }
 
     try {
@@ -78,8 +79,8 @@ export class ProctorVisionService {
         confidence: faceCount > 0 ? 0.95 : 0.0,
       };
     } catch (err) {
-      console.warn("[ProctorVision] Inférence tolérante (fallback) :", err);
-      return { hasFace: true, faceCount: 1, confidence: 1.0 };
+      console.warn("[ProctorVision] Erreur d'inférence (Fail-Secure actif) :", err);
+      return { hasFace: false, faceCount: 0, confidence: 0.0 };
     }
   }
 }

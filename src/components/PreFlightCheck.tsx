@@ -467,11 +467,12 @@ export function PreFlightCheck({
   }, []);
 
   // L'examen exige obligatoirement 1 seul écran, une webcam certifiée et un bouclier anti-intrusion sans menace
+  // Règle d'intégrité (CWE-1188) : Aucun flux simulé/synthétique n'est toléré pour débuter une épreuve officielle
   const allChecksPass =
     hardware.singleMonitor &&
     hardware.cameraReady &&
     hardware.antiIntrusionReady &&
-    (!isTauri || !isSimulatedStream);
+    !isSimulatedStream;
 
   const handleStartExam = async () => {
     if (!allChecksPass || !agreed) return;
