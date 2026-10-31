@@ -169,41 +169,6 @@ AgoraExam/
 
 ---
 
-## Déploiement Web Universel (Vercel, Netlify & GitHub Pages)
-
-Le portail web officiel et la documentation d'AgoraExam sont optimisés pour un déploiement instantané à zéro coût sur n'importe quel hébergeur moderne :
-
-| Plateforme | Type de déploiement | Fichier de configuration | Déploiement 1-Clic |
-| :--- | :--- | :--- | :---: |
-| **Vercel** | Edge Network mondial (Vite) | [`vercel.json`](vercel.json) | [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Ffadelilyas01%2FAgoraExam) |
-| **Netlify** | CDN mondial & SPA redirects | [`netlify.toml`](netlify.toml) | [![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/fadelilyas01/AgoraExam) |
-| **GitHub Pages** | Workflow GitHub Actions | [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) | Automatique sur push `main` |
-
-### Déploiement sur Vercel (En 30 secondes)
-1. Rendez-vous sur [vercel.com](https://vercel.com) et connectez-vous avec votre compte GitHub.
-2. Cliquez sur **« Add New... »** > **« Project »**.
-3. Importez le dépôt **`fadelilyas01/AgoraExam`**.
-4. Vercel détecte automatiquement `vercel.json` (Framework: *Vite*, Build: `npm run build`, Output: `dist`).
-5. Cliquez sur **« Deploy »** : le site est instantanément en ligne avec certificat SSL et CDN haute performance.
-
-### Déploiement sur Netlify (En 30 secondes)
-1. Rendez-vous sur [app.netlify.com](https://app.netlify.com) et connectez-vous avec votre compte GitHub.
-2. Cliquez sur **« Add new site »** > **« Import an existing project »** > **GitHub**.
-3. Sélectionnez le dépôt **`fadelilyas01/AgoraExam`**.
-4. Netlify applique automatiquement la configuration de `netlify.toml` (Build: `npm run build`, Publish: `dist`, Redirects: `/* -> /index.html`).
-5. Cliquez sur **« Deploy AgoraExam »**.
-
-### Déploiement via le Terminal (CLI)
-```bash
-# Déploiement direct en production sur Vercel :
-npx vercel --prod
-
-# Déploiement direct en production sur Netlify :
-npx netlify deploy --prod --dir=dist
-```
-
----
-
 ## Instructions de compilation locale
 
 ### Prérequis de compilation
