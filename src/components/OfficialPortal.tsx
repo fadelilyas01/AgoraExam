@@ -871,7 +871,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                     <div className="md:col-span-2 p-4 rounded-xl bg-zinc-950/90 border border-zinc-800/80 space-y-3">
                       <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
                         <span className="flex items-center gap-1.5 truncate">
-                          <MoodleLogo size={14} />
+                          <BookOpen size={14} className="text-emerald-400" />
                           <span>Partiel d'Informatique • Semestre 2</span>
                         </span>
                         <span className="text-emerald-400 font-semibold whitespace-nowrap">Question 3 / 8</span>

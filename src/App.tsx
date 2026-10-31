@@ -20,7 +20,7 @@ import { listen } from "@tauri-apps/api/event";
 import { PreFlightCheck } from "./components/PreFlightCheck";
 import { OfficialPortal } from "./components/OfficialPortal";
 import { proctorVision } from "./services/faceDetection";
-import { AgoraExamLogo, MoodleLogo } from "./components/Logos";
+import { AgoraExamLogo } from "./components/Logos";
 
 export type SurveillancePolicy = "hybrid" | "audit" | "strict";
 
@@ -322,6 +322,72 @@ export default function App() {
       if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
     };
   }, [isExamStarted, isExpelled, activeModalStrike, handleWarning]);
+
+  // Surveillance active anti-HDMI / anti-multi-écrans en cours d'examen
+  useEffect(() => {
+    if (!isExamStarted || isExpelled || isFinished) return;
+
+    let isSubscribed = true;
+
+    const checkExternalDisplays = async () => {
+      if (!isSubscribed) return;
+
+      let isDual = false;
+      let count = 1;
+
+      if (isTauri) {
+        try {
+          const res = await invoke<{ is_valid: boolean; monitor_count: number }>("verifier_materiel");
+          if (!res.is_valid || res.monitor_count > 1) {
+            isDual = true;
+            count = res.monitor_count;
+          }
+        } catch {
+          // Fallback
+        }
+      } else {
+        const screenObj = typeof window !== "undefined" ? window.screen : null;
+        if (screenObj && (screenObj as any).isExtended) {
+          isDual = true;
+          count = 2;
+        }
+
+        if (
+          typeof window !== "undefined" &&
+          (window.screenLeft > (screenObj?.width || 1920) ||
+            window.screenTop > (screenObj?.height || 1080) ||
+            Boolean(screenObj && ((screenObj as any).availLeft > 0 || (screenObj as any).availTop > 0)))
+        ) {
+          isDual = true;
+          count = 2;
+        }
+      }
+
+      if (isDual) {
+        handleWarning(`Câble HDMI ou second écran connecté en cours d'épreuve (${count} écrans détectés)`);
+      }
+    };
+
+    const intervalId = setInterval(checkExternalDisplays, 2000);
+
+    const handleDisplayEvent = () => {
+      checkExternalDisplays();
+    };
+
+    window.addEventListener("resize", handleDisplayEvent);
+    if (typeof window !== "undefined" && "screen" in window && (window.screen as any).addEventListener) {
+      (window.screen as any).addEventListener("change", handleDisplayEvent);
+    }
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(intervalId);
+      window.removeEventListener("resize", handleDisplayEvent);
+      if (typeof window !== "undefined" && "screen" in window && (window.screen as any).removeEventListener) {
+        (window.screen as any).removeEventListener("change", handleDisplayEvent);
+      }
+    };
+  }, [isExamStarted, isExpelled, isFinished, isTauri, handleWarning]);
 
   // 4. Verrouillage intégral des raccourcis système, touches de fonction, clic droit et focus
   useEffect(() => {
@@ -680,8 +746,8 @@ export default function App() {
           <div className="space-y-4">
             <div className="text-xs font-mono font-bold text-zinc-300 uppercase tracking-wider pb-3 border-b border-zinc-800/60 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
-                <MoodleLogo size={14} />
-                <span>Navigation Quiz</span>
+                <BookOpen size={14} className="text-emerald-400" />
+                <span>Navigation Questionnaire</span>
               </span>
               <span className="text-xs text-zinc-400 font-mono font-normal">8 questions</span>
             </div>
@@ -768,7 +834,7 @@ export default function App() {
           {/* Fausse barre d'adresse Moodle sécurisée */}
           <div className="flex items-center justify-between px-4 sm:px-6 py-2 bg-zinc-950/60 border-b border-zinc-800/60 text-xs gap-3">
             <div className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-lg max-w-xl flex-1 text-xs font-mono text-zinc-300 min-w-0">
-              <MoodleLogo size={14} className="shrink-0" />
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
               <Lock size={12} className="text-emerald-400 flex-shrink-0" />
               <span className="truncate text-[11px] sm:text-xs">{moodleUrl}</span>
             </div>

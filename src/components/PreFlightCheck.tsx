@@ -14,7 +14,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
-import { AgoraExamLogo, MoodleLogo } from "./Logos";
+import { AgoraExamLogo } from "./Logos";
 
 interface HardwareStatus {
   singleMonitor: boolean;
@@ -292,34 +292,144 @@ export function PreFlightCheck({
       micOk = true;
     }
 
-    // C. Détection du multi-écran via Tauri Backend
-    let isSingleMon = true;
-    let monCount = 1;
-    let monMsg = "1 seul écran physique détecté.";
-    try {
-      const result = await invoke<{
-        is_valid: boolean;
-        monitor_count: number;
-        message: string;
-      }>("verifier_materiel");
-
-      isSingleMon = result.is_valid;
-      monCount = result.monitor_count;
-      monMsg = result.message;
-    } catch {
-      isSingleMon = true;
-    }
+    // C. Diagnostic universel d'écran unique / multi-écrans (Tauri Natif + Navigateur Web)
+    const monitorStatus = await detectMonitors();
 
     setHardware({
-      singleMonitor: isSingleMon,
-      monitorCount: monCount,
-      monitorMessage: monMsg,
+      singleMonitor: monitorStatus.singleMonitor,
+      monitorCount: monitorStatus.monitorCount,
+      monitorMessage: monitorStatus.monitorMessage,
       cameraReady: camOk,
       micReady: micOk,
     });
 
     setIsChecking(false);
   };
+
+  // Détecteur universel d'écran unique / multi-écrans & câble HDMI
+  const detectMonitors = async (): Promise<{
+    singleMonitor: boolean;
+    monitorCount: number;
+    monitorMessage: string;
+  }> => {
+    // 1. Détection sous application native Tauri (via Rust backend)
+    if (isTauri) {
+      try {
+        const result = await invoke<{
+          is_valid: boolean;
+          monitor_count: number;
+          message: string;
+        }>("verifier_materiel");
+
+        return {
+          singleMonitor: result.is_valid,
+          monitorCount: result.monitor_count,
+          monitorMessage: result.message,
+        };
+      } catch (err) {
+        console.warn("Erreur invoke verifier_materiel :", err);
+      }
+    }
+
+    // 2. Détection sous Navigateur Web (Chrome, Edge, Safari, Firefox, Vercel)
+    if (typeof window !== "undefined") {
+      let isExtended = false;
+      let detailedCount = 1;
+
+      // Propriété standard W3C Screen Details (Chromium 100+)
+      if ("screen" in window && "isExtended" in window.screen) {
+        isExtended = Boolean((window.screen as any).isExtended);
+      }
+
+      // API W3C Window Management si supportée
+      if ("getScreenDetails" in window && typeof (window as any).getScreenDetails === "function") {
+        try {
+          const details = await (window as any).getScreenDetails();
+          if (details && Array.isArray(details.screens)) {
+            detailedCount = details.screens.length;
+          }
+        } catch {
+          // Fallback sur isExtended
+        }
+      }
+
+      // Heuristiques de positionnement sur écran déporté / bureau étendu
+      const screenObj = window.screen;
+      const hasSecondaryOffset =
+        window.screenLeft > screenObj.width ||
+        window.screenTop > screenObj.height ||
+        window.screenLeft < 0 ||
+        window.screenTop < 0 ||
+        Boolean(screenObj && ((screenObj as any).availLeft > 0 || (screenObj as any).availTop > 0));
+
+      // Détection de résolution étendue anormale (double écran étendu en un seul bureau virtuel)
+      const isDualGeometry =
+        screenObj.availWidth >= 3440 ||
+        (screenObj.availWidth > 2000 && screenObj.availWidth > screenObj.availHeight * 2.3);
+
+      if (isExtended || detailedCount > 1 || hasSecondaryOffset || isDualGeometry) {
+        const finalCount = Math.max(detailedCount, isExtended ? 2 : 1, hasSecondaryOffset ? 2 : 1);
+        return {
+          singleMonitor: false,
+          monitorCount: finalCount,
+          monitorMessage: `${finalCount} écrans physiques détectés (Câble HDMI ou écran secondaire branché). Débranchez votre second écran pour continuer.`,
+        };
+      }
+    }
+
+    return {
+      singleMonitor: true,
+      monitorCount: 1,
+      monitorMessage: "1 seul écran physique détecté (Conforme).",
+    };
+  };
+
+  // Surveillance active en temps réel du câble HDMI et des écrans secondaires
+  useEffect(() => {
+    let isSubscribed = true;
+
+    const refreshMonitors = async () => {
+      if (!isSubscribed) return;
+      const status = await detectMonitors();
+      setHardware((prev) => {
+        if (
+          prev.singleMonitor !== status.singleMonitor ||
+          prev.monitorCount !== status.monitorCount ||
+          prev.monitorMessage !== status.monitorMessage
+        ) {
+          return {
+            ...prev,
+            singleMonitor: status.singleMonitor,
+            monitorCount: status.monitorCount,
+            monitorMessage: status.monitorMessage,
+          };
+        }
+        return prev;
+      });
+    };
+
+    // Watchdog toutes les 1.5 secondes
+    const intervalId = setInterval(refreshMonitors, 1500);
+
+    // Écoute des événements de redimensionnement d'écran et de changement de display
+    const handleDisplayChange = () => {
+      refreshMonitors();
+    };
+
+    window.addEventListener("resize", handleDisplayChange);
+    if (typeof window !== "undefined" && "screen" in window && (window.screen as any).addEventListener) {
+      (window.screen as any).addEventListener("change", handleDisplayChange);
+    }
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(intervalId);
+      window.removeEventListener("resize", handleDisplayChange);
+      if (typeof window !== "undefined" && "screen" in window && (window.screen as any).removeEventListener) {
+        (window.screen as any).removeEventListener("change", handleDisplayChange);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     requestCameraPermission();
@@ -531,8 +641,14 @@ export function PreFlightCheck({
                       <span className="text-sm font-bold block text-zinc-100">
                         Écran Physique
                       </span>
-                      <span className="text-xs text-zinc-400 font-mono">
-                        {hardware.monitorCount} écran détecté
+                      <span
+                        className={`text-xs font-mono ${
+                          hardware.singleMonitor ? "text-zinc-400" : "text-rose-400 font-semibold"
+                        }`}
+                      >
+                        {hardware.singleMonitor
+                          ? "1 écran physique détecté"
+                          : `${hardware.monitorCount} écrans détectés (Câble HDMI actif)`}
                       </span>
                     </div>
                   </div>
@@ -549,7 +665,7 @@ export function PreFlightCheck({
                 <p className="mt-3 text-xs sm:text-sm leading-relaxed text-zinc-300">
                   {hardware.singleMonitor
                     ? "Configuration validée (aucun moniteur externe HDMI/DP)."
-                    : "Débranchez immédiatement vos écrans secondaires."}
+                    : "Infraction matérielle : Débranchez immédiatement votre câble HDMI ou moniteur secondaire pour débloquer le démarrage."}
                 </p>
               </div>
 
@@ -752,8 +868,8 @@ export function PreFlightCheck({
         {/* Bouton de Démarrage */}
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-between border-t border-zinc-800 pt-5 gap-4">
           <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
-            <MoodleLogo size={15} />
-            <span>Session Moodle ID : #48291-SEC</span>
+            <span className="flex h-2 w-2 rounded-full bg-emerald-400" />
+            <span>Session d'Épreuve : #48291-SEC</span>
           </div>
 
           <button
