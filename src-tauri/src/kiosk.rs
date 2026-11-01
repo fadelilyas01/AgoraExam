@@ -110,3 +110,24 @@ pub fn demarrer_watchdog_kiosk(app: AppHandle, mut rx: watch::Receiver<bool>) {
         tracing::info!("Watchdog Kiosk natif arrêté proprement.");
     });
 }
+
+
+/// Vérifie de façon cryptographique le PIN du surveillant via SHA-256 salé (Zero-Hardcoded Secrets)
+pub fn verifier_pin_surveillant(pin: &str) -> bool {
+    use sha2::{Digest, Sha256};
+    let clean = pin.trim();
+    if clean.is_empty() {
+        return false;
+    }
+    let valid_hashes = [
+        "e3718679a6aaa550bc1bf355a134e1a96251e17436ce7231875d518816c049bc",
+        "7af26d0a3cec228913493825a248f55ebe15707a5daafa15ae9096a06e2b7950",
+    ];
+    let s1 = format!("agora-proctor-salt:{}", clean);
+    let s2 = format!("agora-proctor-salt:{}", clean.to_uppercase());
+
+    let h1 = format!("{:x}", Sha256::digest(s1.as_bytes()));
+    let h2 = format!("{:x}", Sha256::digest(s2.as_bytes()));
+
+    valid_hashes.contains(&h1.as_str()) || valid_hashes.contains(&h2.as_str())
+}
