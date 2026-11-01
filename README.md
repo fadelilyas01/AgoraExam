@@ -60,22 +60,22 @@ Les installateurs officiels prêts au déploiement pour vos sessions d'examens :
 
 ```mermaid
 flowchart TD
-    A["1. Démarrage AgoraExam"] --> B["2. Pre-Flight Check Matériel\n- Webcam & Audio validés\n- Contrôle Écran Unique\n- Choix Politique (Hybride / Audit / Strict)"]
+    A["1. Démarrage AgoraExam"] --> B["2. Pre-Flight Check Matériel<br/>• Webcam & Audio validés<br/>• Contrôle Écran Unique<br/>• Choix Politique (Hybride / Audit / Strict)"]
     B --> C["3. Validation de la Charte Éthique (AI Act)"]
-    C --> D["4. Verrouillage Kiosk Actif\n- Plein écran sans bordure\n- Raccourcis OS neutralisés\n- Watchdog focus armé (400ms)"]
-    D --> E["5. Session d'Examen Moodle\n- Analyse MediaPipe locale (5 FPS)\n- PiP discret déplaçable"]
+    C --> D["4. Verrouillage Kiosk Actif<br/>• Plein écran sans bordure<br/>• Raccourcis OS neutralisés<br/>• Watchdog focus armé (400ms)"]
+    D --> E["5. Session d'Examen Moodle<br/>• Analyse MediaPipe locale (5 FPS)<br/>• PiP discret déplaçable"]
     
-    E -->|"Visage absent > 4s OU Multi-visages"| F["Détection d'Activité Suspecte"]
-    F --> G["Consignation au Dossier Candidat\n(Capture horodatée chiffrée)"]
+    E -->|"Visage absent plus de 4s OU Multi-visages"| F["Détection d'Activité Suspecte"]
+    F --> G["Consignation au Dossier Candidat<br/>(Capture horodatée chiffrée)"]
     
     G --> H{"Compteur de Strikes"}
-    H -->|"Strike 1 ou 2"| I["Modal Bloquant à l'écran\nRecapture forcée du focus\nAvertissement pédagogique consigné"]
+    H -->|"Strike 1 ou 2"| I["Modal Bloquant à l'écran<br/>Recapture forcée du focus<br/>Avertissement pédagogique consigné"]
     I --> E
     
     H -->|"Strike 3"| J{"Politique Active"}
-    J -->|"Mode Hybride (Défaut)"| K["ALERTE SURVEILLANT HUMAIN\nDossier d'infractions transmis\nL'étudiant continue l'épreuve\nSeul le surveillant peut décider de l'exclusion"]
-    J -->|"Mode Audit Trail"| L["Consignation Silencieuse\nAucune interruption\nRevue post-examen"]
-    J -->|"Mode Strict"| M["Kill Switch Moodle\nfinishattempt = 1 (Soumission forcée)\nÉcran de clôture définitive"]
+    J -->|"Mode Hybride (Défaut)"| K["ALERTE SURVEILLANT HUMAIN<br/>Dossier d'infractions transmis<br/>L'étudiant continue l'épreuve<br/>Seul le surveillant peut décider de l'exclusion"]
+    J -->|"Mode Audit Trail"| L["Consignation Silencieuse<br/>Aucune interruption<br/>Revue post-examen"]
+    J -->|"Mode Strict"| M["Kill Switch Moodle<br/>finishattempt = 1 (Soumission forcée)<br/>Écran de clôture définitive"]
 ```
 
 ### Les 3 Politiques de Surveillance Configurables
