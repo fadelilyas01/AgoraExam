@@ -29,6 +29,7 @@ import { AgoraExamLogo } from "./components/Logos";
 
 export type SurveillancePolicy = "hybrid" | "audit" | "strict";
 
+
 /**
  * VÃ©rification cryptographique du code PIN surveillant via empreinte SHA-256 salÃ©e.
  * Aucun secret n'est Ã©crit en clair dans le code source (CWE-798 & OWASP A07:2021).
@@ -694,8 +695,8 @@ export default function App() {
       typeof window !== "undefined" && window.location.hash === "#docs"
         ? "docs"
         : typeof window !== "undefined" && window.location.hash === "#download"
-        ? "download"
-        : "home";
+          ? "download"
+          : "home";
 
     return (
       <OfficialPortal
@@ -728,7 +729,7 @@ export default function App() {
   // Ã‰cran d'expulsion dÃ©finitive (Strike 3)
   if (isExpelled) {
     return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center bg-zinc-950 p-6 sm:p-8 text-center font-sans antialiased">
+      <div className="flex min-h-screen w-full max-w-full flex-col items-center justify-center bg-zinc-950 p-6 sm:p-8 text-center font-sans antialiased">
         <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20 mb-6 shadow-xl shadow-rose-500/5">
           <AlertOctagon size={44} />
         </div>
@@ -796,7 +797,7 @@ export default function App() {
     };
 
     return (
-      <div className="flex min-h-screen w-screen flex-col items-center justify-center bg-zinc-950 p-4 sm:p-8 text-center font-sans antialiased overflow-y-auto">
+      <div className="flex min-h-screen w-full max-w-full flex-col items-center justify-center bg-zinc-950 p-4 sm:p-8 text-center font-sans antialiased overflow-y-auto">
         {/* Attestation Officielle de Fin d'Ã‰preuve */}
         <div className="w-full max-w-2xl rounded-3xl border border-zinc-800 bg-zinc-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur space-y-6 text-left print-surface">
           {/* En-tÃªte de l'Attestation */}
@@ -949,7 +950,7 @@ export default function App() {
   const timerPercentage = Math.max(0, Math.min(100, (secondsRemaining / 7200) * 100));
 
   return (
-    <div className="flex h-screen w-screen flex-col bg-zinc-950 text-zinc-100 font-sans overflow-hidden antialiased">
+    <div className="flex h-screen w-full max-w-full flex-col bg-zinc-950 text-zinc-100 font-sans overflow-hidden antialiased">
       {/* Canvas invisible pour capture d'infractions */}
       <canvas ref={canvasRef} className="hidden" />
 
@@ -995,33 +996,30 @@ export default function App() {
           <div className="hidden md:flex items-center rounded-lg border border-zinc-800 bg-zinc-900/90 p-0.5 text-xs text-zinc-400">
             <button
               onClick={() => setFontSizeLevel("normal")}
-              className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors ${
-                fontSizeLevel === "normal"
+              className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors ${fontSizeLevel === "normal"
                   ? "bg-zinc-800 text-zinc-100 font-bold"
                   : "hover:text-zinc-200"
-              }`}
+                }`}
               title="Taille de texte normale (100%)"
             >
               A
             </button>
             <button
               onClick={() => setFontSizeLevel("large")}
-              className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors ${
-                fontSizeLevel === "large"
+              className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors ${fontSizeLevel === "large"
                   ? "bg-zinc-800 text-zinc-100 font-bold"
                   : "hover:text-zinc-200"
-              }`}
+                }`}
               title="Taille de texte agrandie (115%)"
             >
               A+
             </button>
             <button
               onClick={() => setFontSizeLevel("xlarge")}
-              className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors ${
-                fontSizeLevel === "xlarge"
+              className={`px-2 py-1 rounded text-[11px] font-semibold transition-colors ${fontSizeLevel === "xlarge"
                   ? "bg-zinc-800 text-zinc-100 font-bold"
                   : "hover:text-zinc-200"
-              }`}
+                }`}
               title="Taille de texte maximale (130%)"
             >
               A++
@@ -1036,11 +1034,10 @@ export default function App() {
               return (
                 <div
                   key={num}
-                  className={`h-6 sm:h-7 px-2 sm:px-2.5 rounded-md sm:rounded-lg text-[10px] sm:text-xs font-mono font-bold flex items-center gap-1 border transition-colors ${
-                    isActive
+                  className={`h-6 sm:h-7 px-2 sm:px-2.5 rounded-md sm:rounded-lg text-[10px] sm:text-xs font-mono font-bold flex items-center gap-1 border transition-colors ${isActive
                       ? "bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm shadow-rose-500/10"
                       : "bg-zinc-800/40 text-zinc-500 border-zinc-800"
-                  }`}
+                    }`}
                 >
                   <AlertTriangle size={11} />
                   <span>{num}</span>
@@ -1053,13 +1050,12 @@ export default function App() {
 
           {/* ChronomÃ¨tre avec jauge de temps restante dynamique */}
           <div
-            className={`flex items-center gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border transition-colors shadow-sm ${
-              secondsRemaining <= 300
+            className={`flex items-center gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border transition-colors shadow-sm ${secondsRemaining <= 300
                 ? "bg-rose-500/20 border-rose-500/50 text-rose-300 animate-pulse"
                 : secondsRemaining <= 900
-                ? "bg-amber-500/15 border-amber-500/40 text-amber-300"
-                : "bg-zinc-800/90 border-zinc-700/60 text-zinc-100"
-            }`}
+                  ? "bg-amber-500/15 border-amber-500/40 text-amber-300"
+                  : "bg-zinc-800/90 border-zinc-700/60 text-zinc-100"
+              }`}
           >
             <Clock size={13} className={secondsRemaining <= 900 ? "text-amber-400" : "text-zinc-400"} />
             <div className="flex flex-col">
@@ -1068,13 +1064,12 @@ export default function App() {
               </span>
               <div className="w-12 h-1 bg-zinc-700/60 rounded-full overflow-hidden mt-0.5">
                 <div
-                  className={`h-full transition-all duration-1000 ${
-                    secondsRemaining <= 300
+                  className={`h-full transition-all duration-1000 ${secondsRemaining <= 300
                       ? "bg-rose-500"
                       : secondsRemaining <= 900
-                      ? "bg-amber-400"
-                      : "bg-emerald-400"
-                  }`}
+                        ? "bg-amber-400"
+                        : "bg-emerald-400"
+                    }`}
                   style={{ width: `${timerPercentage}%` }}
                 />
               </div>
@@ -1136,13 +1131,12 @@ export default function App() {
                   <button
                     key={qNum}
                     onClick={() => setCurrentQuestion(qNum)}
-                    className={`relative h-10 rounded-xl text-xs sm:text-sm font-mono font-semibold border flex items-center justify-center transition-all ${
-                      isCurrent
+                    className={`relative h-10 rounded-xl text-xs sm:text-sm font-mono font-semibold border flex items-center justify-center transition-all ${isCurrent
                         ? "bg-emerald-500 text-zinc-950 border-emerald-400 font-bold shadow-md shadow-emerald-500/10"
                         : isAnswered
-                        ? "bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700"
-                        : "bg-zinc-900/60 text-zinc-500 border-zinc-800 hover:border-zinc-700"
-                    }`}
+                          ? "bg-zinc-800 text-zinc-200 border-zinc-700 hover:bg-zinc-700"
+                          : "bg-zinc-900/60 text-zinc-500 border-zinc-800 hover:border-zinc-700"
+                      }`}
                   >
                     <span>{qNum}</span>
                     {/* Pastille de question Ã©pinglÃ©e pour rÃ©vision */}
@@ -1194,13 +1188,12 @@ export default function App() {
                   <button
                     key={qNum}
                     onClick={() => setCurrentQuestion(qNum)}
-                    className={`relative h-7 w-7 rounded-lg text-xs font-mono font-semibold shrink-0 flex items-center justify-center border transition-all ${
-                      isCurrent
+                    className={`relative h-7 w-7 rounded-lg text-xs font-mono font-semibold shrink-0 flex items-center justify-center border transition-all ${isCurrent
                         ? "bg-emerald-500 text-zinc-950 border-emerald-400 font-bold"
                         : isAnswered
-                        ? "bg-zinc-800 text-zinc-200 border-zinc-700"
-                        : "bg-zinc-900/60 text-zinc-500 border-zinc-800"
-                    }`}
+                          ? "bg-zinc-800 text-zinc-200 border-zinc-700"
+                          : "bg-zinc-900/60 text-zinc-500 border-zinc-800"
+                      }`}
                   >
                     <span>{qNum}</span>
                     {isFlagged && (
@@ -1261,11 +1254,10 @@ export default function App() {
                   {/* Bouton d'Ã‰pinglage pour rÃ©vision */}
                   <button
                     onClick={() => toggleFlagQuestion(currentQuestion)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
-                      flaggedQuestions.includes(currentQuestion)
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${flaggedQuestions.includes(currentQuestion)
                         ? "bg-amber-500/15 text-amber-300 border-amber-500/40"
                         : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200 hover:border-zinc-700"
-                    }`}
+                      }`}
                     title="Ã‰pingler cette question pour y revenir avant de soumettre (Touche F)"
                   >
                     <Flag
@@ -1282,13 +1274,12 @@ export default function App() {
               {currentQuestion === 1 ? (
                 <>
                   <h2
-                    className={`font-bold text-zinc-100 leading-snug ${
-                      fontSizeLevel === "normal"
+                    className={`font-bold text-zinc-100 leading-snug ${fontSizeLevel === "normal"
                         ? "text-base sm:text-lg"
                         : fontSizeLevel === "large"
-                        ? "text-lg sm:text-xl"
-                        : "text-xl sm:text-2xl"
-                    }`}
+                          ? "text-lg sm:text-xl"
+                          : "text-xl sm:text-2xl"
+                      }`}
                   >
                     Quelle est la complexitÃ© asymptotique moyenne de la recherche d'une clÃ© dans une table de hachage bien dimensionnÃ©e avec rÃ©solution par adressage ouvert ?
                   </h2>
@@ -1301,17 +1292,15 @@ export default function App() {
                     ].map((opt) => (
                       <label
                         key={opt.id}
-                        className={`flex items-center gap-3.5 p-4 rounded-2xl border cursor-pointer transition-colors ${
-                          fontSizeLevel === "normal"
+                        className={`flex items-center gap-3.5 p-4 rounded-2xl border cursor-pointer transition-colors ${fontSizeLevel === "normal"
                             ? "text-sm sm:text-base"
                             : fontSizeLevel === "large"
-                            ? "text-base sm:text-lg"
-                            : "text-lg sm:text-xl"
-                        } ${
-                          answers[1] === opt.id
+                              ? "text-base sm:text-lg"
+                              : "text-lg sm:text-xl"
+                          } ${answers[1] === opt.id
                             ? "border-emerald-500/50 bg-emerald-500/10 text-zinc-100 font-semibold"
                             : "border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:bg-zinc-900/80"
-                        }`}
+                          }`}
                       >
                         <input
                           type="radio"
@@ -1331,13 +1320,12 @@ export default function App() {
               ) : (
                 <>
                   <h2
-                    className={`font-bold text-zinc-100 leading-snug ${
-                      fontSizeLevel === "normal"
+                    className={`font-bold text-zinc-100 leading-snug ${fontSizeLevel === "normal"
                         ? "text-base sm:text-lg"
                         : fontSizeLevel === "large"
-                        ? "text-lg sm:text-xl"
-                        : "text-xl sm:text-2xl"
-                    }`}
+                          ? "text-lg sm:text-xl"
+                          : "text-xl sm:text-2xl"
+                      }`}
                   >
                     ImplÃ©mentez l'inversion d'une liste chaÃ®nÃ©e simple en complexitÃ© mÃ©moire O(1).
                   </h2>
@@ -1382,13 +1370,12 @@ export default function App() {
               /* Mode RÃ©duit : Badge ultra-discret */
               <div className="flex items-center gap-2.5 rounded-full border border-zinc-800 bg-zinc-900/95 px-3.5 py-2 shadow-2xl backdrop-blur">
                 <span
-                  className={`h-2.5 w-2.5 rounded-full ${
-                    multipleFaces
+                  className={`h-2.5 w-2.5 rounded-full ${multipleFaces
                       ? "bg-rose-500 animate-ping"
                       : faceDetected
-                      ? "bg-emerald-400"
-                      : "bg-amber-400 animate-pulse"
-                  }`}
+                        ? "bg-emerald-400"
+                        : "bg-amber-400 animate-pulse"
+                    }`}
                 />
                 <span className="text-xs font-semibold text-zinc-200">
                   {multipleFaces ? "2 visages !" : faceDetected ? "Surveillance active" : "Visage absent"}
@@ -1414,11 +1401,10 @@ export default function App() {
                     {/* Bouton Ghost Camera (Masquage visuel du miroir pour Ã©liminer la fatigue) */}
                     <button
                       onClick={() => setGhostCamera((prev) => !prev)}
-                      className={`p-1 rounded transition-colors ${
-                        ghostCamera
+                      className={`p-1 rounded transition-colors ${ghostCamera
                           ? "text-emerald-400 bg-emerald-500/15"
                           : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
-                      }`}
+                        }`}
                       title={
                         ghostCamera
                           ? "Afficher le miroir vidÃ©o (Touche G)"
@@ -1451,9 +1437,8 @@ export default function App() {
                     autoPlay
                     playsInline
                     muted
-                    className={`h-full w-full object-cover -scale-x-100 ${
-                      ghostCamera ? "hidden" : "block"
-                    }`}
+                    className={`h-full w-full object-cover -scale-x-100 ${ghostCamera ? "hidden" : "block"
+                      }`}
                   />
 
                   {/* Mode Discret / Ghost Camera : Ã‰cran de rassurance anti-anxiÃ©tÃ© */}
@@ -1473,13 +1458,12 @@ export default function App() {
                   {/* Pastille de statut en surimpression */}
                   <div className="absolute top-2 left-2">
                     <span
-                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-mono font-bold backdrop-blur ${
-                        multipleFaces
+                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-mono font-bold backdrop-blur ${multipleFaces
                           ? "bg-rose-500/90 text-white"
                           : faceDetected
-                          ? "bg-emerald-500/90 text-zinc-950"
-                          : "bg-amber-500/90 text-zinc-950"
-                      }`}
+                            ? "bg-emerald-500/90 text-zinc-950"
+                            : "bg-amber-500/90 text-zinc-950"
+                        }`}
                     >
                       {multipleFaces ? "MULTI-FACES" : faceDetected ? "OK" : "ABSENT"}
                     </span>
@@ -1551,18 +1535,16 @@ export default function App() {
       {activeModalStrike && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-6">
           <div
-            className={`w-full max-w-md rounded-3xl border bg-zinc-950 p-6 sm:p-8 shadow-2xl text-center space-y-5 animate-in fade-in zoom-in-95 ${
-              activeModalStrike.isProctorAlert
+            className={`w-full max-w-md rounded-3xl border bg-zinc-950 p-6 sm:p-8 shadow-2xl text-center space-y-5 animate-in fade-in zoom-in-95 ${activeModalStrike.isProctorAlert
                 ? "border-amber-500/40"
                 : "border-rose-500/40"
-            }`}
+              }`}
           >
             <div
-              className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border ${
-                activeModalStrike.isProctorAlert
+              className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border ${activeModalStrike.isProctorAlert
                   ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
                   : "bg-rose-500/10 text-rose-500 border-rose-500/20"
-              }`}
+                }`}
             >
               {activeModalStrike.isProctorAlert ? (
                 <Shield size={32} />
@@ -1573,11 +1555,10 @@ export default function App() {
 
             <div>
               <span
-                className={`inline-block rounded-full px-3.5 py-1 text-xs font-mono font-bold mb-2 border ${
-                  activeModalStrike.isProctorAlert
+                className={`inline-block rounded-full px-3.5 py-1 text-xs font-mono font-bold mb-2 border ${activeModalStrike.isProctorAlert
                     ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
                     : "bg-rose-500/20 text-rose-300 border-rose-500/30"
-                }`}
+                  }`}
               >
                 {activeModalStrike.isProctorAlert
                   ? "Alerte Surveillant â€” ContrÃ´le Humain Obligatoire"
@@ -1602,9 +1583,8 @@ export default function App() {
                   : "Preuve photographique archivÃ©e"}
               </div>
               <div
-                className={`pt-1 font-semibold ${
-                  activeModalStrike.isProctorAlert ? "text-amber-400" : "text-rose-400"
-                }`}
+                className={`pt-1 font-semibold ${activeModalStrike.isProctorAlert ? "text-amber-400" : "text-rose-400"
+                  }`}
               >
                 {activeModalStrike.isProctorAlert
                   ? "âš–ï¸ ConformÃ©ment au RGPD et Ã  l'AI Act, aucune dÃ©cision d'expulsion n'est prise par l'IA seule. Vous pouvez poursuivre votre Ã©preuve. Seul le surveillant humain pourra statuer."
@@ -1614,11 +1594,10 @@ export default function App() {
 
             <button
               onClick={() => setActiveModalStrike(null)}
-              className={`w-full rounded-xl py-3 text-xs sm:text-sm font-bold transition-colors min-h-[44px] ${
-                activeModalStrike.isProctorAlert
+              className={`w-full rounded-xl py-3 text-xs sm:text-sm font-bold transition-colors min-h-[44px] ${activeModalStrike.isProctorAlert
                   ? "bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
                   : "bg-zinc-100 text-zinc-950 hover:bg-white"
-              }`}
+                }`}
             >
               {activeModalStrike.isProctorAlert
                 ? "Poursuivre mon examen"

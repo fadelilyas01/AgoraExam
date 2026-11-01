@@ -112,14 +112,18 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [mobileDocsDrawerOpen, setMobileDocsDrawerOpen] = useState<boolean>(false);
 
-  // Détection automatique de l'OS de l'utilisateur
+  // Détection automatique de l'OS et du support mobile de l'utilisateur
   const [detectedOs, setDetectedOs] = useState<"windows" | "mac" | "linux">("windows");
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const ua = window.navigator.userAgent.toLowerCase();
-      if (ua.includes("mac")) setDetectedOs("mac");
-      else if (ua.includes("linux")) setDetectedOs("linux");
+      const mobileCheck = /iphone|ipad|ipod|android|mobile/.test(ua) || (window.innerWidth < 768 && "ontouchstart" in window);
+      setIsMobileDevice(mobileCheck);
+
+      if (ua.includes("mac") && !mobileCheck) setDetectedOs("mac");
+      else if (ua.includes("linux") && !mobileCheck) setDetectedOs("linux");
       else setDetectedOs("windows");
     }
   }, []);
@@ -521,32 +525,33 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
       </div>
 
       {/* ========================================================================= */}
-      {/* 1. BARRE DE NAVIGATION PRINCIPALE (HEADER RESPONSIVE)                      */}
+      {/* 1. BARRE DE NAVIGATION PRINCIPALE (HEADER RESPONSIVE & SAFE AREA IOS)      */}
       {/* ========================================================================= */}
-      <header className="sticky top-0 z-50 w-full border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md">
-        <div className="flex h-16 w-full items-center justify-between px-4 sm:px-6 lg:px-12">
+      <header className="sticky top-0 z-50 w-full border-b border-zinc-800/80 bg-zinc-950/95 backdrop-blur-md pt-[env(safe-area-inset-top,0px)] transition-all">
+        <div className="flex h-16 w-full items-center justify-between px-3.5 sm:px-6 lg:px-12">
           {/* Logo Brand Officiel */}
-          <div className="flex items-center gap-6 lg:gap-8">
+          <div className="flex items-center gap-3 sm:gap-6 lg:gap-8 min-w-0">
             <button
               onClick={() => changeTab("home")}
-              className="flex items-center gap-3 text-left group focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl"
+              className="flex items-center gap-2.5 sm:gap-3 text-left group focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl min-w-0"
+              aria-label="Retour à l'accueil AgoraExam"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-emerald-500/50 transition-colors shadow-sm">
-                <AgoraExamLogo size={26} />
+              <div className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 group-hover:border-emerald-500/50 transition-colors shadow-sm shrink-0">
+                <AgoraExamLogo size={24} />
               </div>
-              <div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-base font-bold tracking-tight text-zinc-100">AgoraExam</span>
-                  <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20">
+                  <span className="text-sm sm:text-base font-bold tracking-tight text-zinc-100 truncate">AgoraExam</span>
+                  <span className="hidden min-[440px]:inline-flex rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-mono font-semibold text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                     Open-Source
                   </span>
                 </div>
-                <p className="text-xs text-zinc-400 hidden sm:block">Navigateur d'Examen Sécurisé Moodle</p>
+                <p className="text-xs text-zinc-400 hidden sm:block truncate">Navigateur d'Examen Sécurisé Moodle</p>
               </div>
             </button>
 
             {/* Navigation Desktop */}
-            <nav className="hidden md:flex items-center gap-1.5">
+            <nav className="hidden md:flex items-center gap-1.5" aria-label="Navigation principale">
               <button
                 onClick={() => changeTab("home")}
                 className={`rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
@@ -622,11 +627,11 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             </button>
           </div>
 
-          {/* Boutons Mobile (< sm) */}
-          <div className="flex sm:hidden items-center gap-2">
+          {/* Boutons Mobile (< sm & iPhone 16 viewport) */}
+          <div className="flex sm:hidden items-center gap-1.5 shrink-0">
             <button
               onClick={() => setCommandPaletteOpen(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 focus-visible:ring-2 focus-visible:ring-emerald-500"
               aria-label="Recherche rapide ⌘K"
             >
               <Search size={15} />
@@ -634,25 +639,27 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
 
             <button
               onClick={() => changeTab("download")}
-              className="flex items-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400 transition-all"
+              className="flex items-center gap-1 rounded-lg bg-emerald-500 px-2.5 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-400 transition-all shadow-sm active:scale-[0.98]"
+              aria-label="Installer ou télécharger AgoraExam"
             >
-              <Download size={14} />
-              <span>Installer</span>
+              <Download size={13} />
+              <span className="hidden min-[370px]:inline">Installer</span>
             </button>
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500"
-              aria-label="Menu principal"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500"
+              aria-label={mobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu de navigation"}
+              aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
 
-        {/* Tiroir Déroulant Menu Mobile */}
+        {/* Tiroir Déroulant Menu Mobile avec Safe Area iOS */}
         {mobileMenuOpen && (
-          <div className="sm:hidden border-t border-zinc-800 bg-zinc-950/98 px-5 py-4 space-y-4 backdrop-blur-xl animate-in slide-in-from-top-2 duration-150">
+          <div className="sm:hidden border-t border-zinc-800 bg-zinc-950/98 px-4 py-4 space-y-4 backdrop-blur-xl animate-in slide-in-from-top-2 duration-150 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]">
             <nav className="flex flex-col gap-1.5">
               <button
                 onClick={() => {
@@ -752,9 +759,27 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               </p>
             </div>
 
+            {/* Bannière d'information spécifique aux appareils mobiles */}
+            {isMobileDevice && (
+              <div className="inline-flex items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-950/40 p-3 sm:p-4 text-xs text-emerald-200 text-left max-w-lg mx-auto shadow-sm">
+                <span className="text-base shrink-0">💻</span>
+                <span>
+                  <strong>Application pour ordinateurs d'examen :</strong> AgoraExam s'installe sur PC Windows, Mac ou Linux pour sécuriser vos épreuves. Vous pouvez explorer la documentation et tester vos capteurs depuis votre smartphone.
+                </span>
+              </div>
+            )}
+
             {/* Call To Actions de Téléchargement & Démo Web */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1 max-w-lg mx-auto">
-              {detectedOs === "windows" ? (
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1 max-w-lg mx-auto w-full">
+              {isMobileDevice ? (
+                <button
+                  onClick={() => changeTab("download")}
+                  className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+                >
+                  <Download size={18} />
+                  <span>Voir les Versions PC &amp; Mac</span>
+                </button>
+              ) : detectedOs === "windows" ? (
                 <button
                   onClick={() =>
                     triggerDownload(
@@ -825,7 +850,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 {onLaunchApp && (
                   <button
                     onClick={onLaunchApp}
-                    className="flex-1 sm:flex-initial min-h-[46px] flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-800 transition-colors"
+                    className="flex-1 sm:flex-initial min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-800 transition-colors"
                   >
                     <Maximize2 size={15} className="text-emerald-400" />
                     <span>Mode Web Kiosk</span>
@@ -834,7 +859,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
 
                 <button
                   onClick={() => changeTab("docs")}
-                  className="flex-1 sm:flex-initial min-h-[46px] flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-300 hover:bg-zinc-900 transition-colors"
+                  className="flex-1 sm:flex-initial min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-300 hover:bg-zinc-900 transition-colors"
                 >
                   <BookOpen size={15} className="text-zinc-400" />
                   <span>Documentation</span>
@@ -843,28 +868,28 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             </div>
 
             {/* Micro-labels rassurants */}
-            <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-5 text-xs text-zinc-400 font-mono">
-              <span className="flex items-center gap-1.5">
-                <Check size={14} className="text-emerald-400" /> &lt; 21 Mo
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-2.5 sm:gap-5 text-xs text-zinc-400 font-mono">
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
+                <Check size={14} className="text-emerald-400 shrink-0" /> &lt; 21 Mo
               </span>
               <span>•</span>
-              <span className="flex items-center gap-1.5">
-                <Check size={14} className="text-emerald-400" /> Zéro Inscription
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
+                <Check size={14} className="text-emerald-400 shrink-0" /> Zéro Inscription
               </span>
               <span>•</span>
-              <span className="flex items-center gap-1.5">
-                <Check size={14} className="text-emerald-400" /> 100% Open-Source MIT
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
+                <Check size={14} className="text-emerald-400 shrink-0" /> 100% Open-Source MIT
               </span>
             </div>
 
             {/* Mockup Interactif de l'Interface Kiosk */}
-            <div className="pt-4 sm:pt-6">
+            <div className="pt-4 sm:pt-6 w-full">
               <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-2 sm:p-3 shadow-2xl ring-1 ring-zinc-800/80 max-w-4xl mx-auto overflow-hidden">
-                <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-3 sm:p-5 text-left space-y-3.5">
+                <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-2.5 sm:p-5 text-left space-y-3.5">
                   {/* Fausse barre de titre avec Logo Réel AgoraExam */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800/80 pb-3 gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex items-center gap-1.5 mr-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-1.5 mr-1 shrink-0">
                         <div className="h-2.5 w-2.5 rounded-full bg-rose-500/80" />
                         <div className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
                         <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
@@ -874,9 +899,9 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                         AgoraExam • Session Kiosk Verrouillée
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs font-mono text-emerald-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Vision Locale : 30 FPS • 0 flux cloud
+                    <div className="flex items-center gap-1.5 text-[11px] font-mono text-emerald-400 shrink-0">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                      <span>Vision Locale : 30 FPS • 0 flux cloud</span>
                     </div>
                   </div>
 
@@ -1504,8 +1529,8 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
       {/* ========================================================================= */}
       {activeTab === "docs" && (
         <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)] w-full relative">
-          {/* BARRE MOBILE STICKY DE SÉLECTION DU CHAPITRE (< lg) */}
-          <div className="lg:hidden sticky top-16 z-30 flex items-center justify-between border-b border-zinc-800 bg-zinc-950/95 px-4 py-3 backdrop-blur-md">
+          {/* BARRE MOBILE STICKY DE SÉLECTION DU CHAPITRE (< lg) AVEC SAFE AREA */}
+          <div className="lg:hidden sticky top-[calc(4rem+env(safe-area-inset-top,0px))] z-30 flex items-center justify-between border-b border-zinc-800 bg-zinc-950/95 px-4 py-3 backdrop-blur-md">
             <div className="flex items-center gap-2 truncate pr-2">
               <BookOpen size={16} className="text-emerald-400 flex-shrink-0" />
               <span className="text-xs sm:text-sm font-semibold text-zinc-200 truncate">
@@ -1515,21 +1540,23 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
 
             <button
               onClick={() => setMobileDocsDrawerOpen(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-emerald-400 hover:bg-zinc-800 transition-colors flex-shrink-0"
+              className="flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-emerald-400 hover:bg-zinc-800 transition-colors flex-shrink-0 focus-visible:ring-2 focus-visible:ring-emerald-500"
+              aria-label="Ouvrir le sommaire de la documentation"
+              aria-expanded={mobileDocsDrawerOpen}
             >
               <span>Sommaire (11)</span>
               <ChevronDown size={14} />
             </button>
           </div>
 
-          {/* TIROIR MODAL SOMMAIRE MOBILE (< lg) */}
+          {/* TIROIR MODAL SOMMAIRE MOBILE (< lg) AVEC SAFE AREA BOTTOM */}
           {mobileDocsDrawerOpen && (
             <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/80 backdrop-blur-sm lg:hidden animate-in fade-in duration-150">
               <div
                 className="fixed inset-0"
                 onClick={() => setMobileDocsDrawerOpen(false)}
               />
-              <div className="relative z-10 max-h-[85vh] rounded-t-3xl border-t border-zinc-800 bg-zinc-950 p-6 overflow-y-auto space-y-6 shadow-2xl">
+              <div className="relative z-10 max-h-[85vh] rounded-t-3xl border-t border-zinc-800 bg-zinc-950 p-5 sm:p-6 overflow-y-auto space-y-6 shadow-2xl pb-[max(2rem,env(safe-area-inset-bottom,0px))]">
                 <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
                   <div className="flex items-center gap-2">
                     <BookOpen size={18} className="text-emerald-400" />
@@ -2585,7 +2612,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             className="fixed inset-0"
             onClick={() => setDownloadModalData(null)}
           />
-          <div className="relative z-10 max-w-lg w-full rounded-3xl border border-zinc-800 bg-zinc-950 p-6 sm:p-8 space-y-6 shadow-2xl animate-in zoom-in-95 duration-150">
+          <div className="relative z-10 max-w-lg w-full max-h-[90vh] overflow-y-auto rounded-3xl border border-zinc-800 bg-zinc-950 p-5 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl animate-in zoom-in-95 duration-150 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))]">
             {/* Header avec grand Logo AgoraExam */}
             <div className="flex items-start justify-between border-b border-zinc-800 pb-5">
               <div className="flex items-center gap-4">
@@ -2710,7 +2737,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
       {/* ========================================================================= */}
       {commandPaletteOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150"
+          className="fixed inset-0 z-50 flex items-start justify-center pt-[max(1.5rem,env(safe-area-inset-top,0px))] sm:pt-24 px-3 sm:px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150"
           role="dialog"
           aria-modal="true"
           aria-label="Palette de commandes"
@@ -2719,7 +2746,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             className="fixed inset-0"
             onClick={() => setCommandPaletteOpen(false)}
           />
-          <div className="relative z-10 max-w-xl w-full rounded-3xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
+          <div className="relative z-10 max-w-xl w-full max-h-[85vh] flex flex-col rounded-3xl border border-zinc-800 bg-zinc-950 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
             {/* Barre de recherche */}
             <div className="flex items-center border-b border-zinc-800 px-4 py-3.5 gap-3">
               <Search size={18} className="text-emerald-400 shrink-0" />

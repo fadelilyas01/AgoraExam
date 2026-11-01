@@ -461,7 +461,7 @@ export function PreFlightCheck({
   };
 
   return (
-    <div className="flex min-h-screen w-screen items-center justify-center bg-zinc-950 p-4 sm:p-6 text-zinc-100 font-sans antialiased">
+    <div className="flex min-h-screen w-full max-w-full items-center justify-center bg-zinc-950 p-4 sm:p-6 text-zinc-100 font-sans antialiased overflow-x-hidden">
       <div className="w-full max-w-2xl rounded-3xl border border-zinc-800 bg-zinc-900/90 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
         {/* En-tête Institutionnel avec Logo Réel AgoraExam */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800 pb-5 gap-4">
