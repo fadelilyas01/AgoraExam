@@ -243,6 +243,7 @@ export default function App() {
   const [computedSealDigest, setComputedSealDigest] = useState<string>("");
   const [sealCopied, setSealCopied] = useState<boolean>(false);
   const [sessionRestoredBanner, setSessionRestoredBanner] = useState<boolean>(false);
+  const [isDownloadingReceipt, setIsDownloadingReceipt] = useState<boolean>(false);
 
   // Décompte automatique du temps restant
   useEffect(() => {
@@ -1134,14 +1135,23 @@ export default function App() {
             </div>
           )}
 
-          {/* Boutons d'Action Principaux */}
+          {/* Boutons d'Action Principaux avec Double-Submit Guard */}
           <div className="pt-2 flex flex-col sm:flex-row items-center gap-3 no-print">
             <button
-              onClick={downloadReceipt}
-              className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 transition-colors"
+              onClick={async () => {
+                if (isDownloadingReceipt) return;
+                setIsDownloadingReceipt(true);
+                try {
+                  await downloadReceipt();
+                } finally {
+                  setTimeout(() => setIsDownloadingReceipt(false), 1200);
+                }
+              }}
+              disabled={isDownloadingReceipt}
+              className="w-full sm:flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:bg-zinc-800 disabled:text-zinc-500 text-zinc-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 transition-colors cursor-pointer disabled:cursor-not-allowed"
             >
               <Download size={15} />
-              <span>Télécharger le Reçu (.json)</span>
+              <span>{isDownloadingReceipt ? "Enregistrement sécurisé du reçu..." : "Télécharger le Reçu (.json)"}</span>
             </button>
 
             <button

@@ -22,6 +22,7 @@ import {
   Maximize2,
   UserCheck,
   SlidersHorizontal,
+  Laptop,
 } from "lucide-react";
 import {
   LiveDiagnosticWidget,
@@ -786,8 +787,8 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
 
             {/* Bannière d'information spécifique aux appareils mobiles */}
             {isMobileDevice && (
-              <div className="inline-flex items-center gap-2 rounded-2xl border border-emerald-500/30 bg-emerald-950/40 p-3 sm:p-4 text-xs text-emerald-200 text-left max-w-lg mx-auto shadow-sm">
-                <span className="text-base shrink-0">💻</span>
+              <div className="inline-flex items-center gap-2.5 rounded-2xl border border-emerald-500/30 bg-emerald-950/40 p-3 sm:p-4 text-xs text-emerald-200 text-left max-w-lg mx-auto shadow-sm">
+                <Laptop className="w-5 h-5 text-emerald-400 shrink-0" />
                 <span>
                   <strong>Application pour ordinateurs d'examen :</strong> AgoraExam s'installe sur PC Windows, Mac ou Linux pour sécuriser vos épreuves. Vous pouvez explorer la documentation et tester vos capteurs depuis votre smartphone.
                 </span>
@@ -2790,6 +2791,18 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             <span>Logiciel libre et gratuit sous licence MIT</span>
             <span className="hidden sm:inline text-zinc-600">•</span>
             <span>Conçu pour l'enseignement supérieur et Moodle</span>
+          </div>
+
+          {/* Écosystème & Partenaires Institutionnels (Vrais Logos Vectoriels) */}
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 pt-2 pb-2 border-y border-zinc-900/80 w-full max-w-lg my-1">
+            <div className="flex items-center gap-2 text-zinc-400 text-xs">
+              <img src="/logos/moodle.svg" alt="Logo officiel Moodle" className="w-5 h-5 object-contain" />
+              <span>Compatible Moodle 4.x &amp; 5.x</span>
+            </div>
+            <div className="flex items-center gap-2 text-zinc-400 text-xs">
+              <img src="/logos/ministere-enseignement-superieur.svg" alt="Ministère de l'Enseignement Supérieur" className="h-6 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+              <span>Standards Universitaires</span>
+            </div>
           </div>
 
           {/* Liens de navigation avec cibles tactiles confortables */}
