@@ -16,6 +16,10 @@ export default defineConfig(async () => ({
     strictPort: true,
     host: true,
   },
+  esbuild: {
+    // Supprime automatiquement les logs et débogueurs dans le bundle de production
+    drop: process.env.NODE_ENV === "production" ? ["console", "debugger"] : [],
+  },
   build: {
     target: "es2022",
     rollupOptions: {
