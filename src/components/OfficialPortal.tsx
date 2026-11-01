@@ -760,9 +760,12 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
         <div className="space-y-20 sm:space-y-28 pb-24">
           {/* Hero Section */}
           <section className="relative overflow-hidden pt-8 sm:pt-16 lg:pt-24 text-center px-4 sm:px-6 max-w-5xl mx-auto space-y-6 sm:space-y-8">
-            {/* Pill Notification Institutionnelle */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-medium text-emerald-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            {/* Pill Notification Institutionnelle avec balise vivante */}
+            <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-medium text-emerald-300 shadow-sm backdrop-blur">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+              </span>
               <span>v0.1.0 Multiplateforme • Examen Sécurisé &amp; Caméra 100% Privée</span>
             </div>
 
@@ -1065,44 +1068,44 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               {/* Carte 1 */}
-              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-2.5 hover:border-zinc-700 transition-colors">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
+              <div className="interactive-card group p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60 group-hover:border-emerald-500/40 group-hover:scale-105 transition-all duration-300">
                   <Lock size={18} />
                 </div>
-                <h3 className="text-base font-bold text-zinc-100">Écran et applications verrouillés</h3>
+                <h3 className="text-base font-bold text-zinc-100 group-hover:text-emerald-300 transition-colors">Écran et applications verrouillés</h3>
                 <p className="text-sm text-zinc-300 leading-relaxed">
                   Plein écran forcé. Impossible de changer d'application, de copier-coller ou de tricher pendant l'examen.
                 </p>
               </div>
 
               {/* Carte 2 */}
-              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-2.5 hover:border-zinc-700 transition-colors">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
+              <div className="interactive-card group p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60 group-hover:border-emerald-500/40 group-hover:scale-105 transition-all duration-300">
                   <Monitor size={18} />
                 </div>
-                <h3 className="text-base font-bold text-zinc-100">Un seul écran autorisé</h3>
+                <h3 className="text-base font-bold text-zinc-100 group-hover:text-emerald-300 transition-colors">Un seul écran autorisé</h3>
                 <p className="text-sm text-zinc-300 leading-relaxed">
                   Détection automatique. Impossible d'utiliser un deuxième écran ou de brancher un câble HDMI.
                 </p>
               </div>
 
               {/* Carte 3 */}
-              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-2.5 hover:border-zinc-700 transition-colors">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
+              <div className="interactive-card group p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60 group-hover:border-emerald-500/40 group-hover:scale-105 transition-all duration-300">
                   <Camera size={18} />
                 </div>
-                <h3 className="text-base font-bold text-zinc-100">Caméra 100% privée</h3>
+                <h3 className="text-base font-bold text-zinc-100 group-hover:text-emerald-300 transition-colors">Caméra 100% privée</h3>
                 <p className="text-sm text-zinc-300 leading-relaxed">
                   La présence est vérifiée directement sur votre ordinateur, sans jamais envoyer de vidéo sur Internet.
                 </p>
               </div>
 
               {/* Carte 4 */}
-              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-2.5 hover:border-zinc-700 transition-colors">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-amber-400 border border-zinc-700/60">
+              <div className="interactive-card group p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-amber-400 border border-zinc-700/60 group-hover:border-amber-500/40 group-hover:scale-105 transition-all duration-300">
                   <ShieldCheck size={18} />
                 </div>
-                <h3 className="text-base font-bold text-zinc-100">Décision humaine garantie</h3>
+                <h3 className="text-base font-bold text-zinc-100 group-hover:text-amber-300 transition-colors">Décision humaine garantie</h3>
                 <p className="text-sm text-zinc-300 leading-relaxed">
                   Aucune exclusion automatique par l'IA. Seul un enseignant ou surveillant humain peut arbitrer.
                 </p>
@@ -1124,7 +1127,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               <div className="inline-flex rounded-2xl border border-zinc-800 bg-zinc-900/80 p-1.5 shadow-sm max-w-full overflow-x-auto">
                 <button
                   onClick={() => setActiveProfile("etudiant")}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all whitespace-nowrap interactive-button ${
                     activeProfile === "etudiant"
                       ? "bg-zinc-800 text-emerald-400 shadow-sm"
                       : "text-zinc-400 hover:text-zinc-200"
@@ -1135,7 +1138,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 </button>
                 <button
                   onClick={() => setActiveProfile("enseignant")}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all whitespace-nowrap interactive-button ${
                     activeProfile === "enseignant"
                       ? "bg-zinc-800 text-orange-400 shadow-sm"
                       : "text-zinc-400 hover:text-zinc-200"
@@ -1146,7 +1149,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 </button>
                 <button
                   onClick={() => setActiveProfile("dsi")}
-                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all whitespace-nowrap interactive-button ${
                     activeProfile === "dsi"
                       ? "bg-zinc-800 text-purple-400 shadow-sm"
                       : "text-zinc-400 hover:text-zinc-200"
@@ -1159,7 +1162,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             </div>
 
             {/* Contenu spécifique au profil actif */}
-            <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 sm:p-8 shadow-xl transition-all">
+            <div key={activeProfile} className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 sm:p-8 shadow-xl transition-all animate-fade-in-up">
               {activeProfile === "etudiant" && (
                 <div className="space-y-5 animate-in fade-in duration-200">
                   <div className="space-y-2">

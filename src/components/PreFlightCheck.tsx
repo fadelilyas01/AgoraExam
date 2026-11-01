@@ -751,15 +751,17 @@ export function PreFlightCheck({
                         muted
                         className="h-full w-full object-cover -scale-x-100"
                       />
-                      {/* Viseur optique de précision */}
+                      {/* Viseur optique de précision avec ligne de scan radar professionnelle */}
                       <div className="absolute inset-3 border border-emerald-500/30 rounded-lg pointer-events-none" />
                       <div className="absolute top-3 left-3 w-3 h-3 border-t-2 border-l-2 border-emerald-400 pointer-events-none" />
                       <div className="absolute top-3 right-3 w-3 h-3 border-t-2 border-r-2 border-emerald-400 pointer-events-none" />
                       <div className="absolute bottom-3 left-3 w-3 h-3 border-b-2 border-l-2 border-emerald-400 pointer-events-none" />
                       <div className="absolute bottom-3 right-3 w-3 h-3 border-b-2 border-r-2 border-emerald-400 pointer-events-none" />
+                      <div className="absolute inset-x-3 h-0.5 bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent animate-scan-sweep pointer-events-none" />
                       <div className="absolute bottom-2 inset-x-2 text-center pointer-events-none">
-                        <span className="inline-block rounded-full bg-zinc-950/80 px-2 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/30 backdrop-blur">
-                          {isSimulatedStream ? "Position Valide (Simulateur Démo)" : "Position Valide"}
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-950/85 px-2.5 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/30 backdrop-blur shadow-sm">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>{isSimulatedStream ? "Position Valide (Simulateur Démo)" : "Position Valide • 100% Local"}</span>
                         </span>
                       </div>
                     </>

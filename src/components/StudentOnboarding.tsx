@@ -492,17 +492,17 @@ export function ThreeStepStudentJourney({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <button
           onClick={() => setActiveStep(1)}
-          className={`p-4 rounded-2xl border text-left transition-all flex items-start gap-3 ${
+          className={`p-4 rounded-2xl border text-left transition-all flex items-start gap-3 interactive-button ${
             activeStep === 1
-              ? "bg-zinc-800 border-emerald-500/50 shadow-sm"
+              ? "bg-zinc-800 border-emerald-500/50 shadow-md shadow-emerald-500/5"
               : "bg-zinc-900/40 border-zinc-800 hover:border-zinc-700"
           }`}
         >
-          <span className={`flex h-7 w-7 items-center justify-center rounded-xl font-mono text-xs font-bold shrink-0 ${activeStep === 1 ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-400"}`}>
+          <span className={`flex h-7 w-7 items-center justify-center rounded-xl font-mono text-xs font-bold shrink-0 transition-transform ${activeStep === 1 ? "bg-emerald-500 text-zinc-950 scale-105" : "bg-zinc-800 text-zinc-400"}`}>
             1
           </span>
           <div>
-            <div className={`text-sm font-bold ${activeStep === 1 ? "text-emerald-400" : "text-zinc-200"}`}>
+            <div className={`text-sm font-bold transition-colors ${activeStep === 1 ? "text-emerald-400" : "text-zinc-200"}`}>
               Avant l'Examen
             </div>
             <div className="text-xs text-zinc-400 mt-0.5">De J-2 à H-1 • Préparation</div>
@@ -511,17 +511,17 @@ export function ThreeStepStudentJourney({
 
         <button
           onClick={() => setActiveStep(2)}
-          className={`p-4 rounded-2xl border text-left transition-all flex items-start gap-3 ${
+          className={`p-4 rounded-2xl border text-left transition-all flex items-start gap-3 interactive-button ${
             activeStep === 2
-              ? "bg-zinc-800 border-emerald-500/50 shadow-sm"
+              ? "bg-zinc-800 border-emerald-500/50 shadow-md shadow-emerald-500/5"
               : "bg-zinc-900/40 border-zinc-800 hover:border-zinc-700"
           }`}
         >
-          <span className={`flex h-7 w-7 items-center justify-center rounded-xl font-mono text-xs font-bold shrink-0 ${activeStep === 2 ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-400"}`}>
+          <span className={`flex h-7 w-7 items-center justify-center rounded-xl font-mono text-xs font-bold shrink-0 transition-transform ${activeStep === 2 ? "bg-emerald-500 text-zinc-950 scale-105" : "bg-zinc-800 text-zinc-400"}`}>
             2
           </span>
           <div>
-            <div className={`text-sm font-bold ${activeStep === 2 ? "text-emerald-400" : "text-zinc-200"}`}>
+            <div className={`text-sm font-bold transition-colors ${activeStep === 2 ? "text-emerald-400" : "text-zinc-200"}`}>
               Pendant l'Examen
             </div>
             <div className="text-xs text-zinc-400 mt-0.5">Jour J • Règles & Confinement</div>
@@ -530,17 +530,17 @@ export function ThreeStepStudentJourney({
 
         <button
           onClick={() => setActiveStep(3)}
-          className={`p-4 rounded-2xl border text-left transition-all flex items-start gap-3 ${
+          className={`p-4 rounded-2xl border text-left transition-all flex items-start gap-3 interactive-button ${
             activeStep === 3
-              ? "bg-zinc-800 border-emerald-500/50 shadow-sm"
+              ? "bg-zinc-800 border-emerald-500/50 shadow-md shadow-emerald-500/5"
               : "bg-zinc-900/40 border-zinc-800 hover:border-zinc-700"
           }`}
         >
-          <span className={`flex h-7 w-7 items-center justify-center rounded-xl font-mono text-xs font-bold shrink-0 ${activeStep === 3 ? "bg-emerald-500 text-zinc-950" : "bg-zinc-800 text-zinc-400"}`}>
+          <span className={`flex h-7 w-7 items-center justify-center rounded-xl font-mono text-xs font-bold shrink-0 transition-transform ${activeStep === 3 ? "bg-emerald-500 text-zinc-950 scale-105" : "bg-zinc-800 text-zinc-400"}`}>
             3
           </span>
           <div>
-            <div className={`text-sm font-bold ${activeStep === 3 ? "text-emerald-400" : "text-zinc-200"}`}>
+            <div className={`text-sm font-bold transition-colors ${activeStep === 3 ? "text-emerald-400" : "text-zinc-200"}`}>
               Après l'Examen
             </div>
             <div className="text-xs text-zinc-400 mt-0.5">Remise, Reçu & Données</div>
@@ -549,7 +549,7 @@ export function ThreeStepStudentJourney({
       </div>
 
       {/* Contenu de l'étape active */}
-      <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 sm:p-8 space-y-6">
+      <div key={activeStep} className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 sm:p-8 space-y-6 animate-fade-in-up">
         {/* ÉTAPE 1 : AVANT L'EXAMEN */}
         {activeStep === 1 && (
           <div className="space-y-6 animate-in fade-in duration-150">
