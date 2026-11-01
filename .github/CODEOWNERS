@@ -1,0 +1,8 @@
+# ==============================================================================
+# AgoraExam - GitHub CODEOWNERS
+# Définition des propriétaires de code pour la gouvernance Open-Source
+# ==============================================================================
+
+# Toute contribution, pull request ou modification sur l'ensemble du projet
+# requiert impérativement la revue et l'approbation formelle de @fadelilyas01
+* @fadelilyas01
