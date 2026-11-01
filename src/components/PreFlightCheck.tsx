@@ -439,7 +439,7 @@ export function PreFlightCheck({
 
   // L'examen exige obligatoirement 1 seul écran et une webcam réelle certifiée (simulation strictement interdite en natif)
   const allChecksPass =
-    hardware.singleMonitor && hardware.cameraReady && (!isTauri || !isSimulatedStream);
+    hardware.singleMonitor && hardware.cameraReady && !isSimulatedStream;
 
   const handleStartExam = async () => {
     if (!allChecksPass || !agreed) return;
@@ -868,14 +868,21 @@ export function PreFlightCheck({
             <span>Session d'Épreuve : #48291-SEC</span>
           </div>
 
-          <button
-            onClick={handleStartExam}
-            disabled={!allChecksPass || !agreed}
-            className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-md shadow-emerald-500/10 active:scale-[0.98]"
-          >
-            <span>Démarrer l'Examen Sécurisé</span>
-            <ArrowRight size={17} />
-          </button>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            {isSimulatedStream && (
+              <span className="text-xs text-amber-400 font-medium bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 rounded-xl">
+                Webcam physique requise pour composer (mode démo actif)
+              </span>
+            )}
+            <button
+              onClick={handleStartExam}
+              disabled={!allChecksPass || !agreed}
+              className="w-full sm:w-auto min-h-[48px] flex items-center justify-center gap-2.5 rounded-xl bg-emerald-500 px-6 py-3 text-sm sm:text-base font-semibold text-zinc-950 hover:bg-emerald-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-md shadow-emerald-500/10 active:scale-[0.98]"
+            >
+              <span>Démarrer l'Examen Sécurisé</span>
+              <ArrowRight size={17} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

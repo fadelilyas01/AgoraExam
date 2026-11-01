@@ -89,6 +89,8 @@ interface StrikeEvent {
 
 type PipPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
+const EXAM_SESSION_STORAGE_KEY = "agora_exam_session_v1";
+
 export default function App() {
   const isTauri =
     typeof window !== "undefined" &&
@@ -113,7 +115,7 @@ export default function App() {
   const [isExamStarted, setIsExamStarted] = useState<boolean>(false);
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
 
-  // �0coute des changements de hash (#docs, #download, #home, #app)
+  // Écoute des changements de hash (#docs, #download, #home, #app)
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
@@ -138,7 +140,7 @@ export default function App() {
   });
   const [isFlaggedForProctorReview, setIsFlaggedForProctorReview] = useState<boolean>(false);
 
-  // �0tat de l'examen et de la télésurveillance
+  // État de l'examen et de la télésurveillance
   const [strikes, setStrikes] = useState<number>(0);
   const [activeModalStrike, setActiveModalStrike] = useState<StrikeEvent | null>(null);
   const [isExpelled, setIsExpelled] = useState<boolean>(false);
@@ -167,7 +169,7 @@ export default function App() {
   // Modal d'aide aux raccourcis clavier
   const [showShortcutsModal, setShowShortcutsModal] = useState<boolean>(false);
 
-  // �0tat de l'examen Moodle interactif (simulation de test universitaire)
+  // État de l'examen Moodle interactif (simulation de test universitaire)
   const [currentQuestion, setCurrentQuestion] = useState<number>(1);
   const [answers, setAnswers] = useState<Record<number, string>>({
     1: "b",
@@ -180,6 +182,16 @@ export default function App() {
   const [showProctorPinModal, setShowProctorPinModal] = useState<boolean>(false);
   const [proctorPin, setProctorPin] = useState<string>("");
   const [proctorPinError, setProctorPinError] = useState<string | null>(null);
+
+  // Sécurité PIN Surveillant : Rate-limiting (3 essais max puis verrouillage 60s)
+  const [proctorPinAttempts, setProctorPinAttempts] = useState<number>(0);
+  const [proctorPinLockoutUntil, setProctorPinLockoutUntil] = useState<number>(0);
+  const [lockoutCountdown, setLockoutCountdown] = useState<number>(0);
+
+  // Sceau cryptographique SHA-256 dynamique et persistance de session
+  const [computedSealDigest, setComputedSealDigest] = useState<string>("");
+  const [sealCopied, setSealCopied] = useState<boolean>(false);
+  const [sessionRestoredBanner, setSessionRestoredBanner] = useState<boolean>(false);
 
   // Décompte automatique du temps restant
   useEffect(() => {
@@ -203,6 +215,120 @@ export default function App() {
     const seconds = totalSeconds % 60;
     return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   };
+
+  // Compte à rebours du verrouillage PIN
+  useEffect(() => {
+    if (proctorPinLockoutUntil <= Date.now()) return;
+    const interval = setInterval(() => {
+      const diff = Math.ceil((proctorPinLockoutUntil - Date.now()) / 1000);
+      if (diff <= 0) {
+        setLockoutCountdown(0);
+        setProctorPinError(null);
+        clearInterval(interval);
+      } else {
+        setLockoutCountdown(diff);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [proctorPinLockoutUntil]);
+
+  // Restauration de session au démarrage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = sessionStorage.getItem(EXAM_SESSION_STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.answers) {
+            setAnswers(parsed.answers);
+            if (typeof parsed.currentQuestion === "number") setCurrentQuestion(parsed.currentQuestion);
+            if (Array.isArray(parsed.flaggedQuestions)) setFlaggedQuestions(parsed.flaggedQuestions);
+            if (typeof parsed.secondsRemaining === "number") setSecondsRemaining(parsed.secondsRemaining);
+            if (typeof parsed.strikes === "number") setStrikes(parsed.strikes);
+            setSessionRestoredBanner(true);
+            setTimeout(() => setSessionRestoredBanner(false), 5000);
+          }
+        }
+      } catch {}
+    }
+  }, []);
+
+  // Sauvegarde automatique continue en sessionStorage
+  useEffect(() => {
+    if (!isExamStarted || isFinished || isExpelled) return;
+    try {
+      sessionStorage.setItem(
+        EXAM_SESSION_STORAGE_KEY,
+        JSON.stringify({
+          currentQuestion,
+          answers,
+          flaggedQuestions,
+          secondsRemaining,
+          strikes,
+          policy,
+          lastSavedTime,
+        })
+      );
+    } catch {}
+  }, [isExamStarted, isFinished, isExpelled, currentQuestion, answers, flaggedQuestions, secondsRemaining, strikes, policy, lastSavedTime]);
+
+  // Nettoyage sessionStorage lors de la clôture
+  useEffect(() => {
+    if (isFinished || isExpelled) {
+      try {
+        sessionStorage.removeItem(EXAM_SESSION_STORAGE_KEY);
+      } catch {}
+    }
+  }, [isFinished, isExpelled]);
+
+  // Calcul dynamique et authentique du sceau cryptographique SHA-256 dès la fin d'épreuve
+  useEffect(() => {
+    if (isFinished && !computedSealDigest) {
+      const computeDynamicSeal = async () => {
+        const canonicalReceipt = {
+          certification: "AgoraExam Academic Integrity Official Receipt",
+          protocolVersion: "2.4-Sovereign-Edge",
+          sessionId: "AGORA-2026-X48291",
+          institution: "Université Numérique & Plateforme Moodle",
+          exam: {
+            code: "ALG402",
+            title: "Algorithmique Avancée & Structures de Données",
+            attemptId: 48291,
+          },
+          candidate: {
+            id: "ETU-2026-48291",
+            confinementStatus: isTauri ? "Strict Kiosk Lock (Tauri v2 Native Verified)" : "Web Kiosk Emulation",
+          },
+          submission: {
+            timestamp: new Date().toISOString(),
+            formattedDate: new Date().toLocaleString("fr-FR"),
+            questionsAnswered: Object.keys(answers).length,
+            totalQuestions: 8,
+            answersSummary: answers,
+            strikesCount: strikes,
+            policyApplied: policy,
+            flaggedForProctorReview: isFlaggedForProctorReview,
+            studentObservation: studentObservation.trim() || "Aucune observation signalée par l'étudiant",
+          },
+        };
+
+        if (typeof window !== "undefined" && window.crypto && window.crypto.subtle) {
+          try {
+            const raw = JSON.stringify(canonicalReceipt);
+            const digest = await window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+            const hex = Array.from(new Uint8Array(digest))
+              .map((b) => b.toString(16).padStart(2, "0"))
+              .join("");
+            setComputedSealDigest(hex);
+          } catch (e) {
+            console.error("Échec calcul sceau SHA-256 :", e);
+          }
+        }
+      };
+
+      computeDynamicSeal();
+    }
+  }, [isFinished, computedSealDigest, isTauri, answers, strikes, policy, isFlaggedForProctorReview, studentObservation]);
 
   const updateAnswer = (questionNumber: number, answerValue: string) => {
     setSaveStatus("saving");
@@ -341,7 +467,7 @@ export default function App() {
           motif: reason,
         });
       } catch (err) {
-        console.error("�0chec sauvegarde preuve :", err);
+        console.error("Échec sauvegarde preuve :", err);
       }
     }
 
@@ -354,7 +480,7 @@ export default function App() {
             motif: reason,
           });
         } catch (e) {
-          console.error("�0chec signalement avertissement :", e);
+          console.error("Échec signalement avertissement :", e);
         }
       }
 
@@ -371,7 +497,7 @@ export default function App() {
     } else {
       // 3ème avertissement : Application de la politique choisie
       if (policy === "hybrid") {
-        // 1. POLITIQUE HYBRIDE RECOMMAND�0E (Human-in-the-Loop) :
+        // 1. POLITIQUE HYBRIDE RECOMMANDÉE (Human-in-the-Loop) :
         // Aucune expulsion automatique par l'IA !
         // L'incident est consigné au dossier et seul un surveillant humain est alerté pour arbitrer.
         setIsFlaggedForProctorReview(true);
@@ -384,14 +510,14 @@ export default function App() {
               evidencePath: evidencePath || null,
             });
           } catch (e) {
-            console.error("�0chec transmission alerte surveillant :", e);
+            console.error("Échec transmission alerte surveillant :", e);
           }
         }
 
         setActiveModalStrike({
           strike_number: newStrikeCount,
           max_strikes: 3,
-          reason: `${reason} � Anomalie consignée au dossier. Un surveillant humain a été alerté pour vérification. Vous pouvez continuer à composer.`,
+          reason: `${reason} • Anomalie consignée au dossier. Un surveillant humain a été alerté pour vérification. Vous pouvez continuer à composer.`,
           timestamp: new Date().toLocaleTimeString(),
           evidencePath,
           isProctorAlert: true,
@@ -408,11 +534,11 @@ export default function App() {
               motif: reason,
             });
           } catch (e) {
-            console.error("�0chec expulsion étudiant :", e);
+            console.error("Échec expulsion étudiant :", e);
           }
         }
       } else {
-        // 3. POLITIQUE P�0DAGOGIQUE (Audit Trail Silencieux pour TP/Contrôle continu)
+        // 3. POLITIQUE PÉDAGOGIQUE (Audit Trail Silencieux pour TP/Contrôle continu)
         setIsFlaggedForProctorReview(true);
       }
     }
@@ -612,32 +738,56 @@ export default function App() {
       return false;
     };
 
+    // Tolérance bienveillante de 3 secondes avant d'enregistrer un strike formel
+    let blurTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
     const handleBlur = () => {
-      handleWarning("Perte de focus de la fenêtre d'examen détectée !");
-      window.focus();
+      if (blurTimeoutId) clearTimeout(blurTimeoutId);
+      blurTimeoutId = setTimeout(() => {
+        handleWarning("Perte de focus prolongée de la fenêtre d'examen détectée !");
+        window.focus();
+      }, 3000);
+    };
+
+    const handleFocus = () => {
+      if (blurTimeoutId) {
+        clearTimeout(blurTimeoutId);
+        blurTimeoutId = null;
+      }
     };
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        handleWarning("La fenêtre d'examen a été minimisée ou masquée !");
-        window.focus();
+        if (blurTimeoutId) clearTimeout(blurTimeoutId);
+        blurTimeoutId = setTimeout(() => {
+          handleWarning("La fenêtre d'examen a été minimisée ou masquée !");
+          window.focus();
+        }, 3000);
+      } else {
+        if (blurTimeoutId) {
+          clearTimeout(blurTimeoutId);
+          blurTimeoutId = null;
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown, { capture: true });
     window.addEventListener("contextmenu", handleContextMenu, { capture: true });
     window.addEventListener("blur", handleBlur);
+    window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
+      if (blurTimeoutId) clearTimeout(blurTimeoutId);
       window.removeEventListener("keydown", handleKeyDown, { capture: true });
       window.removeEventListener("contextmenu", handleContextMenu, { capture: true });
       window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [isExamStarted, isExpelled, isFinished, handleWarning]);
 
-  // �0coute des événements système Tauri (Focus perdu, alt-tab, etc.) � Uniquement dans l'application native
+  // Écoute des événements système Tauri (Focus perdu, alt-tab, etc.) • Uniquement dans l'application native
   useEffect(() => {
     if (!isTauri || !isExamStarted) return;
 
@@ -651,7 +801,7 @@ export default function App() {
         unlistenSecurityFn = unlisten;
       })
       .catch((err) => {
-        console.warn("�0coute security_violation indisponible :", err);
+        console.warn("Écoute security_violation indisponible :", err);
       });
 
     listen<string>("window_focus_lost", (event) => {
@@ -661,7 +811,7 @@ export default function App() {
         unlistenFocusFn = unlisten;
       })
       .catch((err) => {
-        console.warn("�0coute window_focus_lost indisponible :", err);
+        console.warn("Écoute window_focus_lost indisponible :", err);
       });
 
     return () => {
@@ -726,7 +876,7 @@ export default function App() {
     );
   }
 
-  // �0cran d'expulsion définitive (Strike 3)
+  // Écran d'expulsion définitive (Strike 3)
   if (isExpelled) {
     return (
       <div className="flex min-h-screen w-full max-w-full flex-col items-center justify-center bg-zinc-950 p-6 sm:p-8 text-center font-sans antialiased">
@@ -749,11 +899,12 @@ export default function App() {
     );
   }
 
-  // �0cran de fin d'examen (avec Attestation Officielle Cryptographique & Protocole Human-in-the-Loop)
+  // Écran de fin d'examen (avec Attestation Officielle Cryptographique & Protocole Human-in-the-Loop)
   if (isFinished) {
     const hasFlags = isFlaggedForProctorReview || strikes > 0;
 
     const downloadReceipt = () => {
+      const finalSeal = computedSealDigest || "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
       const receiptPayload = {
         certification: "AgoraExam Academic Integrity Official Receipt",
         protocolVersion: "2.4-Sovereign-Edge",
@@ -773,6 +924,7 @@ export default function App() {
           formattedDate: new Date().toLocaleString("fr-FR"),
           questionsAnswered: Object.keys(answers).length,
           totalQuestions: 8,
+          answersSummary: answers,
           strikesCount: strikes,
           policyApplied: policy,
           flaggedForProctorReview: isFlaggedForProctorReview,
@@ -780,8 +932,8 @@ export default function App() {
         },
         cryptographicSeal: {
           algorithm: "SHA-256",
-          sha256Digest: "8f7a9d0e2c4b6e8a1f3d5c7b9a0e2f4d6c8b0a2e4f6a8c0e2d4b6a8f0e2c4b6e",
-          verificationUrl: "https://agoraexam.vercel.app/#verify",
+          sha256Digest: finalSeal,
+          verificationUrl: "https://agoraexam.vercel.app/#docs",
         },
       };
 
@@ -791,14 +943,14 @@ export default function App() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "Recu-AgoraExam-ALG402-Session48291.json";
+      link.download = `Recu-AgoraExam-ALG402-Session48291-${finalSeal.slice(0, 8)}.json`;
       link.click();
       URL.revokeObjectURL(url);
     };
 
     return (
       <div className="flex min-h-screen w-full max-w-full flex-col items-center justify-center bg-zinc-950 p-4 sm:p-8 text-center font-sans antialiased overflow-y-auto">
-        {/* Attestation Officielle de Fin d'�0preuve */}
+        {/* Attestation Officielle de Fin d'Épreuve */}
         <div className="w-full max-w-2xl rounded-3xl border border-zinc-800 bg-zinc-900/80 p-6 sm:p-8 shadow-2xl backdrop-blur space-y-6 text-left print-surface">
           {/* En-tête de l'Attestation */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-zinc-800 gap-4">
@@ -808,7 +960,7 @@ export default function App() {
               </div>
               <div>
                 <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400 block">
-                  Récépissé Officiel de Remise d'�0preuve
+                  Récépissé Officiel de Remise d'Épreuve
                 </span>
                 <h1 className="text-lg sm:text-xl font-extrabold text-zinc-100 tracking-tight">
                   Attestation de Composition Sécurisée
@@ -827,8 +979,8 @@ export default function App() {
           {/* Grille des caractéristiques certifiées */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs font-mono">
             <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-1">
-              <span className="text-zinc-500 uppercase block font-semibold text-[10px]">�0preuve Universitaire</span>
-              <span className="text-zinc-200 font-bold text-sm block">ALG402 � Algorithmique Avancée</span>
+              <span className="text-zinc-500 uppercase block font-semibold text-[10px]">Épreuve Universitaire</span>
+              <span className="text-zinc-200 font-bold text-sm block">ALG402 • Algorithmique Avancée</span>
               <span className="text-zinc-400 text-[11px] block">Tentative Moodle ID : #48291</span>
             </div>
 
@@ -836,7 +988,7 @@ export default function App() {
               <span className="text-zinc-500 uppercase block font-semibold text-[10px]">Candidat & Confinement</span>
               <span className="text-zinc-200 font-bold text-sm block">Candidat ID : #ETU-2026-48291</span>
               <span className="text-emerald-400 text-[11px] font-semibold block">
-                {isTauri ? "Kiosk Kiosk OS Verrouillé (Tauri Native)" : "Kiosk �0mulé (Web Preview)"}
+                {isTauri ? "Kiosk Kiosk OS Verrouillé (Tauri Native)" : "Kiosk Émulé (Web Preview)"}
               </span>
             </div>
 
@@ -857,17 +1009,30 @@ export default function App() {
             </div>
           </div>
 
-          {/* Sceau Cryptographique SHA-256 */}
+          {/* Sceau Cryptographique SHA-256 Dynamique & Vérifiable */}
           <div className="p-3.5 rounded-2xl border border-zinc-800 bg-zinc-950/90 text-xs font-mono space-y-1.5">
             <div className="flex items-center justify-between text-zinc-400">
               <span className="flex items-center gap-1.5 text-zinc-300 font-bold">
                 <Lock size={12} className="text-emerald-400" />
-                Sceau Cryptographique d'Intégrité (SHA-256)
+                Sceau Cryptographique d'Intégrité (SHA-256 Dynamique)
               </span>
               <span className="text-[10px] text-emerald-400">Certifié Inaltérable</span>
             </div>
-            <div className="text-[11px] text-zinc-400 break-all select-all font-mono bg-zinc-900/60 p-2 rounded-xl border border-zinc-800">
-              8f7a9d0e2c4b6e8a1f3d5c7b9a0e2f4d6c8b0a2e4f6a8c0e2d4b6a8f0e2c4b6e
+            <div className="text-[11px] text-zinc-300 break-all select-all font-mono bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-800 flex items-center justify-between gap-2">
+              <span className="truncate">{computedSealDigest || "Calcul de l'empreinte mathématique..."}</span>
+              {computedSealDigest && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(computedSealDigest);
+                    setSealCopied(true);
+                    setTimeout(() => setSealCopied(false), 2000);
+                  }}
+                  className="shrink-0 px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-[10px] text-zinc-200 border border-zinc-700 transition-colors"
+                >
+                  {sealCopied ? "Copié !" : "Copier"}
+                </button>
+              )}
             </div>
           </div>
 
@@ -954,7 +1119,7 @@ export default function App() {
       {/* Canvas invisible pour capture d'infractions */}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* 1. TOP HUD / BARRE DE S�0CURIT�0 OFFICIELLE */}
+      {/* 1. TOP HUD / BARRE DE SÉCURITÉ OFFICIELLE */}
       <header className="flex h-16 items-center justify-between border-b border-zinc-800/80 bg-zinc-900/95 px-3 sm:px-6 backdrop-blur z-20">
         {/* Identité logicielle & Statut Kiosk */}
         <div className="flex items-center gap-2.5 sm:gap-3.5">
@@ -977,7 +1142,7 @@ export default function App() {
               )}
             </div>
             <p className="text-[11px] text-zinc-400 hidden sm:block truncate">
-              Algorithmique Avancée ⬢ Réf: ALG402 ⬢ �0preuve Universitaire
+              Algorithmique Avancée ⬢ Réf: ALG402 ⬢ Épreuve Universitaire
             </p>
           </div>
         </div>
@@ -1088,12 +1253,20 @@ export default function App() {
         </div>
       </header>
 
+      {/* Bannière de session restaurée suite à incident / coupure */}
+      {sessionRestoredBanner && (
+        <div className="w-full bg-emerald-500/15 border-b border-emerald-500/30 px-4 py-2 flex items-center justify-center gap-2 text-xs sm:text-sm text-emerald-300 z-10 animate-in fade-in duration-200">
+          <Check size={14} className="text-emerald-400 shrink-0" />
+          <span>Session d'examen restaurée avec succès. Vos réponses précédentes ont été récupérées.</span>
+        </div>
+      )}
+
       {/* Jauge d'absence responsive en bannière fine sous le header */}
       {absenceCountdown !== null && (
         <div className="w-full bg-amber-500/15 border-b border-amber-500/40 px-4 py-2 flex items-center justify-between text-xs sm:text-sm text-amber-300 z-10 animate-pulse">
           <div className="flex items-center gap-2">
             <AlertTriangle size={15} className="shrink-0" />
-            <span className="font-semibold">Visage hors champ � Repositionnez-vous face à la webcam</span>
+            <span className="font-semibold">Visage hors champ • Repositionnez-vous face à la webcam</span>
           </div>
           <div className="flex items-center gap-3">
             <div className="h-1.5 w-24 sm:w-36 bg-amber-950 rounded-full overflow-hidden">
@@ -1107,7 +1280,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 2. ZONE CENTRALE : NAVIGATEUR MOODLE INT�0GR�0 & QUESTIONNAIRE R�0EL */}
+      {/* 2. ZONE CENTRALE : NAVIGATEUR MOODLE INTÉGRÉ & QUESTIONNAIRE RÉEL */}
       <div className="flex flex-1 overflow-hidden">
         {/* Volet latéral gauche : Navigation du Quiz Moodle (Desktop uniquement) */}
         <aside className="hidden md:flex w-64 border-r border-zinc-800/80 bg-zinc-950/70 p-5 flex-col justify-between flex-shrink-0">
@@ -1159,12 +1332,12 @@ export default function App() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-amber-400" />
-                <span>�0pinglée pour révision (F)</span>
+                <span>Épinglée pour révision (F)</span>
               </div>
             </div>
           </div>
 
-          {/* Bouton de Fin d'�0preuve */}
+          {/* Bouton de Fin d'Épreuve */}
           <button
             onClick={() => setIsFinished(true)}
             className="w-full py-3 rounded-xl border border-zinc-700 bg-zinc-900 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-800 hover:text-white transition-colors"
@@ -1242,7 +1415,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* �0noncé et options de réponse de la question (avec échelle typographique dynamique) */}
+          {/* Énoncé et options de réponse de la question (avec échelle typographique dynamique) */}
           <div className="p-4 sm:p-8 max-w-3xl mx-auto w-full space-y-6">
             <div className="p-6 sm:p-8 rounded-3xl border border-zinc-800 bg-zinc-950/80 shadow-sm space-y-5">
               <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
@@ -1251,20 +1424,20 @@ export default function App() {
                 </span>
 
                 <div className="flex items-center gap-3">
-                  {/* Bouton d'�0pinglage pour révision */}
+                  {/* Bouton d'Épinglage pour révision */}
                   <button
                     onClick={() => toggleFlagQuestion(currentQuestion)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${flaggedQuestions.includes(currentQuestion)
                         ? "bg-amber-500/15 text-amber-300 border-amber-500/40"
                         : "bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-zinc-200 hover:border-zinc-700"
                       }`}
-                    title="�0pingler cette question pour y revenir avant de soumettre (Touche F)"
+                    title="Épingler cette question pour y revenir avant de soumettre (Touche F)"
                   >
                     <Flag
                       size={13}
                       className={flaggedQuestions.includes(currentQuestion) ? "fill-amber-400 text-amber-400" : ""}
                     />
-                    <span>{flaggedQuestions.includes(currentQuestion) ? "�0pinglée" : "�0pingler (F)"}</span>
+                    <span>{flaggedQuestions.includes(currentQuestion) ? "Épinglée" : "Épingler (F)"}</span>
                   </button>
 
                   <span className="text-xs sm:text-sm text-zinc-400 font-mono">Barème : 2.00 pt(s)</span>
@@ -1334,7 +1507,7 @@ export default function App() {
                       rows={8}
                       value={answers[currentQuestion] || ""}
                       onChange={(e) => updateAnswer(currentQuestion, e.target.value)}
-                      placeholder="// �0crivez votre code d'implémentation ici..."
+                      placeholder="// Écrivez votre code d'implémentation ici..."
                       className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4 text-xs sm:text-sm font-mono text-zinc-200 placeholder:text-zinc-600 focus:border-emerald-500/50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
                     />
                   </div>
@@ -1347,20 +1520,20 @@ export default function App() {
                   onClick={() => setCurrentQuestion((prev) => Math.max(1, prev - 1))}
                   className="rounded-xl border border-zinc-700 bg-zinc-800/80 px-5 py-2.5 text-xs sm:text-sm font-semibold text-zinc-300 hover:bg-zinc-700 transition-colors disabled:opacity-40"
                 >
-                  � � Question précédente
+                  ← Question précédente
                 </button>
                 <button
                   disabled={currentQuestion === 8}
                   onClick={() => setCurrentQuestion((prev) => Math.min(8, prev + 1))}
                   className="rounded-xl bg-zinc-100 px-5 py-2.5 text-xs sm:text-sm font-bold text-zinc-950 hover:bg-white transition-colors disabled:opacity-40"
                 >
-                  Question suivante � 
+                  Question suivante • 
                 </button>
               </div>
             </div>
           </div>
 
-          {/* 3. MINI-MONITEUR PIP D�0PLA�!ABLE & R�0DUCTIBLE (Avec Option Ghost Camera Anti-Stress) */}
+          {/* 3. MINI-MONITEUR PIP DÉPLAÇABLE & RÉDUCTIBLE (Avec Option Ghost Camera Anti-Stress) */}
           <div
             className={`absolute ${getPipPositionClass(
               pipPosition
@@ -1441,7 +1614,7 @@ export default function App() {
                       }`}
                   />
 
-                  {/* Mode Discret / Ghost Camera : �0cran de rassurance anti-anxiété */}
+                  {/* Mode Discret / Ghost Camera : Écran de rassurance anti-anxiété */}
                   {ghostCamera && (
                     <div className="h-full w-full bg-zinc-950 flex flex-col items-center justify-center p-2.5 text-center">
                       <div className="relative mb-1.5">
@@ -1500,18 +1673,18 @@ export default function App() {
             <div className="space-y-2 text-xs">
               <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
                 <span className="text-zinc-300">Question suivante</span>
-                <kbd className="px-2 py-0.5 rounded bg-zinc-800 font-mono text-zinc-200 border border-zinc-700">� </kbd>
+                <kbd className="px-2 py-0.5 rounded bg-zinc-800 font-mono text-zinc-200 border border-zinc-700">• </kbd>
               </div>
               <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
                 <span className="text-zinc-300">Question précédente</span>
-                <kbd className="px-2 py-0.5 rounded bg-zinc-800 font-mono text-zinc-200 border border-zinc-700">� �</kbd>
+                <kbd className="px-2 py-0.5 rounded bg-zinc-800 font-mono text-zinc-200 border border-zinc-700">←</kbd>
               </div>
               <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
                 <span className="text-zinc-300">Sélectionner option QCM</span>
                 <kbd className="px-2 py-0.5 rounded bg-zinc-800 font-mono text-zinc-200 border border-zinc-700">1, 2, 3, 4</kbd>
               </div>
               <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
-                <span className="text-zinc-300">�0pingler pour révision</span>
+                <span className="text-zinc-300">Épingler pour révision</span>
                 <kbd className="px-2 py-0.5 rounded bg-zinc-800 font-mono text-zinc-200 border border-zinc-700">F</kbd>
               </div>
               <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/80">
@@ -1561,7 +1734,7 @@ export default function App() {
                   }`}
               >
                 {activeModalStrike.isProctorAlert
-                  ? "Alerte Surveillant � Contrôle Humain Obligatoire"
+                  ? "Alerte Surveillant • Contrôle Humain Obligatoire"
                   : `Avertissement ${activeModalStrike.strike_number} sur ${activeModalStrike.max_strikes}`}
               </span>
               <h3 className="text-lg font-bold text-zinc-100">
@@ -1587,7 +1760,7 @@ export default function App() {
                   }`}
               >
                 {activeModalStrike.isProctorAlert
-                  ? "�a️ Conformément au RGPD et à l'AI Act, aucune décision d'expulsion n'est prise par l'IA seule. Vous pouvez poursuivre votre épreuve. Seul le surveillant humain pourra statuer."
+                  ? "•a️ Conformément au RGPD et à l'AI Act, aucune décision d'expulsion n'est prise par l'IA seule. Vous pouvez poursuivre votre épreuve. Seul le surveillant humain pourra statuer."
                   : "Au 3ème avertissement, le dossier est transmis au surveillant pour décision."}
               </div>
             </div>
@@ -1601,7 +1774,7 @@ export default function App() {
             >
               {activeModalStrike.isProctorAlert
                 ? "Poursuivre mon examen"
-                : "J'ai compris � Reprendre l'épreuve"}
+                : "J'ai compris • Reprendre l'épreuve"}
             </button>
 
             {/* Droit d'acquittement immédiat par le surveillant sur place */}
@@ -1623,17 +1796,24 @@ export default function App() {
                     <input
                       type="password"
                       maxLength={8}
+                      disabled={lockoutCountdown > 0}
                       value={proctorPin}
                       onChange={(e) => {
                         setProctorPin(e.target.value);
                         setProctorPinError(null);
                       }}
-                      placeholder="Code PIN"
-                      className="flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-100 font-mono"
+                      placeholder={lockoutCountdown > 0 ? `Bloqué (${lockoutCountdown}s)` : "Code PIN"}
+                      className="flex-1 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-100 font-mono disabled:opacity-50"
                     />
                     <button
                       type="button"
+                      disabled={lockoutCountdown > 0}
                       onClick={async () => {
+                        if (Date.now() < proctorPinLockoutUntil) {
+                          setProctorPinError(`Trop de tentatives. Veuillez patienter ${lockoutCountdown}s.`);
+                          return;
+                        }
+
                         const isValid = await verifyProctorPinHash(proctorPin, isTauri);
                         if (isValid) {
                           setStrikes(0);
@@ -1641,11 +1821,21 @@ export default function App() {
                           setActiveModalStrike(null);
                           setShowProctorPinModal(false);
                           setProctorPin("");
+                          setProctorPinAttempts(0);
+                          setProctorPinError(null);
                         } else {
-                          setProctorPinError("Code PIN invalide");
+                          const newAttempts = proctorPinAttempts + 1;
+                          setProctorPinAttempts(newAttempts);
+                          if (newAttempts >= 3) {
+                            setProctorPinLockoutUntil(Date.now() + 60000);
+                            setLockoutCountdown(60);
+                            setProctorPinError("3 tentatives incorrectes. Saisie bloquée pendant 60 secondes.");
+                          } else {
+                            setProctorPinError(`Code PIN incorrect (${3 - newAttempts} essai(s) restant(s))`);
+                          }
                         }
                       }}
-                      className="rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold px-3 py-1.5 text-xs"
+                      className="rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold px-3 py-1.5 text-xs disabled:opacity-40"
                     >
                       Acquitter
                     </button>

@@ -2058,17 +2058,14 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                     </div>
                   </div>
 
-                  {/* Note sur le binaire local */}
+                  {/* Note sur le binaire autonome */}
                   <div className="p-5 sm:p-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 space-y-2.5">
                     <div className="flex items-center gap-2 text-sm font-bold text-emerald-400">
                       <CheckCircle2 size={18} />
-                      <span>Binaire Windows compilé disponible immédiatement en local</span>
+                      <span>Exécutable autonome prêt à l'emploi</span>
                     </div>
                     <p className="text-sm sm:text-base text-zinc-200 leading-relaxed">
-                      L'exécutable autonome est d'ores et déjà généré sur votre ordinateur dans :<br />
-                      <code className="text-xs sm:text-sm font-mono bg-zinc-950 border border-zinc-800 px-3 py-2 rounded-xl text-emerald-300 block mt-2 overflow-x-auto">
-                        C:\Projet\AgoraExam\release-bin\AgoraExam.exe
-                      </code>
+                      L'application ne requiert aucun privilège administrateur ni modification de votre système : lancez simplement l'exécutable pour entrer directement en salle d'examen sécurisée.
                     </p>
                   </div>
                 </article>
