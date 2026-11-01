@@ -65,17 +65,17 @@ flowchart TD
     C --> D["4. Verrouillage Kiosk Actif\n- Plein écran sans bordure\n- Raccourcis OS neutralisés\n- Watchdog focus armé (400ms)"]
     D --> E["5. Session d'Examen Moodle\n- Analyse MediaPipe locale (5 FPS)\n- PiP discret déplaçable"]
     
-    E -->|Visage absent > 4s OU Multi-visages| F["Détection d'Activité Suspecte"]
+    E -->|"Visage absent > 4s OU Multi-visages"| F["Détection d'Activité Suspecte"]
     F --> G["Consignation au Dossier Candidat\n(Capture horodatée chiffrée)"]
     
     G --> H{"Compteur de Strikes"}
-    H -->|Strike 1 ou 2| I["Modal Bloquant à l'écran\nRecapture forcée du focus\nAvertissement pédagogique consigné"]
+    H -->|"Strike 1 ou 2"| I["Modal Bloquant à l'écran\nRecapture forcée du focus\nAvertissement pédagogique consigné"]
     I --> E
     
-    H -->|Strike 3| J{"Politique Active"}
-    J -->|Mode Hybride (Défaut)| K["ALERTE SURVEILLANT HUMAIN\nDossier d'infractions transmis\nL'étudiant continue l'épreuve\nSeul le surveillant peut décider de l'exclusion"]
-    J -->|Mode Audit Trail| L["Consignation Silencieuse\nAucune interruption\nRevue post-examen"]
-    J -->|Mode Strict| M["Kill Switch Moodle\nfinishattempt = 1 (Soumission forcée)\nÉcran de clôture définitive"]
+    H -->|"Strike 3"| J{"Politique Active"}
+    J -->|"Mode Hybride (Défaut)"| K["ALERTE SURVEILLANT HUMAIN\nDossier d'infractions transmis\nL'étudiant continue l'épreuve\nSeul le surveillant peut décider de l'exclusion"]
+    J -->|"Mode Audit Trail"| L["Consignation Silencieuse\nAucune interruption\nRevue post-examen"]
+    J -->|"Mode Strict"| M["Kill Switch Moodle\nfinishattempt = 1 (Soumission forcée)\nÉcran de clôture définitive"]
 ```
 
 ### Les 3 Politiques de Surveillance Configurables
