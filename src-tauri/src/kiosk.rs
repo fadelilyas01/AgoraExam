@@ -54,6 +54,13 @@ pub fn appliquer_confinement_fenetre(app: &AppHandle) -> Result<(), ProctorError
     }
 }
 
+/// Purge le presse-papier au démarrage pour éliminer tout copié préalable (anti-triche)
+pub fn purger_presse_papier(app: &AppHandle) {
+    if let Some(main_window) = app.get_webview_window("main") {
+        let _ = main_window.eval("if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText('').catch(() => {}); }");
+    }
+}
+
 /// Lance le Watchdog natif avec récepteur de contrôle et détection HDMI à chaud
 pub fn demarrer_watchdog_kiosk(app: AppHandle, mut rx: watch::Receiver<bool>) {
     tauri::async_runtime::spawn(async move {
@@ -110,7 +117,6 @@ pub fn demarrer_watchdog_kiosk(app: AppHandle, mut rx: watch::Receiver<bool>) {
         tracing::info!("Watchdog Kiosk natif arrêté proprement.");
     });
 }
-
 
 /// Comparaison à temps constant de deux chaînes hexadécimales de même taille (CWE-208 Anti-Timing Attack)
 pub fn constant_time_eq_str(a: &str, b: &str) -> bool {

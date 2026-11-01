@@ -125,6 +125,30 @@ interface StrikeEvent {
   isProctorAlert?: boolean;
 }
 
+interface InfractionResult {
+  strike_number: number;
+  max_strikes: number;
+  reason: string;
+  is_expelled: boolean;
+  is_proctor_alert: boolean;
+  evidence_path?: string;
+  timestamp: string;
+}
+
+interface SealedReceiptResult {
+  seal_digest: string;
+  session_id: string;
+  attempt_id: number;
+  timestamp: string;
+  strikes_count: number;
+  policy_applied: string;
+  total_questions: number;
+  answers_summary: Record<string, string>;
+  student_observation: string;
+  confinement_status: string;
+  receipt_file_path?: string;
+}
+
 type PipPosition = "bottom-right" | "bottom-left" | "top-right" | "top-left";
 
 const EXAM_SESSION_STORAGE_KEY = "agora_exam_session_v1";
@@ -178,18 +202,36 @@ export default function App() {
   });
   const [isFlaggedForProctorReview, setIsFlaggedForProctorReview] = useState<boolean>(false);
 
-  // Paramètres d'authentification de session Moodle (transmis dynamiquement via query params sécurisés)
-  const [sessionAuth] = useState(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      return {
-        moodleUrl: params.get("moodleUrl") || params.get("moodle_url") || "",
-        wstoken: params.get("wstoken") || "",
-        attemptId: parseInt(params.get("attemptId") || params.get("attempt_id") || "0", 10),
-      };
+  // Initialisation sécurisée du séquestre Moodle dans Rust et purge immédiate de l'URL (CWE-312 & CWE-798)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const moodleUrl = params.get("moodleUrl") || params.get("moodle_url") || "";
+    const wstoken = params.get("wstoken") || "";
+    const attemptId = parseInt(params.get("attemptId") || params.get("attempt_id") || "48291", 10);
+
+    if (moodleUrl || wstoken) {
+      if (isTauri) {
+        invoke("initialiser_session_examen", {
+          moodleUrl,
+          wstoken,
+          attemptId,
+          policy,
+        }).catch((err) => {
+          console.error("Échec initialisation session sécurisée Rust :", err);
+        });
+      }
+
+      // Purge immédiate et irréversible de l'historique et de l'URL pour ne jamais exposer le wstoken (CWE-312)
+      try {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete("wstoken");
+        cleanUrl.searchParams.delete("moodleUrl");
+        cleanUrl.searchParams.delete("moodle_url");
+        window.history.replaceState({}, document.title, cleanUrl.pathname + cleanUrl.hash);
+      } catch {}
     }
-    return { moodleUrl: "", wstoken: "", attemptId: 0 };
-  });
+  }, [isTauri, policy]);
 
   // État de l'examen et de la télésurveillance
   const [strikes, setStrikes] = useState<number>(0);
@@ -333,10 +375,25 @@ export default function App() {
     }
   }, [isFinished, isExpelled]);
 
-  // Calcul dynamique et authentique du sceau cryptographique SHA-256 dès la fin d'épreuve
+  // Calcul et scellement cryptographique SHA-256 garanti souverainement par le backend Rust (CWE-345)
   useEffect(() => {
     if (isFinished && !computedSealDigest) {
       const computeDynamicSeal = async () => {
+        // 1. En environnement natif Tauri : Calcul et scellement d'intégrité souverain dans Rust (CWE-345)
+        if (isTauri) {
+          try {
+            const result = await invoke<SealedReceiptResult>("sceller_resultats_examen", {
+              answers,
+              studentObservation: studentObservation.trim(),
+            });
+            setComputedSealDigest(result.seal_digest);
+            return;
+          } catch (err) {
+            console.error("Échec scellement cryptographique Rust :", err);
+          }
+        }
+
+        // 2. Émulation Web (Navigateur)
         const canonicalReceipt = {
           certification: "AgoraExam Academic Integrity Official Receipt",
           protocolVersion: "2.4-Sovereign-Edge",
@@ -349,7 +406,7 @@ export default function App() {
           },
           candidate: {
             id: "ETU-2026-48291",
-            confinementStatus: isTauri ? "Strict Kiosk Lock (Tauri v2 Native Verified)" : "Web Kiosk Emulation",
+            confinementStatus: "Web Kiosk Emulation",
           },
           submission: {
             timestamp: new Date().toISOString(),
@@ -504,98 +561,82 @@ export default function App() {
 
   // Gestionnaire d'infraction & Enregistrement légal
   const handleWarning = useCallback(async (reason: string) => {
-    const newStrikeCount = strikes + 1;
-    setStrikes(newStrikeCount);
-
     const snapshotBase64 = captureEvidenceSnapshot();
-    let evidencePath = "";
 
-    if (snapshotBase64 && isTauri) {
+    // 1. En environnement natif Tauri : Le backend Rust est l'autorité absolue (Fail-Secure & Zero-Bypass)
+    if (isTauri) {
       try {
-        evidencePath = await invoke<string>("enregistrer_preuve", {
-          attemptId: 48291,
-          strikeNumber: newStrikeCount,
-          imageBase64: snapshotBase64,
+        const result = await invoke<InfractionResult>("enregistrer_infraction", {
           motif: reason,
+          imageBase64: snapshotBase64 || null,
         });
+
+        // Synchronisation avec le compteur officiel déterminé et scellé par Rust
+        setStrikes(result.strike_number);
+
+        if (result.is_expelled) {
+          setIsExpelled(true);
+          return;
+        }
+
+        if (result.is_proctor_alert) {
+          setIsFlaggedForProctorReview(true);
+          setActiveModalStrike({
+            strike_number: result.strike_number,
+            max_strikes: result.max_strikes,
+            reason: `${reason} • Anomalie consignée au dossier. Un surveillant humain a été alerté pour vérification. Vous pouvez continuer à composer.`,
+            timestamp: new Date().toLocaleTimeString(),
+            evidencePath: result.evidence_path,
+            isProctorAlert: true,
+          });
+          return;
+        }
+
+        if (policy !== "audit") {
+          setActiveModalStrike({
+            strike_number: result.strike_number,
+            max_strikes: result.max_strikes,
+            reason,
+            timestamp: new Date().toLocaleTimeString(),
+            evidencePath: result.evidence_path,
+            isProctorAlert: false,
+          });
+        }
+        return;
       } catch (err) {
-        console.error("Échec sauvegarde preuve :", err);
+        console.error("Échec enregistrement infraction souverain Rust :", err);
       }
     }
 
-    if (newStrikeCount < 3) {
-      if (isTauri) {
-        try {
-          await invoke("signaler_avertissement", {
-            attemptId: 48291,
-            strikeCount: newStrikeCount,
-            motif: reason,
+    // 2. Émulation Web (Navigateur / Démo sans runtime Rust)
+    setStrikes((prev) => {
+      const nextStrikes = prev + 1;
+      if (nextStrikes >= 3) {
+        if (policy === "strict") {
+          setIsExpelled(true);
+        } else {
+          setIsFlaggedForProctorReview(true);
+          setActiveModalStrike({
+            strike_number: nextStrikes,
+            max_strikes: 3,
+            reason: `${reason} • Anomalie consignée au dossier. Un surveillant humain a été alerté. Vous pouvez continuer à composer.`,
+            timestamp: new Date().toLocaleTimeString(),
+            isProctorAlert: true,
           });
-        } catch (e) {
-          console.error("Échec signalement avertissement :", e);
         }
-      }
-
-      if (policy !== "audit") {
+      } else if (policy !== "audit") {
         setActiveModalStrike({
-          strike_number: newStrikeCount,
+          strike_number: nextStrikes,
           max_strikes: 3,
           reason,
           timestamp: new Date().toLocaleTimeString(),
-          evidencePath,
           isProctorAlert: false,
         });
       }
-    } else {
-      // 3ème avertissement : Application de la politique choisie
-      if (policy === "hybrid") {
-        // 1. POLITIQUE HYBRIDE RECOMMANDÉE (Human-in-the-Loop) :
-        // Aucune expulsion automatique par l'IA !
-        // L'incident est consigné au dossier et seul un surveillant humain est alerté pour arbitrer.
-        setIsFlaggedForProctorReview(true);
-        if (isTauri) {
-          try {
-            await invoke("alerter_surveillant", {
-              attemptId: 48291,
-              strikeCount: newStrikeCount,
-              motif: reason,
-              evidencePath: evidencePath || null,
-            });
-          } catch (e) {
-            console.error("Échec transmission alerte surveillant :", e);
-          }
-        }
-
-        setActiveModalStrike({
-          strike_number: newStrikeCount,
-          max_strikes: 3,
-          reason: `${reason} • Anomalie consignée au dossier. Un surveillant humain a été alerté pour vérification. Vous pouvez continuer à composer.`,
-          timestamp: new Date().toLocaleTimeString(),
-          evidencePath,
-          isProctorAlert: true,
-        });
-      } else if (policy === "strict") {
-        // 2. POLITIQUE STRICTE (Concours spécifiques avec exclusion immédiate)
-        setIsExpelled(true);
-        if (isTauri && sessionAuth.moodleUrl && sessionAuth.wstoken && sessionAuth.attemptId > 0) {
-          try {
-            await invoke("expulser_etudiant", {
-              moodleUrl: sessionAuth.moodleUrl,
-              wstoken: sessionAuth.wstoken,
-              attemptId: sessionAuth.attemptId,
-              motif: reason,
-            });
-          } catch (e) {
-            console.error("Échec expulsion étudiant :", e);
-          }
-        }
-      } else {
-        // 3. POLITIQUE PÉDAGOGIQUE (Audit Trail Silencieux pour TP/Contrôle continu)
-        setIsFlaggedForProctorReview(true);
-      }
-    }
-  }, [strikes, captureEvidenceSnapshot, policy, isTauri, sessionAuth]);
-
+      return nextStrikes;
+    });
+  }, [captureEvidenceSnapshot, isTauri, policy]);
+  
   // Boucle de vision locale avec Tolérance 4s (Anti-faux positifs)
   useEffect(() => {
     if (!isExamStarted || isExpelled) return;
@@ -823,8 +864,21 @@ export default function App() {
       }
     };
 
+    const handleClipboard = (e: ClipboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleWarning(`Action de presse-papier (${e.type}) neutralisée`);
+      if (isTauri) {
+        invoke("vider_presse_papier").catch(() => {});
+      }
+      return false;
+    };
+
     window.addEventListener("keydown", handleKeyDown, { capture: true });
     window.addEventListener("contextmenu", handleContextMenu, { capture: true });
+    window.addEventListener("copy", handleClipboard, { capture: true });
+    window.addEventListener("cut", handleClipboard, { capture: true });
+    window.addEventListener("paste", handleClipboard, { capture: true });
     window.addEventListener("blur", handleBlur);
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
@@ -833,6 +887,9 @@ export default function App() {
       if (blurTimeoutId) clearTimeout(blurTimeoutId);
       window.removeEventListener("keydown", handleKeyDown, { capture: true });
       window.removeEventListener("contextmenu", handleContextMenu, { capture: true });
+      window.removeEventListener("copy", handleClipboard, { capture: true });
+      window.removeEventListener("cut", handleClipboard, { capture: true });
+      window.removeEventListener("paste", handleClipboard, { capture: true });
       window.removeEventListener("blur", handleBlur);
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);

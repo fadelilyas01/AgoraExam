@@ -28,4 +28,10 @@ pub enum ProctorError {
 
     #[error("Tentative de verrouillage alors que l'examen est déjà actif")]
     AlreadyLocked,
+
+    #[error("Aucune session Moodle active sous séquestre dans le backend Rust")]
+    NoActiveMoodleSession,
+
+    #[error("Échec de génération ou sérialisation du reçu cryptographique : {0}")]
+    ReceiptSerializationError(String),
 }
