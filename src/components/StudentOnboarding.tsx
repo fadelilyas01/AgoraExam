@@ -1052,7 +1052,7 @@ export function InteractiveTroubleshootingFaq() {
         <a
           href="https://github.com/fadelilyas01/AgoraExam/issues"
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="text-emerald-400 font-semibold hover:underline inline-flex items-center gap-1 shrink-0"
         >
           <span>Ouvrir un ticket GitHub</span>

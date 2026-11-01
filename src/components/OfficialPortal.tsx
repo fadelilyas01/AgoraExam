@@ -619,7 +619,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             <a
               href="https://github.com/fadelilyas01/AgoraExam"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/80 px-3.5 py-2 text-sm font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
             >
               <GitHubLogo size={16} />
@@ -729,7 +729,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               <a
                 href="https://github.com/fadelilyas01/AgoraExam"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 py-3 text-sm font-semibold text-zinc-300 hover:text-white"
               >
                 <GitHubLogo size={16} />
@@ -1408,7 +1408,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                   <a
                     href="https://github.com/fadelilyas01/AgoraExam/releases/tag/v0.1.0"
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="text-emerald-400 hover:underline inline-flex items-center gap-1"
                   >
                     <span>Release GitHub v0.1.0</span>
@@ -2791,7 +2791,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             <a
               href="https://github.com/fadelilyas01/AgoraExam"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5 py-1 px-2"
             >
               <GitHubLogo size={14} />
