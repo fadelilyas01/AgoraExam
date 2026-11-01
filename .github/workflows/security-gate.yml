@@ -1,7 +1,10 @@
-name: Security & Quality Gate
+name: Security & Vulnerability Scan
 
 on:
   pull_request:
+    branches:
+      - main
+  push:
     branches:
       - main
   workflow_dispatch:
@@ -13,8 +16,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  audit-and-validate:
-    name: Zero-Vulnerability & Build Gate
+  security-scan:
+    name: Security & Vulnerability Scan
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
