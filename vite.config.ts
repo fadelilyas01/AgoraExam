@@ -16,4 +16,15 @@ export default defineConfig(async () => ({
     strictPort: true,
     host: true,
   },
+  build: {
+    target: "es2022",
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "lucide-react"],
+          mediapipe: ["@mediapipe/tasks-vision"],
+        },
+      },
+    },
+  },
 }));

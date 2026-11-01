@@ -140,6 +140,19 @@ export default function App() {
   });
   const [isFlaggedForProctorReview, setIsFlaggedForProctorReview] = useState<boolean>(false);
 
+  // Paramètres d'authentification de session Moodle (transmis dynamiquement via query params sécurisés)
+  const [sessionAuth] = useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        moodleUrl: params.get("moodleUrl") || params.get("moodle_url") || "",
+        wstoken: params.get("wstoken") || "",
+        attemptId: parseInt(params.get("attemptId") || params.get("attempt_id") || "0", 10),
+      };
+    }
+    return { moodleUrl: "", wstoken: "", attemptId: 0 };
+  });
+
   // État de l'examen et de la télésurveillance
   const [strikes, setStrikes] = useState<number>(0);
   const [activeModalStrike, setActiveModalStrike] = useState<StrikeEvent | null>(null);
@@ -525,12 +538,12 @@ export default function App() {
       } else if (policy === "strict") {
         // 2. POLITIQUE STRICTE (Concours spécifiques avec exclusion immédiate)
         setIsExpelled(true);
-        if (isTauri) {
+        if (isTauri && sessionAuth.moodleUrl && sessionAuth.wstoken && sessionAuth.attemptId > 0) {
           try {
             await invoke("expulser_etudiant", {
-              moodleUrl: "https://moodle.universite.fr",
-              wstoken: "secret_token_session_placeholder",
-              attemptId: 48291,
+              moodleUrl: sessionAuth.moodleUrl,
+              wstoken: sessionAuth.wstoken,
+              attemptId: sessionAuth.attemptId,
               motif: reason,
             });
           } catch (e) {
@@ -542,7 +555,7 @@ export default function App() {
         setIsFlaggedForProctorReview(true);
       }
     }
-  }, [strikes, captureEvidenceSnapshot, policy, isTauri]);
+  }, [strikes, captureEvidenceSnapshot, policy, isTauri, sessionAuth]);
 
   // Boucle de vision locale avec Tolérance 4s (Anti-faux positifs)
   useEffect(() => {
