@@ -937,7 +937,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                                 : "border-zinc-800/80 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300"
                             }`}
                           >
-                            <div className="flex items-center gap-2.5 truncate">
+                            <div className="flex items-start gap-2.5 min-w-0">
                               <div
                                 className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
                                   mockupSelectedOption === opt.id
@@ -949,7 +949,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                                 )}
                               </div>
-                              <span className="truncate">{opt.label}</span>
+                              <span className="text-xs sm:text-sm leading-snug break-words">{opt.label}</span>
                             </div>
                             {mockupSelectedOption === opt.id && opt.correct && (
                               <span className="text-[11px] font-mono text-emerald-400 shrink-0 hidden sm:inline">

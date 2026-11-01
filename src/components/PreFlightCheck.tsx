@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { AgoraExamLogo } from "./Logos";
+import { PolicyCombobox } from "./Combobox";
 
 interface HardwareStatus {
   singleMonitor: boolean;
@@ -461,30 +462,30 @@ export function PreFlightCheck({
   };
 
   return (
-    <div className="flex min-h-screen w-full max-w-full items-center justify-center bg-zinc-950 p-4 sm:p-6 text-zinc-100 font-sans antialiased overflow-x-hidden">
-      <div className="w-full max-w-2xl rounded-3xl border border-zinc-800 bg-zinc-900/90 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+    <div className="flex min-h-screen w-full max-w-full items-center justify-center bg-zinc-950 p-3 sm:p-6 text-zinc-100 font-sans antialiased overflow-x-hidden">
+      <div className="w-full max-w-2xl rounded-3xl border border-zinc-800 bg-zinc-900/90 p-4 sm:p-8 shadow-2xl backdrop-blur-xl">
         {/* En-tête Institutionnel avec Logo Réel AgoraExam */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800 pb-5 gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-950 border border-zinc-800 shadow-md flex-shrink-0">
-              <AgoraExamLogo size={30} />
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-zinc-950 border border-zinc-800 shadow-md shrink-0">
+              <AgoraExamLogo size={28} />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-base sm:text-lg font-bold tracking-tight text-zinc-100">
                   AgoraExam
                 </h1>
-                <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20">
+                <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-mono font-semibold text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                   Pre-Flight Check
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-zinc-400 mt-0.5">
+              <p className="text-xs sm:text-sm text-zinc-400 mt-0.5 line-clamp-1 sm:line-clamp-none">
                 Vérification du poste d'examen et conformité réglementaire
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-end sm:self-auto">
+          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto pt-2 sm:pt-0 border-t border-zinc-800/60 sm:border-t-0">
             {onOpenDocs && (
               <button
                 onClick={onOpenDocs}
@@ -733,9 +734,9 @@ export function PreFlightCheck({
                 </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-5 items-center">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 items-center">
                 {/* Cadre vidéo avec coins de visée esthétiques */}
-                <div className="relative h-44 w-56 flex-shrink-0 rounded-2xl overflow-hidden bg-black border border-zinc-800 flex items-center justify-center shadow-inner">
+                <div className="relative w-full max-w-[280px] sm:w-56 aspect-[4/3] sm:h-44 shrink-0 rounded-2xl overflow-hidden bg-black border border-zinc-800 flex items-center justify-center shadow-inner mx-auto sm:mx-0">
                   {isChecking && !hardware.cameraReady ? (
                     <div className="h-full w-full bg-zinc-900 animate-pulse flex flex-col items-center justify-center text-zinc-500 gap-2">
                       <RefreshCw size={22} className="animate-spin text-zinc-400" />
@@ -810,24 +811,19 @@ export function PreFlightCheck({
 
             {/* Politique d'Examen & Human-in-the-Loop */}
             <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950/70 border border-zinc-800 text-xs sm:text-sm text-zinc-300 space-y-3.5">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800/80 pb-2.5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-3">
                 <div className="flex items-center gap-2">
                   <ShieldCheck size={16} className="text-emerald-400 shrink-0" />
                   <span className="font-semibold text-zinc-200">
-                    Politique : {policy === "hybrid" ? "Contrôle Humain" : policy === "audit" ? "Audit Silencieux" : "Mode Strict"}
+                    Protocole de Surveillance
                   </span>
                 </div>
                 {onPolicyChange && (
-                  <select
+                  <PolicyCombobox
                     value={policy}
-                    onChange={(e) => onPolicyChange(e.target.value as "hybrid" | "audit" | "strict")}
-                    className="w-full sm:w-auto rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-1 text-xs text-zinc-200 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    aria-label="Sélectionner la politique de surveillance"
-                  >
-                    <option value="hybrid">Mode Hybride (Human-in-the-Loop - Défaut)</option>
-                    <option value="audit">Mode Pédagogique (Audit Trail)</option>
-                    <option value="strict">Mode Strict (Concours)</option>
-                  </select>
+                    onChange={onPolicyChange}
+                    className="w-full sm:w-auto"
+                  />
                 )}
               </div>
 
@@ -850,12 +846,12 @@ export function PreFlightCheck({
                 </p>
               </div>
 
-              <label className="flex items-center gap-3 pt-1 text-zinc-200 cursor-pointer select-none">
+              <label className="flex items-start gap-3 pt-1 text-zinc-200 cursor-pointer select-none min-h-[44px]">
                 <input
                   type="checkbox"
                   checked={agreed}
                   onChange={(e) => setAgreed(e.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500/20"
+                  className="mt-0.5 h-4 w-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500/20 shrink-0"
                 />
                 <span className="text-xs sm:text-sm font-medium">
                   J'accepte le protocole d'examen et le confinement en plein écran exclusif.
