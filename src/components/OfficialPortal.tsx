@@ -24,6 +24,12 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import {
+  LiveDiagnosticWidget,
+  ThreeStepStudentJourney,
+  PrivacyAndEthicsSection,
+  InteractiveTroubleshootingFaq,
+} from "./StudentOnboarding";
+import {
   AgoraExamLogo,
   WindowsLogo,
   AppleLogo,
@@ -39,6 +45,9 @@ interface OfficialPortalProps {
 
 export type DocSectionId =
   | "intro"
+  | "onboarding-test"
+  | "vie-privee"
+  | "faq-depannage"
   | "edge-ai"
   | "telechargement"
   | "etudiant-guide"
@@ -64,6 +73,15 @@ interface DocGroup {
 
 const DOC_GROUPS: DocGroup[] = [
   {
+    group: "Portail Onboarding Étudiant",
+    items: [
+      { id: "onboarding-test", title: "Autodiagnostic Candidat", desc: "Test live caméra, micro, écran & réseau", badge: "Live Test" },
+      { id: "etudiant-guide", title: "Déroulement de l'Examen", desc: "Parcours en 3 étapes : Avant, Pendant, Après" },
+      { id: "vie-privee", title: "Vie Privée & Éthique", desc: "Edge AI 100% local, RGPD & Loi 25", badge: "RGPD" },
+      { id: "faq-depannage", title: "Centre de Dépannage & FAQ", desc: "SmartScreen, processus système, reconnexion Wi-Fi", badge: "Aide" },
+    ],
+  },
+  {
     group: "Bien Démarrer",
     items: [
       { id: "intro", title: "Présentation Générale", desc: "Vision & architecture du navigateur" },
@@ -72,9 +90,8 @@ const DOC_GROUPS: DocGroup[] = [
     ],
   },
   {
-    group: "Guide Candidat",
+    group: "Guide Candidat Approfondi",
     items: [
-      { id: "etudiant-guide", title: "Déroulement de l'Examen", desc: "Étapes avant et pendant l'épreuve" },
       { id: "regle-strikes", title: "Human-in-the-Loop & Strikes", desc: "Tolérance 4s, Dossier Candidat & Politiques", badge: "Éthique" },
       { id: "depannage-camera", title: "Dépannage Caméra & Micro", desc: "Résolution des conflits de capteurs" },
     ],
@@ -2059,6 +2076,58 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
 
               {/* ================================================================= */}
               {/* 3. VISION LOCALE & RGPD (NON-HYPE)                                */}
+              {/* ================================================================= */}
+              {/* ================================================================= */}
+              {/* PORTAIL ONBOARDING : 1. AUTODIAGNOSTIC EN DIRECT                  */}
+              {/* ================================================================= */}
+              {(activeDocSection === "onboarding-test" || activeDocSection === "bac-a-sable") && (
+                <div className="space-y-6">
+                  <div className="border-b border-zinc-800 pb-5 space-y-2">
+                    <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-mono font-semibold text-emerald-400 border border-emerald-500/20">
+                      Testeur Pré-Vol Candidat
+                    </span>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-100">
+                      Autodiagnostic Matériel &amp; Réseau en Direct
+                    </h1>
+                    <p className="text-sm sm:text-base text-zinc-400">
+                      Vérifiez vos autorisations de webcam, la sensibilité du micro avec le VU-mètre interactif, votre écran et la latence réseau.
+                    </p>
+                  </div>
+
+                  <LiveDiagnosticWidget
+                    onStartDryRun={onLaunchApp}
+                    onGoToDownloads={() => changeTab("download")}
+                  />
+                </div>
+              )}
+
+              {/* ================================================================= */}
+              {/* PORTAIL ONBOARDING : 2. PARCOURS ÉTUDIANT EN 3 ÉTAPES             */}
+              {/* ================================================================= */}
+              {activeDocSection === "etudiant-guide" && (
+                <ThreeStepStudentJourney
+                  onStartExamTest={onLaunchApp}
+                  onGoToDownloads={() => changeTab("download")}
+                  onOpenPrivacy={() => selectDocSection("vie-privee")}
+                />
+              )}
+
+              {/* ================================================================= */}
+              {/* PORTAIL ONBOARDING : 3. VIE PRIVÉE, RGPD & LOI 25                 */}
+              {/* ================================================================= */}
+              {activeDocSection === "vie-privee" && (
+                <PrivacyAndEthicsSection />
+              )}
+
+              {/* ================================================================= */}
+              {/* PORTAIL ONBOARDING : 4. DÉPANNAGE & CODES D'ERREUR                */}
+              {/* ================================================================= */}
+              {(activeDocSection === "faq-depannage" || activeDocSection === "depannage-camera") && (
+                <InteractiveTroubleshootingFaq />
+              )}
+
+              {/* ================================================================= */}
+              {/* 3. VISION LOCALE & RGPD (CONSERVÉ)                                */}
               {/* ================================================================= */}
               {activeDocSection === "edge-ai" && (
                 <article className="space-y-8 animate-in fade-in duration-200">
