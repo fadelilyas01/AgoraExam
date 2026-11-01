@@ -413,7 +413,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
         {
           id: "dl-mac-arm",
           title: "Télécharger pour macOS (Apple Silicon)",
-          desc: "Image disque .dmg native 4.9 Mo pour M1, M2, M3, M4",
+          desc: "Application pour Mac avec puce Apple Silicon (M1, M2, M3, M4)",
           badge: "ARM64",
           action: () => {
             changeTab("download");
@@ -763,7 +763,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             {/* Pill Notification Institutionnelle */}
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-medium text-emerald-300">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              <span>v0.1.0 Multiplateforme • Confinement Kiosk &amp; Inférence Locale</span>
+              <span>v0.1.0 Multiplateforme • Examen Sécurisé &amp; Caméra 100% Privée</span>
             </div>
 
             {/* Titre & Sous-titre Épurés et Rigoureux */}
@@ -772,7 +772,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 Le Navigateur d'Examen Sécurisé pour Moodle
               </h1>
               <p className="text-sm sm:text-base lg:text-lg text-zinc-300 max-w-2xl mx-auto leading-relaxed">
-                Verrouillage hermétique de l'ordinateur et présence faciale <strong>100% locale (Edge AI)</strong>.
+                Verrouillage sécurisé de l'ordinateur et présence faciale <strong>100% sur votre ordinateur</strong>.
                 Zéro flux vidéo dans le cloud. Conforme RGPD et souveraineté académique.
               </p>
             </div>
@@ -871,7 +871,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                     className="flex-1 sm:flex-initial min-h-[48px] flex items-center justify-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-xs sm:text-sm font-semibold text-zinc-200 hover:bg-zinc-800 transition-colors"
                   >
                     <Maximize2 size={15} className="text-emerald-400" />
-                    <span>Mode Web Kiosk</span>
+                    <span>Tester l'Examen Démo</span>
                   </button>
                 )}
 
@@ -919,7 +919,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                     </div>
                     <div className="flex items-center gap-1.5 text-[11px] font-mono text-emerald-400 shrink-0">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                      <span>Vision Locale : 30 FPS • 0 flux cloud</span>
+                      <span>Caméra Active • 100% sur l'appareil</span>
                     </div>
                   </div>
 
@@ -971,7 +971,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                             </div>
                             {mockupSelectedOption === opt.id && opt.correct && (
                               <span className="text-[11px] font-mono text-emerald-400 shrink-0 hidden sm:inline">
-                                ✓ Réponse sauvegardée (TLS 1.3)
+                                ✓ Réponse enregistrée automatiquement
                               </span>
                             )}
                           </button>
@@ -1030,7 +1030,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                             <div className="text-center p-2 space-y-1">
                               <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse mx-auto" />
                               <span className="text-[11px] text-zinc-300 font-mono block">Visage Centré • Conforme</span>
-                              <span className="text-[9px] text-zinc-500 font-mono block">Zéro paquet envoyé au cloud</span>
+                              <span className="text-[9px] text-zinc-500 font-mono block">Aucune vidéo envoyée sur Internet</span>
                             </div>
                           )}
                         </div>
@@ -1350,7 +1350,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                   Logo officiel du logiciel • Repérez ce blason vert émeraude dans votre dossier <em>Téléchargements</em> ou sur votre bureau.
                 </p>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] font-mono text-zinc-400 pt-0.5">
-                  <span className="text-emerald-400 font-semibold">Tauri v2 + Rust</span>
+                  <span className="text-emerald-400 font-semibold">Application Autonome</span>
                   <span>•</span>
                   <span>SHA-256 Certifié</span>
                   <span>•</span>
@@ -1379,7 +1379,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 </span>
               </div>
               <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                Binaire exécutable autonome (.exe). Double-cliquez pour installer et composer sans mot de passe administrateur.
+                Application pour Windows (.exe). Double-cliquez pour lancer votre examen sans mot de passe administrateur.
               </p>
               <div className="pt-2 space-y-2">
                 <button
@@ -1434,7 +1434,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                 </span>
               </div>
               <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                Image disque (.dmg) native pour puces Apple Silicon. Glissez simplement dans le dossier Applications.
+                Application pour Mac (Apple Silicon). Glissez simplement l'icône dans le dossier Applications.
               </p>
               <div className="pt-2">
                 <button
@@ -2016,7 +2016,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                           </span>
                         </div>
                         <p className="text-xs sm:text-sm text-zinc-300">
-                          Image disque (.dmg) pour les modèles Mac avec processeur Intel Core.
+                          Application pour Mac (processeurs Intel). Glissez simplement l'icône dans le dossier Applications.
                         </p>
                         <div className="text-xs font-mono text-zinc-400">
                           Prérequis : macOS 10.15 (Catalina) ou ultérieur
