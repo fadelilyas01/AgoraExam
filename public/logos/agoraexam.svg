@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" fill="none">
+  <defs>
+    <linearGradient id="agoraShieldGrad" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+    <linearGradient id="agoraInnerGrad" x1="24" y1="10" x2="24" y2="38" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#a7f3d0" />
+    </linearGradient>
+    <filter id="agoraGlow" x="0" y="0" width="48" height="48" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#10b981" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Bouclier d'encadrement souverain -->
+  <path
+    d="M24 4L7 11V23.5C7 34.2 14.3 43.1 24 45.8C33.7 43.1 41 34.2 41 23.5V11L24 4Z"
+    fill="#09090b"
+    stroke="url(#agoraShieldGrad)"
+    stroke-width="2.5"
+    stroke-linejoin="round"
+    filter="url(#agoraGlow)"
+  />
+
+  <!-- Cadre biseauté interne -->
+  <path
+    d="M24 8L11 13.8V23.2C11 31.8 16.7 39.2 24 41.5C31.3 39.2 37 31.8 37 23.2V13.8L24 8Z"
+    fill="#18181b"
+    opacity="0.85"
+  />
+
+  <!-- Fronton triangulaire -->
+  <path
+    d="M24 13L17 17.5H31L24 13Z"
+    fill="url(#agoraInnerGrad)"
+  />
+
+  <!-- Colonnes de l'agora (Défense en profondeur) -->
+  <rect x="18" y="19.5" width="2.5" height="11" rx="1.2" fill="#34d399" />
+  <rect x="22.75" y="19.5" width="2.5" height="11" rx="1.2" fill="#ffffff" />
+  <rect x="27.5" y="19.5" width="2.5" height="11" rx="1.2" fill="#34d399" />
+
+  <!-- Base scellée -->
+  <path
+    d="M16 32H32V33.8C32 34.5 31.4 35 30.7 35H17.3C16.6 35 16 34.5 16 33.8V32Z"
+    fill="url(#agoraInnerGrad)"
+  />
+
+  <!-- Point focal cryptographique -->
+  <circle cx="24" cy="24.5" r="1.5" fill="#10b981" />
+</svg>

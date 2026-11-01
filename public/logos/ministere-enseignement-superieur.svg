@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100" width="160" height="100" fill="none">
+  <!-- République Française Bloc Marque Institutionnelle -->
+  <rect x="0" y="0" width="16" height="40" fill="#000091"/>
+  <rect x="16" y="0" width="16" height="40" fill="#FFFFFF"/>
+  <rect x="32" y="0" width="16" height="40" fill="#E1000F"/>
+  <text x="0" y="58" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#FFFFFF" letter-spacing="-0.2">RÉPUBLIQUE</text>
+  <text x="0" y="69" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="700" fill="#FFFFFF" letter-spacing="-0.2">FRANÇAISE</text>
+  <text x="0" y="82" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="500" fill="#A1A1AA">MINISTÈRE DE L'ENSEIGNEMENT</text>
+  <text x="0" y="91" font-family="system-ui, -apple-system, sans-serif" font-size="7" font-weight="500" fill="#A1A1AA">SUPÉRIEUR ET DE LA RECHERCHE</text>
+</svg>

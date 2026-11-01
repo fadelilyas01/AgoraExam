@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 180" width="256" height="180" fill="none">
+  <!-- Moodle Official Graduation Cap & 'm' Emblem -->
+  <g id="moodle-cap">
+    <path d="M128 12 L12 68 L128 124 L244 68 Z" fill="#F98012"/>
+    <path d="M244 68 V118 C244 118 226 126 226 108 V78 L128 124 L48 84 V138 C48 152 84 164 128 164 C172 164 208 152 208 138 V118" stroke="#F98012" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M42 82 V132 L34 142" stroke="#F98012" stroke-width="9" stroke-linecap="round"/>
+  </g>
+  <!-- Stylized Moodle 'm' Letterform -->
+  <g id="moodle-m" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M72 164 V120 C72 104 84 94 98 94 C112 94 124 104 124 120 V164"/>
+    <path d="M124 120 C124 104 136 94 150 94 C164 94 176 104 176 120 V164"/>
+  </g>
+</svg>
