@@ -760,6 +760,10 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
         <div className="space-y-20 sm:space-y-28 pb-24">
           {/* Hero Section */}
           <section className="relative overflow-hidden pt-8 sm:pt-16 lg:pt-24 text-center px-4 sm:px-6 max-w-5xl mx-auto space-y-6 sm:space-y-8">
+            {/* Arrière-plan Aurora & Cyber-Grid animé */}
+            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] sm:w-[700px] h-[300px] sm:h-[400px] bg-gradient-to-tr from-emerald-500/20 via-emerald-400/10 to-transparent rounded-full blur-3xl pointer-events-none animate-aurora -z-10" />
+            <div className="absolute top-0 inset-x-0 h-96 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:28px_28px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-10" />
+
             {/* Pill Notification Institutionnelle avec balise vivante */}
             <div className="inline-flex items-center gap-2.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-medium text-emerald-300 shadow-sm backdrop-blur">
               <span className="relative flex h-2 w-2">
@@ -903,28 +907,44 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
               </span>
             </div>
 
-            {/* Mockup Interactif de l'Interface Kiosk */}
+            {/* Mockup Interactif de l'Interface Kiosk avec Animated Border Beam */}
             <div className="pt-4 sm:pt-6 w-full">
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-2 sm:p-3 shadow-2xl ring-1 ring-zinc-800/80 max-w-4xl mx-auto overflow-hidden">
-                <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-2.5 sm:p-5 text-left space-y-3.5">
-                  {/* Fausse barre de titre avec Logo Réel AgoraExam */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800/80 pb-3 gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="flex items-center gap-1.5 mr-1 shrink-0">
-                        <div className="h-2.5 w-2.5 rounded-full bg-rose-500/80" />
-                        <div className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
-                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
+              <div className="relative rounded-2xl p-[1px] max-w-4xl mx-auto overflow-hidden shadow-2xl group">
+                {/* Rayon laser lumineux tournant autour du cadre (Border Beam) */}
+                <div className="absolute -inset-[100%] animate-border-spin bg-[conic-gradient(from_0deg,transparent_0_340deg,#10b981_360deg)] opacity-75 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                <div className="relative rounded-2xl bg-zinc-950 p-2 sm:p-3 ring-1 ring-zinc-800/80">
+                  <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-2.5 sm:p-5 text-left space-y-3.5 backdrop-blur-xl">
+                    {/* Fausse barre de titre avec Logo Réel AgoraExam */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800/80 pb-3 gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-center gap-1.5 mr-1 shrink-0">
+                          <div className="h-2.5 w-2.5 rounded-full bg-rose-500/80" />
+                          <div className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
+                          <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
+                        </div>
+                        <AgoraExamLogo size={18} />
+                        <span className="text-xs sm:text-sm font-mono text-zinc-200 font-semibold truncate">
+                          AgoraExam • Session Kiosk Verrouillée
+                        </span>
                       </div>
-                      <AgoraExamLogo size={18} />
-                      <span className="text-xs sm:text-sm font-mono text-zinc-200 font-semibold truncate">
-                        AgoraExam • Session Kiosk Verrouillée
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {/* Indicateur de Confiance IA & Onde Sonore Locale en direct */}
+                        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-[10px] font-mono text-emerald-300">
+                          <div className="flex items-center gap-0.5 h-2.5">
+                            <span className="w-0.5 h-1.5 bg-emerald-400 rounded-full animate-waveform-1" />
+                            <span className="w-0.5 h-2.5 bg-emerald-400 rounded-full animate-waveform-2" />
+                            <span className="w-0.5 h-1.5 bg-emerald-400 rounded-full animate-waveform-3" />
+                            <span className="w-0.5 h-2 bg-emerald-400 rounded-full animate-waveform-2" />
+                          </div>
+                          <span>IA Edge 100% Locale</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] font-mono text-emerald-400 shrink-0">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                          <span>Caméra Active</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[11px] font-mono text-emerald-400 shrink-0">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                      <span>Caméra Active • 100% sur l'appareil</span>
-                    </div>
-                  </div>
 
                   {/* Questionnaire Moodle simulé authentique */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
@@ -1049,6 +1069,7 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
                         </div>
                       </div>
                     </div>
+                  </div>
                   </div>
                 </div>
               </div>
