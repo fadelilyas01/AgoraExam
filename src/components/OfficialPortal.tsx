@@ -9,7 +9,6 @@ import {
   Check,
   Copy,
   Search,
-  AlertTriangle,
   CheckCircle2,
   ShieldCheck,
   Eye,
@@ -110,6 +109,8 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
 
   // Menus tiroirs mobiles
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  // Profil sélectionné sur la page d'accueil ("etudiant" | "enseignant" | "dsi")
+  const [activeProfile, setActiveProfile] = useState<"etudiant" | "enseignant" | "dsi">("etudiant");
   const [mobileDocsDrawerOpen, setMobileDocsDrawerOpen] = useState<boolean>(false);
 
   // Détection automatique de l'OS et du support mobile de l'utilisateur
@@ -1034,120 +1035,236 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
             </div>
           </section>
 
-          {/* Grille Bento des Fonctionnalités Clés */}
-          <section className="px-4 sm:px-6 max-w-6xl mx-auto space-y-10 sm:space-y-12">
-            <div className="text-center space-y-3 max-w-2xl mx-auto">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-zinc-100">
-                L'Excellence Technique au Service de la Justice Académique
+          {/* Grille des 4 Fonctionnalités Clés (Simple, Punchy, Anti-Jargon) */}
+          <section className="px-4 sm:px-6 max-w-5xl mx-auto space-y-8 sm:space-y-10">
+            <div className="text-center space-y-2.5 max-w-2xl mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-100">
+                Tout ce qu'il faut pour un examen serein et équitable
               </h2>
-              <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                Conçu pour garantir l'intégrité de l'examen sans transformer l'ordinateur de l'étudiant en mouchard intrusif.
+              <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
+                Une sécurité discrète qui protège l'intégrité de l'épreuve sans être intrusive.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               {/* Carte 1 */}
-              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3 hover:border-zinc-700 transition-colors">
+              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-2.5 hover:border-zinc-700 transition-colors">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
-                  <Lock size={20} />
+                  <Lock size={18} />
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-zinc-100">Verrouillage Kiosk Hermétique</h3>
-                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                  Plein écran forcé, neutralisation d'Alt+Tab, Alt+F4, captures d'écran, masquage du Dock et de la barre des tâches de l'OS.
+                <h3 className="text-base font-bold text-zinc-100">Écran et applications verrouillés</h3>
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  Plein écran forcé. Impossible de changer d'application, de copier-coller ou de tricher pendant l'examen.
                 </p>
               </div>
 
               {/* Carte 2 */}
-              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3 hover:border-zinc-700 transition-colors">
+              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-2.5 hover:border-zinc-700 transition-colors">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
-                  <Monitor size={20} />
+                  <Monitor size={18} />
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-zinc-100">Anti-Double Écran Matériel</h3>
-                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                  Contrôle direct du gestionnaire d'affichage en Rust : impossible de lancer l'examen si un câble HDMI, DisplayPort ou AirPlay est actif.
+                <h3 className="text-base font-bold text-zinc-100">Un seul écran autorisé</h3>
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  Détection automatique. Impossible d'utiliser un deuxième écran ou de brancher un câble HDMI.
                 </p>
               </div>
 
-              {/* Carte 3 - Vision Locale */}
-              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3 hover:border-zinc-700 transition-colors">
+              {/* Carte 3 */}
+              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-2.5 hover:border-zinc-700 transition-colors">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
-                  <Eye size={20} />
+                  <Camera size={18} />
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-zinc-100">Vision Embarquée Souveraine</h3>
-                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                  Analyse faciale MediaPipe exécutée 100% dans la mémoire vive de l'ordinateur. Aucun flux vidéo n'est envoyé vers des serveurs distants.
+                <h3 className="text-base font-bold text-zinc-100">Caméra 100% privée</h3>
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  La présence est vérifiée directement sur votre ordinateur, sans jamais envoyer de vidéo sur Internet.
                 </p>
               </div>
 
-              {/* Carte 4 - Human in the loop */}
-              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3 hover:border-zinc-700 transition-colors">
+              {/* Carte 4 */}
+              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-2.5 hover:border-zinc-700 transition-colors">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-amber-400 border border-zinc-700/60">
-                  <AlertTriangle size={20} />
+                  <ShieldCheck size={18} />
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-zinc-100">Human-in-the-Loop &amp; 3 Strikes</h3>
-                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                  Tolérance active de 4s anti-faux positifs. Au 3ème avertissement, transmission du dossier au surveillant humain (seul habilité à arbitrer).
-                </p>
-              </div>
-
-              {/* Carte 5 */}
-              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3 hover:border-zinc-700 transition-colors">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-emerald-400 border border-zinc-700/60">
-                  <Camera size={20} />
-                </div>
-                <h3 className="text-sm sm:text-base font-bold text-zinc-100">Preuves Photographiques Scellées</h3>
-                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                  Seules les infractions avérées génèrent une photo locale horodatée pour examen ultérieur par la commission pédagogique.
-                </p>
-              </div>
-
-              {/* Carte 6 - Moodle Logo */}
-              <div className="p-5 sm:p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 space-y-3 hover:border-zinc-700 transition-colors">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-800 text-orange-400 border border-zinc-700/60">
-                  <MoodleLogo size={20} />
-                </div>
-                <h3 className="text-sm sm:text-base font-bold text-zinc-100">Zéro Plugin Moodle Obligatoire</h3>
-                <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                  L'enseignant configure son test avec un mot de passe masqué et insère un bouton d'accès direct. Aucune extension serveur requise.
+                <h3 className="text-base font-bold text-zinc-100">Décision humaine garantie</h3>
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  Aucune exclusion automatique par l'IA. Seul un enseignant ou surveillant humain peut arbitrer.
                 </p>
               </div>
             </div>
           </section>
 
-          {/* Section Les 3 Personas */}
-          <section className="px-4 sm:px-6 max-w-5xl mx-auto space-y-8 sm:space-y-10">
+          {/* Section « Pour qui » en Onglets Interactifs */}
+          <section className="px-4 sm:px-6 max-w-4xl mx-auto space-y-6 sm:space-y-8">
             <div className="text-center space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-bold text-zinc-100">Une Solution Pensée pour Tous</h2>
-              <p className="text-sm sm:text-base text-zinc-300">Étudiants, Enseignants et DSI travaillent en parfaite harmonie.</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-zinc-100">Une solution pensée pour chacun</h2>
+              <p className="text-sm sm:text-base text-zinc-400">
+                Cliquez sur votre profil pour découvrir comment AgoraExam simplifie vos examens.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-950/70 space-y-3">
-                <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">Pour l'Étudiant</span>
-                <h4 className="text-base sm:text-lg font-bold text-zinc-100">Installation Sans Droits Admin</h4>
-                <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                  S'installe en 1 clic dans le profil utilisateur Windows ou par glisser-déposer sur Mac. Test à froid la veille pour être serein le jour J.
-                </p>
+            {/* Onglets de profil */}
+            <div className="flex justify-center">
+              <div className="inline-flex rounded-2xl border border-zinc-800 bg-zinc-900/80 p-1.5 shadow-sm max-w-full overflow-x-auto">
+                <button
+                  onClick={() => setActiveProfile("etudiant")}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                    activeProfile === "etudiant"
+                      ? "bg-zinc-800 text-emerald-400 shadow-sm"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  <UserCheck size={16} />
+                  <span>Étudiant</span>
+                </button>
+                <button
+                  onClick={() => setActiveProfile("enseignant")}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                    activeProfile === "enseignant"
+                      ? "bg-zinc-800 text-orange-400 shadow-sm"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  <MoodleLogo size={16} />
+                  <span>Enseignant</span>
+                </button>
+                <button
+                  onClick={() => setActiveProfile("dsi")}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold transition-all whitespace-nowrap ${
+                    activeProfile === "dsi"
+                      ? "bg-zinc-800 text-purple-400 shadow-sm"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  <ShieldCheck size={16} />
+                  <span>Établissement & DSI</span>
+                </button>
               </div>
+            </div>
 
-              <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-950/70 space-y-3">
-                <div className="flex items-center gap-2">
-                  <MoodleLogo size={15} />
-                  <span className="text-xs font-mono font-bold text-orange-400 uppercase tracking-wider">Pour l'Enseignant</span>
+            {/* Contenu spécifique au profil actif */}
+            <div className="rounded-3xl border border-zinc-800 bg-zinc-950/80 p-6 sm:p-8 shadow-xl transition-all">
+              {activeProfile === "etudiant" && (
+                <div className="space-y-5 animate-in fade-in duration-200">
+                  <div className="space-y-2">
+                    <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
+                      Espace Candidat
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-bold text-zinc-100">
+                      Simple à installer, sans stress le jour J
+                    </h3>
+                    <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
+                      Téléchargez l'application en un clic. Pas besoin de droits d'administrateur. Vous pouvez tester votre webcam et votre micro la veille chez vous pour aborder l'examen en toute sérénité.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs sm:text-sm text-zinc-300">
+                    <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 flex items-center gap-2">
+                      <Check size={16} className="text-emerald-400 shrink-0" />
+                      <span>Zéro droit administrateur requis</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 flex items-center gap-2">
+                      <Check size={16} className="text-emerald-400 shrink-0" />
+                      <span>Test caméra la veille à la maison</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 flex items-center gap-2">
+                      <Check size={16} className="text-emerald-400 shrink-0" />
+                      <span>Protection contre les faux positifs</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      onClick={() => selectDocSection("etudiant-guide")}
+                      className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-emerald-400 hover:text-emerald-300 transition-colors"
+                    >
+                      <span>Consulter le guide pratique pour les étudiants</span>
+                      <ChevronRight size={15} />
+                    </button>
+                  </div>
                 </div>
-                <h4 className="text-base sm:text-lg font-bold text-zinc-100">Générateur Moodle Intégré</h4>
-                <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                  Renseignez l'ID du test et copiez le bloc HTML sécurisé. Les étudiants sans AgoraExam ne peuvent pas déverrouiller l'accès.
-                </p>
-              </div>
+              )}
 
-              <div className="p-6 sm:p-7 rounded-2xl border border-zinc-800 bg-zinc-950/70 space-y-3">
-                <span className="text-xs font-mono font-bold text-purple-400 uppercase tracking-wider">Pour la DSI Campus</span>
-                <h4 className="text-base sm:text-lg font-bold text-zinc-100">Déploiement Intune & GPO</h4>
-                <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
-                  Paquets MSI et PKG avec commande silencieuse pour équiper les salles de cours universitaires sans aucune intervention manuelle.
-                </p>
-              </div>
+              {activeProfile === "enseignant" && (
+                <div className="space-y-5 animate-in fade-in duration-200">
+                  <div className="space-y-2">
+                    <span className="text-xs font-mono font-bold text-orange-400 uppercase tracking-wider">
+                      Espace Pédagogique
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-bold text-zinc-100">
+                      Compatible avec vos quiz Moodle existants
+                    </h3>
+                    <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
+                      Protégez vos évaluations en quelques clics grâce à notre bouton prêt à copier-coller dans votre cours. Aucune installation technique complexe n'est requise sur le serveur Moodle.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs sm:text-sm text-zinc-300">
+                    <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 flex items-center gap-2">
+                      <Check size={16} className="text-orange-400 shrink-0" />
+                      <span>Zéro plugin à installer sur Moodle</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 flex items-center gap-2">
+                      <Check size={16} className="text-orange-400 shrink-0" />
+                      <span>Bouton sécurisé prêt à copier-coller</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 flex items-center gap-2">
+                      <Check size={16} className="text-orange-400 shrink-0" />
+                      <span>Rapports d'incident clairs pour le jury</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      onClick={() => selectDocSection("enseignant-guide")}
+                      className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-orange-400 hover:text-orange-300 transition-colors"
+                    >
+                      <span>Consulter le guide enseignant et créer mon bouton</span>
+                      <ChevronRight size={15} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {activeProfile === "dsi" && (
+                <div className="space-y-5 animate-in fade-in duration-200">
+                  <div className="space-y-2">
+                    <span className="text-xs font-mono font-bold text-purple-400 uppercase tracking-wider">
+                      Espace Université & Informatique
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-bold text-zinc-100">
+                      Déploiement simple sur tout votre parc de machines
+                    </h3>
+                    <p className="text-sm sm:text-base text-zinc-300 leading-relaxed">
+                      Équipez facilement vos salles de cours et postes d'examen. AgoraExam est 100% respectueux du RGPD car aucun flux vidéo n'est envoyé vers des serveurs externes.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs sm:text-sm text-zinc-300">
+                    <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 flex items-center gap-2">
+                      <Check size={16} className="text-purple-400 shrink-0" />
+                      <span>Installation facile en masse (PC & Mac)</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 flex items-center gap-2">
+                      <Check size={16} className="text-purple-400 shrink-0" />
+                      <span>Conforme RGPD et vie privée garantie</span>
+                    </div>
+                    <div className="p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/80 flex items-center gap-2">
+                      <Check size={16} className="text-purple-400 shrink-0" />
+                      <span>Application ultra-légère (&lt; 21 Mo)</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      onClick={() => selectDocSection("dsi-securite")}
+                      className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-purple-400 hover:text-purple-300 transition-colors"
+                    >
+                      <span>Consulter les détails techniques et spécifications de sécurité</span>
+                      <ChevronRight size={15} />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 
@@ -2570,31 +2687,55 @@ export function OfficialPortal({ initialTab = "home", onLaunchApp }: OfficialPor
       {/* ========================================================================= */}
       {/* 4. FOOTER GLOBAL                                                          */}
       {/* ========================================================================= */}
-      <footer className="border-t border-zinc-800/80 bg-zinc-950 px-4 sm:px-6 py-8 sm:py-10 text-center text-xs sm:text-sm text-zinc-400 space-y-3">
-        <div className="flex items-center justify-center gap-2 text-zinc-300">
-          <AgoraExamLogo size={18} />
-          <span className="font-semibold text-zinc-200">AgoraExam</span>
-          <span>•</span>
-          <span>Logiciel Libre sous licence MIT</span>
-          <span>•</span>
-          <span>Conçu pour l'enseignement supérieur et Moodle</span>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-4 text-xs sm:text-sm text-zinc-400">
-          <button onClick={() => changeTab("home")} className="hover:text-white transition-colors">Accueil</button>
-          <span>•</span>
-          <button onClick={() => changeTab("download")} className="hover:text-white transition-colors">Téléchargements</button>
-          <span>•</span>
-          <button onClick={() => changeTab("docs")} className="hover:text-white transition-colors">Documentation</button>
-          <span>•</span>
-          <a
-            href="https://github.com/fadelilyas01/AgoraExam"
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-white transition-colors inline-flex items-center gap-1.5"
-          >
-            <GitHubLogo size={14} />
-            <span>GitHub</span>
-          </a>
+      <footer className="border-t border-zinc-800/80 bg-zinc-950 px-4 sm:px-6 py-8 sm:py-10 text-xs sm:text-sm text-zinc-400">
+        <div className="max-w-4xl mx-auto flex flex-col items-center gap-4 text-center">
+          {/* Logo & Identité */}
+          <div className="flex items-center gap-2 text-zinc-200 font-semibold">
+            <AgoraExamLogo size={20} />
+            <span className="text-sm font-bold tracking-tight">AgoraExam</span>
+          </div>
+
+          {/* Mentions empilées proprement sur mobile */}
+          <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs text-zinc-400">
+            <span>Logiciel libre et gratuit sous licence MIT</span>
+            <span className="hidden sm:inline text-zinc-600">•</span>
+            <span>Conçu pour l'enseignement supérieur et Moodle</span>
+          </div>
+
+          {/* Liens de navigation avec cibles tactiles confortables */}
+          <nav className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-6 pt-1 text-xs sm:text-sm font-medium text-zinc-300" aria-label="Liens de pied de page">
+            <button
+              onClick={() => changeTab("home")}
+              className="hover:text-emerald-400 transition-colors py-1 px-2"
+            >
+              Accueil
+            </button>
+            <button
+              onClick={() => changeTab("download")}
+              className="hover:text-emerald-400 transition-colors py-1 px-2"
+            >
+              Téléchargements
+            </button>
+            <button
+              onClick={() => changeTab("docs")}
+              className="hover:text-emerald-400 transition-colors py-1 px-2"
+            >
+              Documentation
+            </button>
+            <a
+              href="https://github.com/fadelilyas01/AgoraExam"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-emerald-400 transition-colors inline-flex items-center gap-1.5 py-1 px-2"
+            >
+              <GitHubLogo size={14} />
+              <span>GitHub</span>
+            </a>
+          </nav>
+
+          <p className="text-[11px] text-zinc-600 pt-2 font-mono">
+            AgoraExam — Respect absolu de la vie privée & Souveraineté académique
+          </p>
         </div>
       </footer>
 
