@@ -31,23 +31,51 @@ export type SurveillancePolicy = "hybrid" | "audit" | "strict";
 
 
 /**
+ * Comparaison à temps constant de deux chaînes hexadécimales (CWE-208 Anti Timing Side-Channel).
+ * Élimine toute fuite temporelle en évaluant l'intégralité des octets via accumulation XOR.
+ */
+function constantTimeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
+/**
  * Vérification cryptographique du code PIN surveillant via empreinte SHA-256 salée.
  * Aucun secret n'est écrit en clair dans le code source (CWE-798 & OWASP A07:2021).
+ * Évaluation à temps constant (CWE-208) et synchronisation du rate-limiting Rust (CWE-307).
  */
-async function verifyProctorPinHash(pin: string, isTauri: boolean): Promise<boolean> {
+async function verifyProctorPinHash(
+  pin: string,
+  isTauri: boolean
+): Promise<{ success: boolean; lockoutSeconds?: number; errorMessage?: string }> {
   const clean = pin.trim();
-  if (!clean) return false;
+  if (!clean) return { success: false };
 
-  // 1. En environnement natif Tauri, délégation au backend Rust
+  // 1. En environnement natif Tauri, délégation au backend Rust avec rate-limiting natif (CWE-307)
   if (isTauri) {
     try {
-      return await invoke<boolean>("verifier_pin_surveillant", { pin: clean });
-    } catch {
-      // Fallback local Web Crypto si le backend natif ne répond pas
+      const valid = await invoke<boolean>("verifier_pin_surveillant", { pin: clean });
+      return { success: valid };
+    } catch (err: unknown) {
+      const errStr = typeof err === "string" ? err : JSON.stringify(err);
+      if (errStr.includes("Verrouillage de sécurité actif") || errStr.includes("PinRateLimitExceeded")) {
+        const match = errStr.match(/(\d+)s restantes/);
+        const secs = match ? parseInt(match[1], 10) : 60;
+        return {
+          success: false,
+          lockoutSeconds: secs,
+          errorMessage: `Verrouillage de sécurité actif (${secs}s restantes) : trop de tentatives.`,
+        };
+      }
+      return { success: false, errorMessage: "Erreur de validation de code PIN." };
     }
   }
 
-  // 2. En environnement Web (Vercel / navigateur), vérification via Web Crypto API native
+  // 2. En environnement Web (Vercel / navigateur), vérification via Web Crypto API native à temps constant (CWE-208)
   if (typeof window !== "undefined" && window.crypto && window.crypto.subtle) {
     try {
       const encoder = new TextEncoder();
@@ -69,13 +97,23 @@ async function verifyProctorPinHash(pin: string, isTauri: boolean): Promise<bool
           .map((b) => b.toString(16).padStart(2, "0"))
           .join("");
 
-      return validHashes.includes(toHex(h1)) || validHashes.includes(toHex(h2));
+      const hex1 = toHex(h1);
+      const hex2 = toHex(h2);
+
+      let matchFound = false;
+      for (const target of validHashes) {
+        if (constantTimeCompare(hex1, target) || constantTimeCompare(hex2, target)) {
+          matchFound = true;
+        }
+      }
+
+      return { success: matchFound };
     } catch {
-      return false;
+      return { success: false };
     }
   }
 
-  return false;
+  return { success: false };
 }
 
 interface StrikeEvent {
@@ -1827,8 +1865,16 @@ export default function App() {
                           return;
                         }
 
-                        const isValid = await verifyProctorPinHash(proctorPin, isTauri);
-                        if (isValid) {
+                        const result = await verifyProctorPinHash(proctorPin, isTauri);
+
+                        if (result.lockoutSeconds) {
+                          setProctorPinLockoutUntil(Date.now() + result.lockoutSeconds * 1000);
+                          setLockoutCountdown(result.lockoutSeconds);
+                          setProctorPinError(result.errorMessage || `Verrouillage actif (${result.lockoutSeconds}s restantes).`);
+                          return;
+                        }
+
+                        if (result.success) {
                           setStrikes(0);
                           setIsFlaggedForProctorReview(false);
                           setActiveModalStrike(null);
@@ -1844,7 +1890,9 @@ export default function App() {
                             setLockoutCountdown(60);
                             setProctorPinError("3 tentatives incorrectes. Saisie bloquée pendant 60 secondes.");
                           } else {
-                            setProctorPinError(`Code PIN incorrect (${3 - newAttempts} essai(s) restant(s))`);
+                            setProctorPinError(
+                              result.errorMessage || `Code PIN incorrect (${3 - newAttempts} essai(s) restant(s))`
+                            );
                           }
                         }
                       }}

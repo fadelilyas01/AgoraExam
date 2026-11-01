@@ -64,5 +64,8 @@ pub async fn sauvegarder_preuve_async(
         "Preuve sauvegardée et scellée cryptographiquement avec succès (Async I/O)"
     );
 
-    Ok(file_path.to_string_lossy().to_string())
+    // Masquage du chemin absolu C:\Users\... pour empêcher la divulgation d'informations (CWE-209).
+    // Retourne un identifiant de preuve relatif et neutre pour le frontend React.
+    let relative_identifier = format!("evidence/{}/{}", attempt_id, filename);
+    Ok(relative_identifier)
 }

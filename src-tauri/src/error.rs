@@ -23,6 +23,9 @@ pub enum ProctorError {
     #[error("URL Moodle invalide ou bloquée par la politique anti-SSRF (CWE-918)")]
     InvalidMoodleUrl,
 
+    #[error("Verrouillage de sécurité actif ({0}s restantes) : trop de tentatives de code PIN")]
+    PinRateLimitExceeded(u64),
+
     #[error("Tentative de verrouillage alors que l'examen est déjà actif")]
     AlreadyLocked,
 }

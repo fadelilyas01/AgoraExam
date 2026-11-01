@@ -6,10 +6,7 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
+permissions: read-all
 
 concurrency:
   group: 'pages'
@@ -18,6 +15,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

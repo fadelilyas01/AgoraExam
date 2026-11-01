@@ -112,7 +112,21 @@ pub fn demarrer_watchdog_kiosk(app: AppHandle, mut rx: watch::Receiver<bool>) {
 }
 
 
-/// Vérifie de façon cryptographique le PIN du surveillant via SHA-256 salé (Zero-Hardcoded Secrets)
+/// Comparaison à temps constant de deux chaînes hexadécimales de même taille (CWE-208 Anti-Timing Attack)
+pub fn constant_time_eq_str(a: &str, b: &str) -> bool {
+    let a_bytes = a.as_bytes();
+    let b_bytes = b.as_bytes();
+    if a_bytes.len() != b_bytes.len() {
+        return false;
+    }
+    let mut diff = 0u8;
+    for (x, y) in a_bytes.iter().zip(b_bytes.iter()) {
+        diff |= x ^ y;
+    }
+    diff == 0
+}
+
+/// Vérifie de façon cryptographique le PIN du surveillant via SHA-256 salé à temps constant (CWE-208 & CWE-798)
 pub fn verifier_pin_surveillant(pin: &str) -> bool {
     use sha2::{Digest, Sha256};
     let clean = pin.trim();
@@ -129,5 +143,37 @@ pub fn verifier_pin_surveillant(pin: &str) -> bool {
     let h1 = format!("{:x}", Sha256::digest(s1.as_bytes()));
     let h2 = format!("{:x}", Sha256::digest(s2.as_bytes()));
 
-    valid_hashes.contains(&h1.as_str()) || valid_hashes.contains(&h2.as_str())
+    // Parcours à temps constant de l'ensemble des cibles autorisées sans arrêt prématuré
+    let mut match_found = false;
+    for target in &valid_hashes {
+        if constant_time_eq_str(&h1, target) || constant_time_eq_str(&h2, target) {
+            match_found = true;
+        }
+    }
+    match_found
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_constant_time_eq_str() {
+        assert!(constant_time_eq_str("abcdef", "abcdef"));
+        assert!(!constant_time_eq_str("abcdef", "abcdeg"));
+        assert!(!constant_time_eq_str("abcdef", "abcde"));
+        assert!(!constant_time_eq_str("", "a"));
+        assert!(constant_time_eq_str("", ""));
+    }
+
+    #[test]
+    fn test_verifier_pin_surveillant_valide() {
+        assert!(verifier_pin_surveillant("2026"));
+        assert!(verifier_pin_surveillant("AGORA"));
+        assert!(verifier_pin_surveillant("agora"));
+        assert!(verifier_pin_surveillant(" 2026 "));
+        assert!(!verifier_pin_surveillant("2025"));
+        assert!(!verifier_pin_surveillant("wrong_pin"));
+        assert!(!verifier_pin_surveillant(""));
+    }
 }

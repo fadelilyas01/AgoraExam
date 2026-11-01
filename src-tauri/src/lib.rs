@@ -140,11 +140,27 @@ async fn alerter_surveillant(
     Ok(())
 }
 
-/// Vérifie cryptographiquement le code PIN surveillant sans secret en clair (CWE-798)
+/// Vérifie cryptographiquement le code PIN surveillant sans secret en clair,
+/// à temps constant (CWE-208) et protégé contre le bruteforce IPC par rate-limiting natif (CWE-307)
 #[tauri::command]
-#[tracing::instrument(skip(pin))]
-async fn verifier_pin_surveillant(pin: String) -> Result<bool, ProctorError> {
-    Ok(kiosk::verifier_pin_surveillant(&pin))
+#[tracing::instrument(skip(state, pin))]
+async fn verifier_pin_surveillant(
+    state: tauri::State<'_, ExamState>,
+    pin: String,
+) -> Result<bool, ProctorError> {
+    // 1. Contrôle préalable du verrouillage temporel
+    if let Err(remaining) = state.check_pin_rate_limit() {
+        return Err(ProctorError::PinRateLimitExceeded(remaining));
+    }
+
+    // 2. Comparaison à temps constant
+    let is_valid = kiosk::verifier_pin_surveillant(&pin);
+
+    // 3. Enregistrement et application du verrouillage si 3 échecs consécutifs
+    match state.record_pin_result(is_valid) {
+        Ok(valid) => Ok(valid),
+        Err(lockout_secs) => Err(ProctorError::PinRateLimitExceeded(lockout_secs)),
+    }
 }
 
 // -----------------------------------------------------------------------------
