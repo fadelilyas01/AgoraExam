@@ -167,7 +167,7 @@ async fn verifier_pin_surveillant(
 // Point d'Entrée Principal & Runtime Tauri
 // -----------------------------------------------------------------------------
 pub fn run() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(ExamState::default())
         .invoke_handler(tauri::generate_handler![
@@ -233,7 +233,10 @@ pub fn run() {
 
                 _ => {}
             }
-        })
-        .run(tauri::generate_context!())
-        .expect("Erreur fatale lors de l'exécution de l'application AgoraExam");
+        });
+
+    if let Err(err) = app.run(tauri::generate_context!()) {
+        eprintln!("Erreur fatale lors de l'exécution de l'application AgoraExam : {err}");
+        std::process::exit(1);
+    }
 }

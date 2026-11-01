@@ -954,8 +954,13 @@ export default function App() {
   if (isFinished) {
     const hasFlags = isFlaggedForProctorReview || strikes > 0;
 
-    const downloadReceipt = () => {
-      const finalSeal = computedSealDigest || "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    const downloadReceipt = async () => {
+      let finalSeal = computedSealDigest;
+      if (!finalSeal) {
+        const canonical = JSON.stringify({ attemptId: 48291, answersCount: Object.keys(answers).length, timestamp: Date.now() });
+        const digest = await window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical));
+        finalSeal = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
       const receiptPayload = {
         certification: "AgoraExam Academic Integrity Official Receipt",
         protocolVersion: "2.4-Sovereign-Edge",
