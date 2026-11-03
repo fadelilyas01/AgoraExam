@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { Analytics } from "@vercel/analytics/react";
 import { PreFlightCheck } from "./components/PreFlightCheck";
 import { OfficialPortal } from "./components/OfficialPortal";
 import { proctorVision } from "./services/faceDetection";
@@ -1982,6 +1983,7 @@ export default function App() {
           </div>
         </div>
       )}
+      <Analytics />
     </div>
   );
 }
